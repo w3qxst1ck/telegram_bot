@@ -39,8 +39,12 @@ class TestSubscription(Base):
     __tablename__ = "test_subscriptions"
 
     tg_id: Mapped[str] = mapped_column(primary_key=True)
-    created_at: Mapped[datetime.datetime]
-    expired_at: Mapped[datetime.datetime]
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        server_default=text("TIMEZONE('utc-3', now())")
+    )
+    expired_at: Mapped[datetime.datetime] = mapped_column(
+        server_default=text("TIMEZONE('utc-3', now() + interval '1 day')")
+    )
 
 
 class Subscription(Base):
