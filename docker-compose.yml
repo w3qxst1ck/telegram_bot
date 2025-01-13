@@ -1,0 +1,22 @@
+services:
+  bot:
+    container_name: "bot"
+    build: ./
+    command: sh -c "alembic upgrade head && python main.py"
+    volumes:
+      - ./logs:/app/logs/
+    depends_on:
+      - postgresdb
+
+  postgresdb:
+    image: postgres:13.1
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - ./.env.prod
+    ports:
+      - 5432:5432
+
+volumes:
+  postgres_data:

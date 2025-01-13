@@ -25,11 +25,5 @@ logger.add(
     level="INFO",
     format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {file}:{line} | {message}",
     rotation="100 MB",
-    retention="15 days",
+    retention="60 days",
 )
-
-# logger.debug("Дебаг сообщение")
-# logger.info("Инфо сообщение")
-# logger.warning("Варнинг сообщение")
-# logger.error("Еррор сообщение")
-# logger.critical("Критикал сообщение")

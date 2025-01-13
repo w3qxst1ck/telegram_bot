@@ -35,8 +35,6 @@ async def start_bot() -> None:
     dispatcher = io.Dispatcher(storage=storage)
     dispatcher.include_router(main_router)
 
-    await AsyncOrm.create_tables()
-
     await dispatcher.start_polling(bot)
 
 
