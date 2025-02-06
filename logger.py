@@ -27,3 +27,5 @@ logger.add(
     rotation="100 MB",
     retention="60 days",
 )
+
+logger = logger

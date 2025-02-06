@@ -6,9 +6,9 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import BotCommand, BotCommandScopeDefault
 
+from middlewares.database import DatabaseMiddleware
 from settings import settings
 from handlers import main_router
-from database.orm import AsyncOrm
 
 
 async def set_commands(bot: io.Bot):
@@ -32,10 +32,16 @@ async def start_bot() -> None:
     await set_description(bot)
 
     storage = MemoryStorage()
-    dispatcher = io.Dispatcher(storage=storage)
-    dispatcher.include_router(main_router)
+    dp = io.Dispatcher(storage=storage)
 
-    await dispatcher.start_polling(bot)
+    # ROUTERS
+    dp.include_router(main_router)
+
+    # MIDDLEWARES
+    dp.message.middleware(DatabaseMiddleware())
+    dp.callback_query.middleware(DatabaseMiddleware())
+
+    await dp.start_polling(bot)
 
 
 if __name__ == "__main__":
