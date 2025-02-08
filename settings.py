@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     bot_token: str
     admins: list
     db: Database = Database()
+    timezone: str = "Europe/Moscow"
 
     model_config = SettingsConfigDict(env_file=".env.dev", extra="ignore")
 

@@ -7,6 +7,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import BotCommand, BotCommandScopeDefault
 
 from middlewares.database import DatabaseMiddleware
+from middlewares.admin import AdminMiddleware
 from settings import settings
 from handlers import main_router
 
@@ -40,6 +41,8 @@ async def start_bot() -> None:
     # MIDDLEWARES
     dp.message.middleware(DatabaseMiddleware())
     dp.callback_query.middleware(DatabaseMiddleware())
+    dp.message.middleware(AdminMiddleware())
+    dp.callback_query.middleware(AdminMiddleware())
 
     await dp.start_polling(bot)
 

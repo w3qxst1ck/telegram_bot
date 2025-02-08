@@ -22,8 +22,8 @@ class AsyncOrm:
             await conn.run_sync(Base.metadata.drop_all)
 
     @staticmethod
-    async def create_user_test(session: Any, user: UserAdd):
-        """Test method"""
+    async def create_user(user: UserAdd, session: Any):
+        """Создание пользователя"""
         try:
             await session.execute("""
                 INSERT INTO users (tg_id, username, firstname, lastname)
@@ -38,4 +38,19 @@ class AsyncOrm:
         except Exception as e:
             logger.error(f"Ошибка при создании пользователя {user.tg_id} "
                          f"{'@' + user.username if user.username else ''}: {e}")
+            raise
+
+    @staticmethod
+    async def create_subscription(tg_id: str, session: Any):
+        """Создание подписки для пользователя"""
+        try:
+            await session.execute("""
+                INSERT INTO subscriptions (tg_id)
+                VALUES ($1)
+                ON CONFLICT (tg_id) DO NOTHING
+                """,
+                tg_id
+            )
+        except Exception as e:
+            logger.error(f"Ошибка при создании подписки {tg_id}: {e}")
             raise

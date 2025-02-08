@@ -51,8 +51,10 @@ class Subscription(Base):
     __tablename__ = "subscriptions"
 
     tg_id: Mapped[str] = mapped_column(primary_key=True)
-    created_at: Mapped[datetime.datetime]
-    expired_at: Mapped[datetime.datetime]
+    active: Mapped[bool] = mapped_column(default=False)
+    created_at: Mapped[datetime.datetime] = mapped_column(server_default=text("TIMEZONE('utc', now())"))
+    start_date: Mapped[datetime.datetime] = mapped_column(nullable=True, default=None)
+    expire_date: Mapped[datetime.datetime] = mapped_column(nullable=True, default=None)
 
 
 class Payment(Base):
