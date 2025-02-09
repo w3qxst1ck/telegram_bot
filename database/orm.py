@@ -45,11 +45,12 @@ class AsyncOrm:
         """Создание подписки для пользователя"""
         try:
             await session.execute("""
-                INSERT INTO subscriptions (tg_id)
-                VALUES ($1)
+                INSERT INTO subscriptions (tg_id, active)
+                VALUES ($1, $2)
                 ON CONFLICT (tg_id) DO NOTHING
                 """,
-                tg_id
+                tg_id,
+                False
             )
         except Exception as e:
             logger.error(f"Ошибка при создании подписки {tg_id}: {e}")

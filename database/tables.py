@@ -26,7 +26,7 @@ class User(Base):
     username: Mapped[str] = mapped_column(nullable=True)
     firstname: Mapped[str] = mapped_column(nullable=True)
     lastname: Mapped[str] = mapped_column(nullable=True)
-    created_at: Mapped[datetime.datetime] = mapped_column(server_default=text("TIMEZONE('utc', now())"))
+    created_at: Mapped[datetime.datetime] = mapped_column(server_default=text("TIMEZONE('utc-3', now())"))
 
     payments: Mapped[list["Payment"]] = relationship(
         back_populates="user",
@@ -52,7 +52,7 @@ class Subscription(Base):
 
     tg_id: Mapped[str] = mapped_column(primary_key=True)
     active: Mapped[bool] = mapped_column(default=False)
-    created_at: Mapped[datetime.datetime] = mapped_column(server_default=text("TIMEZONE('utc', now())"))
+    created_at: Mapped[datetime.datetime] = mapped_column(server_default=text("TIMEZONE('utc-3', now())"))
     start_date: Mapped[datetime.datetime] = mapped_column(nullable=True, default=None)
     expire_date: Mapped[datetime.datetime] = mapped_column(nullable=True, default=None)
 

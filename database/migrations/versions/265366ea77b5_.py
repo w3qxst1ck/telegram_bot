@@ -1,8 +1,8 @@
-"""init_migration
+"""empty message
 
-Revision ID: 3e01571ff754
+Revision ID: 265366ea77b5
 Revises: 
-Create Date: 2025-01-12 17:49:08.141134
+Create Date: 2025-02-09 15:53:36.270133
 
 """
 
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "3e01571ff754"
+revision: str = "265366ea77b5"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -24,8 +24,15 @@ def upgrade() -> None:
     op.create_table(
         "subscriptions",
         sa.Column("tg_id", sa.String(), nullable=False),
-        sa.Column("created_at", sa.DateTime(), nullable=False),
-        sa.Column("expired_at", sa.DateTime(), nullable=False),
+        sa.Column("active", sa.Boolean(), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(),
+            server_default=sa.text("TIMEZONE('utc-3', now())"),
+            nullable=False,
+        ),
+        sa.Column("start_date", sa.DateTime(), nullable=True),
+        sa.Column("expire_date", sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint("tg_id"),
     )
     op.create_table(
@@ -57,7 +64,7 @@ def upgrade() -> None:
         sa.Column(
             "created_at",
             sa.DateTime(),
-            server_default=sa.text("TIMEZONE('utc', now())"),
+            server_default=sa.text("TIMEZONE('utc-3', now())"),
             nullable=False,
         ),
         sa.PrimaryKeyConstraint("id"),
