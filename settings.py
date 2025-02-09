@@ -1,27 +1,26 @@
+import os
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field
 
 
 class Database(BaseSettings):
-    postgres_user: str
-    postgres_password: str
-    postgres_db: str
-    postgres_host: str
-    postgres_port: str
+    postgres_user: str = Field(..., env='POSTGRES_USER')
+    postgres_password: str = Field(..., env='POSTGRES_USER')
+    postgres_db: str = Field(..., env='POSTGRES_DB')
+    postgres_host: str = Field(..., env='POSTGRES_HOST')
+    postgres_port: str = Field(..., env='POSTGRES_PORT')
 
     @property
     def DATABASE_URL(self):
         return f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
 
-    model_config = SettingsConfigDict(env_file=".env.dev", extra="ignore")
-
 
 class Settings(BaseSettings):
-    bot_token: str
-    admins: list
+    bot_token: str = Field(..., env='BOT_TOKEN')
+    admins: list = Field(..., env='ADMINS')
     db: Database = Database()
     timezone: str = "Europe/Moscow"
-
-    model_config = SettingsConfigDict(env_file=".env.dev", extra="ignore")
 
 
 settings = Settings()
