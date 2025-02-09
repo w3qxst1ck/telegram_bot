@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 265366ea77b5
-Revises: 
-Create Date: 2025-02-09 15:53:36.270133
+Revision ID: f2ee8fc11d78
+Revises:
+Create Date: 2025-02-09 18:16:42.553305
 
 """
 
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "265366ea77b5"
+revision: str = "f2ee8fc11d78"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -36,8 +36,9 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("tg_id"),
     )
     op.create_table(
-        "test_subscriptions",
+        "trial_subscriptions",
         sa.Column("tg_id", sa.String(), nullable=False),
+        sa.Column("active", sa.Boolean(), nullable=False),
         sa.Column(
             "created_at",
             sa.DateTime(),
@@ -52,6 +53,7 @@ def upgrade() -> None:
             ),
             nullable=False,
         ),
+        sa.Column("is_used", sa.Boolean(), nullable=False),
         sa.PrimaryKeyConstraint("tg_id"),
     )
     op.create_table(
@@ -90,6 +92,6 @@ def downgrade() -> None:
     op.drop_table("payments")
     op.drop_index(op.f("ix_users_tg_id"), table_name="users")
     op.drop_table("users")
-    op.drop_table("test_subscriptions")
+    op.drop_table("trial_subscriptions")
     op.drop_table("subscriptions")
     # ### end Alembic commands ###

@@ -33,17 +33,19 @@ class User(Base):
     )
 
 
-class TestSubscription(Base):
+class TrialSubscription(Base):
     """Тестовые разовые подписки"""
-    __tablename__ = "test_subscriptions"
+    __tablename__ = "trial_subscriptions"
 
     tg_id: Mapped[str] = mapped_column(primary_key=True)
+    active: Mapped[bool] = mapped_column()
     created_at: Mapped[datetime.datetime] = mapped_column(
         server_default=text("TIMEZONE('utc-3', now())")
     )
     expired_at: Mapped[datetime.datetime] = mapped_column(
         server_default=text("TIMEZONE('utc-3', now() + interval '1 day')")
     )
+    is_used: Mapped[bool] = mapped_column()
 
 
 class Subscription(Base):
