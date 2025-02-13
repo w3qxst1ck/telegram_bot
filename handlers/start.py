@@ -35,7 +35,7 @@ async def start_handler(message: types.Message, admin: bool, session: Any) -> No
 async def show_start_message(message: types.Message, admin: bool, session: Any) -> None:
     """Отправка приветственного сообщения"""
     name: str = message.from_user.username if message.from_user.username else message.from_user.first_name
-    trial_status = await AsyncOrm.get_trial_subscription_status(str(message.chat.id), session)
+    trial_status: bool = await AsyncOrm.get_trial_subscription_status(str(message.chat.id), session)
     image_path = os.path.join("img", "start.png")
 
     builder = InlineKeyboardBuilder()

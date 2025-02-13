@@ -10,3 +10,4 @@ docker-compose.yml
 **/env
 .env.dev
 .idea
+redisdata/
