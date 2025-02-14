@@ -8,7 +8,6 @@ from aiogram.types import BotCommand, BotCommandScopeDefault
 
 from middlewares.database import DatabaseMiddleware
 from middlewares.admin import AdminMiddleware
-from middlewares.cache import CacheMiddleware
 from settings import settings
 from handlers import main_router
 
@@ -44,8 +43,6 @@ async def start_bot() -> None:
     dp.callback_query.middleware(DatabaseMiddleware())
     dp.message.middleware(AdminMiddleware())
     dp.callback_query.middleware(AdminMiddleware())
-    dp.message.middleware(CacheMiddleware())
-    dp.callback_query.middleware(CacheMiddleware())
 
     await dp.start_polling(bot)
 
