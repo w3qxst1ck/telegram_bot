@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     db: Database = Database()
     redis: Redis = Redis()
     timezone: str = "Europe/Moscow"
+    trial_days: int = 1
 
 
 settings = Settings()

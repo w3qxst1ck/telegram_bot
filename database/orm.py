@@ -1,3 +1,4 @@
+import datetime
 from typing import Any
 
 from database.database import async_engine
@@ -40,16 +41,26 @@ class AsyncOrm:
                          f"{'@' + user.username if user.username else ''}: {e}")
 
     @staticmethod
-    async def create_subscription(tg_id: str, session: Any):
+    async def create_subscription(tg_id: str,
+                                  active:bool,
+                                  start_date: datetime.datetime,
+                                  expire_date: datetime.datetime,
+                                  is_trial: bool,
+                                  trial_used: bool,
+                                  session: Any):
         """Создание подписки для пользователя"""
         try:
             await session.execute("""
-                INSERT INTO subscriptions (tg_id, active)
-                VALUES ($1, $2)
+                INSERT INTO subscriptions (tg_id, active, start_date, expire_date, is_trial, trial_used)
+                VALUES ($1, $2, $3, $4, $5, $6)
                 ON CONFLICT (tg_id) DO NOTHING
                 """,
                 tg_id,
-                False
+                active,
+                start_date,
+                expire_date,
+                is_trial,
+                trial_used
             )
         except Exception as e:
             logger.error(f"Ошибка при создании подписки {tg_id}: {e}")
@@ -69,33 +80,21 @@ class AsyncOrm:
             logger.error(f"Ошибка при проверке регистрации пользователя {tg_id}: {e}")
 
     @staticmethod
-    async def create_test_subscription(tg_id: str, active: bool, is_used: bool, session: Any) -> None:
-        """Создание тестовой (разовой) подписки пользователю"""
-        try:
-            await session.execute("""
-                INSERT INTO trial_subscriptions (tg_id, active, is_used) 
-                VALUES ($1, $2, $3)
-                ON CONFLICT (tg_id) DO NOTHING
-                """,
-                tg_id,
-                active,
-                is_used
-            )
-        except Exception as e:
-            logger.error(f"Ошибка при создании пробной подписки пользователю {tg_id}: {e}")
-
-    @staticmethod
-    async def get_trial_subscription_status(tg_id: str, session: Any) -> bool:
+    async def get_trial_subscription_status(tg_id: str, session: Any) -> dict:
         """Получение статуса использования пробной подписки"""
         try:
-            trial_status = await session.fetchval(
+            subscription = await session.fetch(
                 """
-                SELECT is_used FROM trial_subscriptions 
+                SELECT is_trial, trial_used FROM subscriptions 
                 WHERE tg_id = $1
                 """,
                 tg_id
             )
-            return trial_status
+            sub_status = {
+                "is_trial": subscription[0]["is_trial"],
+                "trial_used": subscription[0]["trial_used"]
+            }
+            return sub_status
 
         except Exception as e:
             logger.error(f"Ошибка при получении статуса пробной подписки {tg_id}: {e}")

@@ -1,8 +1,8 @@
-"""empty message
+"""init
 
-Revision ID: f2ee8fc11d78
+Revision ID: 3bcd3db5da0b
 Revises:
-Create Date: 2025-02-09 18:16:42.553305
+Create Date: 2025-02-16 16:35:18.860109
 
 """
 
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "f2ee8fc11d78"
+revision: str = "3bcd3db5da0b"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -33,27 +33,8 @@ def upgrade() -> None:
         ),
         sa.Column("start_date", sa.DateTime(), nullable=True),
         sa.Column("expire_date", sa.DateTime(), nullable=True),
-        sa.PrimaryKeyConstraint("tg_id"),
-    )
-    op.create_table(
-        "trial_subscriptions",
-        sa.Column("tg_id", sa.String(), nullable=False),
-        sa.Column("active", sa.Boolean(), nullable=False),
-        sa.Column(
-            "created_at",
-            sa.DateTime(),
-            server_default=sa.text("TIMEZONE('utc-3', now())"),
-            nullable=False,
-        ),
-        sa.Column(
-            "expired_at",
-            sa.DateTime(),
-            server_default=sa.text(
-                "TIMEZONE('utc-3', now() + interval '1 day')"
-            ),
-            nullable=False,
-        ),
-        sa.Column("is_used", sa.Boolean(), nullable=False),
+        sa.Column("is_trial", sa.Boolean(), nullable=False),
+        sa.Column("trial_used", sa.Boolean(), nullable=False),
         sa.PrimaryKeyConstraint("tg_id"),
     )
     op.create_table(
@@ -92,6 +73,5 @@ def downgrade() -> None:
     op.drop_table("payments")
     op.drop_index(op.f("ix_users_tg_id"), table_name="users")
     op.drop_table("users")
-    op.drop_table("trial_subscriptions")
     op.drop_table("subscriptions")
     # ### end Alembic commands ###

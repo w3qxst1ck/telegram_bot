@@ -32,20 +32,20 @@ class User(Base):
         back_populates="user",
     )
 
-
-class TrialSubscription(Base):
-    """Тестовые разовые подписки"""
-    __tablename__ = "trial_subscriptions"
-
-    tg_id: Mapped[str] = mapped_column(primary_key=True)
-    active: Mapped[bool] = mapped_column()
-    created_at: Mapped[datetime.datetime] = mapped_column(
-        server_default=text("TIMEZONE('utc-3', now())")
-    )
-    expired_at: Mapped[datetime.datetime] = mapped_column(
-        server_default=text("TIMEZONE('utc-3', now() + interval '1 day')")
-    )
-    is_used: Mapped[bool] = mapped_column()
+#
+# class TrialSubscription(Base):
+#     """Тестовые разовые подписки"""
+#     __tablename__ = "trial_subscriptions"
+#
+#     tg_id: Mapped[str] = mapped_column(primary_key=True)
+#     active: Mapped[bool] = mapped_column()
+#     created_at: Mapped[datetime.datetime] = mapped_column(
+#         server_default=text("TIMEZONE('utc-3', now())")
+#     )
+#     expired_at: Mapped[datetime.datetime] = mapped_column(
+#         server_default=text("TIMEZONE('utc-3', now() + interval '1 day')")
+#     )
+#     is_used: Mapped[bool] = mapped_column()
 
 
 class Subscription(Base):
@@ -57,6 +57,8 @@ class Subscription(Base):
     created_at: Mapped[datetime.datetime] = mapped_column(server_default=text("TIMEZONE('utc-3', now())"))
     start_date: Mapped[datetime.datetime] = mapped_column(nullable=True, default=None)
     expire_date: Mapped[datetime.datetime] = mapped_column(nullable=True, default=None)
+    is_trial: Mapped[bool] = mapped_column(default=True)
+    trial_used: Mapped[bool] = mapped_column(default=False)
 
 
 class Payment(Base):

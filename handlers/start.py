@@ -1,3 +1,4 @@
+import datetime
 import os
 from typing import Any
 
@@ -8,6 +9,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from database.orm import AsyncOrm
 from schemas.user import UserAdd
+from settings import settings
 
 router = Router()
 
@@ -26,21 +28,29 @@ async def start_handler(message: types.Message, admin: bool, session: Any) -> No
             lastname=message.from_user.last_name
         )
         await AsyncOrm.create_user(user, session)
-        await AsyncOrm.create_subscription(tg_id, session)
-        await AsyncOrm.create_test_subscription(tg_id, False, False, session)
+        # создаем подписку сразу с пробным периодом на 1 день
+        await AsyncOrm.create_subscription(
+            tg_id=tg_id,
+            active=True,
+            start_date=datetime.datetime.now(),
+            expire_date=datetime.datetime.now() + datetime.timedelta(days=settings.trial_days),
+            is_trial=True,
+            trial_used=False,
+            session=session
+        )
 
-    await show_start_message(message, admin, session)
+    await show_main_menu_message(message, admin, session)
 
 
-async def show_start_message(message: types.Message, admin: bool, session: Any) -> None:
+async def show_main_menu_message(message: types.Message, admin: bool, session: Any) -> None:
     """Отправка приветственного сообщения"""
     name: str = message.from_user.username if message.from_user.username else message.from_user.first_name
-    trial_status: bool = await AsyncOrm.get_trial_subscription_status(str(message.chat.id), session)
+    trial_status = await AsyncOrm.get_trial_subscription_status(str(message.chat.id), session)
     image_path = os.path.join("img", "start.png")
 
     builder = InlineKeyboardBuilder()
 
-    if not trial_status:
+    if not trial_status["is_trial"]:
         builder.row(InlineKeyboardButton(text="🔗 Подключить VPN", callback_data="connect-vpn"))
 
     builder.row(InlineKeyboardButton(text="👤 Личный кабинет", callback_data="profile"))
@@ -53,12 +63,16 @@ async def show_start_message(message: types.Message, admin: bool, session: Any) 
     if admin:
         builder.row(InlineKeyboardButton(text="🔧 Администратор", callback_data="admin"))
 
+    msg = f"Привет, {name}!\n"
+    if trial_status["is_trial"]:
+        msg += "\nУ вас активирован пробный период на 1 день\nВаш ключ: ...\n\nИнструкция по настройке ..."
+
     if os.path.isfile(image_path):
         with open(image_path, "rb") as image_buffer:
             await message.answer_photo(
                 photo=BufferedInputFile(image_buffer.read(), filename="start.png"),
-                caption=f"Привет, {name}!\n",
+                caption=msg,
                 reply_markup=builder.as_markup(),
             )
     else:
-        await message.answer(f"Привет, {name}!\n", reply_markup=builder.as_markup())
+        await message.answer(msg, reply_markup=builder.as_markup())
