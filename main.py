@@ -15,7 +15,7 @@ from handlers import main_router
 async def set_commands(bot: io.Bot):
     """Перечень команд для бота"""
     commands = [
-        BotCommand(command="menu", description="👨🏻‍💻 Главное меню"),
+        BotCommand(command="start", description="👨🏻‍💻 Главное меню"),
     ]
 
     await bot.set_my_commands(commands, BotCommandScopeDefault())

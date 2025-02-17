@@ -1,11 +1,17 @@
 import datetime
-from typing import Any
+from collections.abc import Mapping
+from typing import Any, List
+
+import asyncpg
 
 from database.database import async_engine
 from database.tables import Base
 
-from schemas.user import UserAdd
+from schemas.user import UserAdd, UserSubscription
 from logger import logger
+
+# для model_validate регистрируем возвращаемый из asyncpg.fetchrow класс Record
+Mapping.register(asyncpg.Record)
 
 
 class AsyncOrm:
@@ -98,3 +104,20 @@ class AsyncOrm:
 
         except Exception as e:
             logger.error(f"Ошибка при получении статуса пробной подписки {tg_id}: {e}")
+
+    @staticmethod
+    async def get_user_with_subscription(tg_id: str, session: Any) -> UserSubscription:
+        """Получение user с подпиской"""
+        try:
+            row = await session.fetchrow(
+                """
+                SELECT * FROM users u
+                JOIN subscriptions s ON u.tg_id = s.tg_id
+                WHERE u.tg_id = $1
+                """,
+                tg_id
+            )
+            user_with_sub = UserSubscription.model_validate(row)
+            return user_with_sub
+        except Exception as e:
+            logger.error(f"Ошибка получения пользователя с подпиской {tg_id}: {e}")

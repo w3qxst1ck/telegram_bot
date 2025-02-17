@@ -1,6 +1,7 @@
 import datetime
 
 from pydantic import BaseModel
+from schemas.subscription import Subscription
 
 
 class UserAdd(BaseModel):
@@ -13,3 +14,8 @@ class UserAdd(BaseModel):
 class User(UserAdd):
     id: int
     created_at: datetime.datetime
+
+
+class UserSubscription(User, Subscription):
+    pass
+

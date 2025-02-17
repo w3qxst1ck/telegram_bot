@@ -15,7 +15,8 @@ router = Router()
 
 
 @router.message(Command("start"))
-async def start_handler(message: types.Message, admin: bool, session: Any) -> None:
+@router.callback_query(lambda c: c.data == "back-to-start")
+async def start_handler(message: types.Message | types.CallbackQuery, admin: bool, session: Any) -> None:
     tg_id: str = str(message.from_user.id)
 
     user_exists: bool = await AsyncOrm.check_user_already_exists(tg_id, session)
@@ -42,10 +43,10 @@ async def start_handler(message: types.Message, admin: bool, session: Any) -> No
     await show_main_menu_message(message, admin, session)
 
 
-async def show_main_menu_message(message: types.Message, admin: bool, session: Any) -> None:
+async def show_main_menu_message(message: types.Message | types.CallbackQuery, admin: bool, session: Any) -> None:
     """Отправка приветственного сообщения"""
     name: str = message.from_user.username if message.from_user.username else message.from_user.first_name
-    trial_status = await AsyncOrm.get_trial_subscription_status(str(message.chat.id), session)
+    trial_status = await AsyncOrm.get_trial_subscription_status(str(message.from_user.id), session)
     image_path = os.path.join("img", "start.png")
 
     builder = InlineKeyboardBuilder()
@@ -65,14 +66,21 @@ async def show_main_menu_message(message: types.Message, admin: bool, session: A
 
     msg = f"Привет, {name}!\n"
     if trial_status["is_trial"]:
-        msg += "\nУ вас активирован пробный период на 1 день\nВаш ключ: ...\n\nИнструкция по настройке ..."
+        msg += "\nУ вас активирован <b>пробный период на 1 день</b>\nВаш ключ: ...\n\nИнструкция по настройке ..."
 
     if os.path.isfile(image_path):
         with open(image_path, "rb") as image_buffer:
-            await message.answer_photo(
-                photo=BufferedInputFile(image_buffer.read(), filename="start.png"),
-                caption=msg,
-                reply_markup=builder.as_markup(),
-            )
+            if type(message) == types.Message:
+                await message.answer_photo(
+                    photo=BufferedInputFile(image_buffer.read(), filename="start.png"),
+                    caption=msg,
+                    reply_markup=builder.as_markup(),
+                )
+            else:
+                await message.message.answer_photo(
+                    photo=BufferedInputFile(image_buffer.read(), filename="start.png"),
+                    caption=msg,
+                    reply_markup=builder.as_markup(),
+                )
     else:
         await message.answer(msg, reply_markup=builder.as_markup())
