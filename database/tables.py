@@ -54,7 +54,7 @@ class Subscription(Base):
 
     tg_id: Mapped[str] = mapped_column(primary_key=True)
     active: Mapped[bool] = mapped_column(default=False)
-    created_at: Mapped[datetime.datetime] = mapped_column(server_default=text("TIMEZONE('utc-3', now())"))
+    # created_at: Mapped[datetime.datetime] = mapped_column(server_default=text("TIMEZONE('utc-3', now())"))
     start_date: Mapped[datetime.datetime] = mapped_column(nullable=True, default=None)
     expire_date: Mapped[datetime.datetime] = mapped_column(nullable=True, default=None)
     is_trial: Mapped[bool] = mapped_column(default=True)
