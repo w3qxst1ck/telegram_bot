@@ -4,10 +4,10 @@ from aiogram import Router
 from aiogram import types
 from typing import Any
 from database.orm import AsyncOrm
-from messages.profile import profile_message
+from handlers.messages.profile import profile_message
 from cache import r
 from schemas.user import UserSubscription
-from keyboards import profile as kb
+from handlers.keyboards import profile as kb
 
 router = Router()
 

@@ -60,8 +60,6 @@ services:
       redis-server /usr/local/etc/redis/redis.conf
       '
     restart: unless-stopped
-    tty: true
-    stdin_open: true
 
 volumes:
   postgres_data:
