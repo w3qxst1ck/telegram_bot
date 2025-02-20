@@ -15,7 +15,12 @@ from handlers import main_router
 async def set_commands(bot: io.Bot):
     """Перечень команд для бота"""
     commands = [
-        BotCommand(command="start", description="👨🏻‍💻 Главное меню"),
+        BotCommand(command="start", description="💻 Перезапустить бота"),
+        BotCommand(command="menu", description="👨🏻‍💻 Главное меню"),
+        BotCommand(command="profile", description="👤 Профиль"),
+        BotCommand(command="buy", description="💳 Купить/продлить подписку"),
+        BotCommand(command="instruction", description="📘 Инструкция"),
+        BotCommand(command="help", description="❓ Поддержка"),
     ]
 
     await bot.set_my_commands(commands, BotCommandScopeDefault())
@@ -23,7 +28,8 @@ async def set_commands(bot: io.Bot):
 
 async def set_description(bot: io.Bot):
     """Описание бота до запуска"""
-    await bot.set_my_description("Some description")
+    await bot.set_my_description(f"Бот предоставляет доступ к VPN с самым совершенным алгоритмом шифрования VLESS\n\n"
+                                 f"1 день бесплатно\nА затем {settings.price}р в месяц")
 
 
 async def start_bot() -> None:
