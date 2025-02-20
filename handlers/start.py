@@ -10,6 +10,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from database.orm import AsyncOrm
 from schemas.user import UserAdd
+from handlers.buttons import commands as cmd
 from settings import settings
 
 router = Router()
@@ -38,15 +39,15 @@ async def send_hello_message(message: types.Message, session: Any) -> None:
     if trial_status["is_trial"] and not trial_status["trial_used"]:
         trial_key = "123456789"  # TODO добавить таблицу ключей и получить его тут
         msg += f"Вам доступен бесплатный пробный период на <b>{settings.trial_days} день</b>.\n" \
-                   f"Ваш ключ доступа:\n <b>{trial_key}</b>\n\n" \
-                   f"Инструкцию по установке vpn можно посмотреть по команде /instruction\n\n"
+                   f"Ваш ключ доступа:\n<b>{trial_key}</b>\n\n" \
+                   f"Инструкцию по установке vpn можно посмотреть по команде /{cmd.INSTRUCTION[0]}\n\n"
 
     # если пробный период уже истек
     else:
-        msg += f"Ваш пробный период истек :(\nВы можете пополнить баланс своего профиля /profile и " \
-                   f"приобрести <b>ключ доступа по команде /buy</b>\n\n"
+        msg += f"Ваш пробный период истек :(\nВы можете пополнить баланс своего профиля /{cmd.BALANCE[0]} и " \
+                   f"приобрести <b>ключ доступа по команде /{cmd.BUY[0]}</b>\n\n"
 
-    msg += "Если у вас остались вопросы, вы можете обратиться в поддержку /help"
+    msg += f"Если у вас остались вопросы, вы можете обратиться в поддержку /{cmd.HELP[0]}"
 
     if os.path.isfile(image_path):
         with open(image_path, "rb") as image_buffer:

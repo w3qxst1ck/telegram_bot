@@ -1,0 +1,7 @@
+START = ("start", "🔄 Перезапустить бота")
+MENU = ("menu", "👨🏻‍💻 Главное меню")
+PROFILE = ("profile", "👤 Профиль")
+BALANCE = ("balance", "💵 Баланс")
+BUY = ("buy", "🔑 Купить подписку")
+INSTRUCTION = ("instruction", "💡 Инструкция")
+HELP = ("help", "❓ Поддержка")
