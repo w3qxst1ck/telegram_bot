@@ -10,17 +10,19 @@ from middlewares.database import DatabaseMiddleware
 from middlewares.admin import AdminMiddleware
 from settings import settings
 from handlers import main_router
+from handlers.buttons import commands as cmd
 
 
 async def set_commands(bot: io.Bot):
     """Перечень команд для бота"""
     commands = [
-        BotCommand(command="start", description="💻 Перезапустить бота"),
-        BotCommand(command="menu", description="👨🏻‍💻 Главное меню"),
-        BotCommand(command="profile", description="👤 Профиль"),
-        BotCommand(command="buy", description="💳 Купить/продлить подписку"),
-        BotCommand(command="instruction", description="📘 Инструкция"),
-        BotCommand(command="help", description="❓ Поддержка"),
+        BotCommand(command=f"{cmd.START[0]}", description=f"{cmd.START[1]}"),
+        BotCommand(command=f"{cmd.MENU[0]}", description=f"{cmd.MENU[1]}"),
+        BotCommand(command=f"{cmd.PROFILE[0]}", description=f"{cmd.PROFILE[1]}"),
+        BotCommand(command=f"{cmd.BALANCE[0]}", description=f"{cmd.BALANCE[1]}"),
+        BotCommand(command=f"{cmd.BUY[0]}", description=f"{cmd.BUY[1]}"),
+        BotCommand(command=f"{cmd.INSTRUCTION[0]}", description=f"{cmd.INSTRUCTION[1]}"),
+        BotCommand(command=f"{cmd.HELP[0]}", description=f"{cmd.HELP[1]}"),
     ]
 
     await bot.set_my_commands(commands, BotCommandScopeDefault())

@@ -7,7 +7,8 @@ def profile_keyboard(active: bool) -> InlineKeyboardBuilder:
     keyboard = InlineKeyboardBuilder()
 
     if not active:
-        keyboard.row(InlineKeyboardButton(text="🔗 Подключить или продлить VPN", callback_data="connect-vpn"))
+        # TODO поменять на кнопку из файла
+        keyboard.row(InlineKeyboardButton(text="Пополнить баланс", callback_data="balance"))
     keyboard.row(InlineKeyboardButton(text="🔙 назад", callback_data="back-to-menu"))
     keyboard.adjust(1)
 

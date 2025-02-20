@@ -12,4 +12,6 @@ async def profile_message(user_with_sub: UserSubscription) -> str:
             message = f"Ваша подписка активна до ...."
         else:
             message = f"Ваша подписка неактивна, вы можете приобрести ее по кнопке ниже"
+
+    message += "\n\nКакая-то статистика в том числе баланс"
     return message
