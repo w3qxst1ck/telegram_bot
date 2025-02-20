@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     redis: Redis = Redis()
     timezone: str = "Europe/Moscow"
     trial_days: int = 1
+    price: int = 200
 
 
 settings = Settings()

@@ -8,7 +8,7 @@ def profile_keyboard(active: bool) -> InlineKeyboardBuilder:
 
     if not active:
         keyboard.row(InlineKeyboardButton(text="🔗 Подключить или продлить VPN", callback_data="connect-vpn"))
-    keyboard.row(InlineKeyboardButton(text="🔙 назад", callback_data="back-to-start"))
+    keyboard.row(InlineKeyboardButton(text="🔙 назад", callback_data="back-to-menu"))
     keyboard.adjust(1)
 
     return keyboard
