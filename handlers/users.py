@@ -11,13 +11,13 @@ from handlers.keyboards import menu as menu_kb
 router = Router()
 
 
-@router.message(Command("instruction"))
+@router.message(Command(f"{cmd.INSTRUCTION[0]}"))
 async def instruction_handler(message: types.Message) -> None:
     # TODO не потерять (копирование текста по нажатию)
     await message.answer("`Instruction message`", parse_mode=ParseMode.MARKDOWN_V2)
 
 
-@router.message(Command("help"))
+@router.message(Command(f"{cmd.HELP[0]}"))
 async def help_handler(message: types.Message) -> None:
     await message.answer("Help message")
 
