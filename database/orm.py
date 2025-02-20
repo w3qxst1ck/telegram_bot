@@ -86,21 +86,18 @@ class AsyncOrm:
             logger.error(f"Ошибка при проверке регистрации пользователя {tg_id}: {e}")
 
     @staticmethod
-    async def get_trial_subscription_status(tg_id: str, session: Any) -> dict:
+    async def get_trial_subscription_status(tg_id: str, session: Any) -> asyncpg.Record:
         """Получение статуса использования пробной подписки"""
         try:
-            subscription = await session.fetch(
+            trial_status_row = await session.fetchrow(
                 """
                 SELECT is_trial, trial_used FROM subscriptions 
                 WHERE tg_id = $1
                 """,
                 tg_id
             )
-            sub_status = {
-                "is_trial": subscription[0]["is_trial"],
-                "trial_used": subscription[0]["trial_used"]
-            }
-            return sub_status
+
+            return trial_status_row
 
         except Exception as e:
             logger.error(f"Ошибка при получении статуса пробной подписки {tg_id}: {e}")

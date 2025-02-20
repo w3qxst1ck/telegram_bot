@@ -23,6 +23,7 @@ class Redis(BaseSettings):
 
 class Settings(BaseSettings):
     bot_token: str = Field(..., env='BOT_TOKEN')
+    bot_name: str = "Vless VPN bot"
     admins: list = Field(..., env='ADMINS')
     db: Database = Database()
     redis: Redis = Redis()
