@@ -14,7 +14,7 @@ def main_menu_keyboard(admin: bool) -> InlineKeyboardBuilder:
         InlineKeyboardButton(text=f"{btn.BUY}", callback_data="menu|buy")
     )
     keyboard.row(
-        InlineKeyboardButton(text=f"{btn.BALANCE}", callback_data="menu|balance"),
+        # InlineKeyboardButton(text=f"{btn.BALANCE}", callback_data="menu|balance"),
         InlineKeyboardButton(text=f"{btn.KEYS}", callback_data="menu|keys")
     )
 

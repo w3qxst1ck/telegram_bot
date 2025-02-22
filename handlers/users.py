@@ -7,6 +7,7 @@ from aiogram.enums import ParseMode
 from database.orm import AsyncOrm
 from handlers.buttons import commands as cmd
 from handlers.keyboards import menu as menu_kb
+from handlers.keyboards import buy as buy_kb
 
 router = Router()
 
@@ -30,6 +31,7 @@ async def main_menu(message: types.Message | types.CallbackQuery, admin: bool) -
 
     msg = f"Рады видеть тебя, <b>{name}</b>!\n\n" \
           f"Пополняйте баланс и оформляйте подписку для доступа к VPN"
+
     if type(message) == types.Message:
         await message.answer(msg, reply_markup=menu_kb.main_menu_keyboard(admin).as_markup())
     else:
@@ -58,4 +60,3 @@ async def send_trial_key(message: types.CallbackQuery, session: Any) -> None:
         f"Инструкцию по установке и настройке VPN вы можете посмотреть здесь /{cmd.INSTRUCTION[0]}",
         reply_markup=menu_kb.to_menu_keyboard().as_markup()
     )
-
