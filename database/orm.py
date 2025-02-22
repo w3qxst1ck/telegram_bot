@@ -8,7 +8,9 @@ from database.database import async_engine
 from database.tables import Base
 
 from schemas.user import UserAdd, UserSubscription
+from settings import settings
 from logger import logger
+
 
 # для model_validate регистрируем возвращаемый из asyncpg.fetchrow класс Record
 Mapping.register(asyncpg.Record)
@@ -48,9 +50,9 @@ class AsyncOrm:
 
     @staticmethod
     async def create_subscription(tg_id: str,
-                                  active:bool,
-                                  start_date: datetime.datetime,
-                                  expire_date: datetime.datetime,
+                                  active: bool,
+                                  start_date: datetime.datetime | None,
+                                  expire_date: datetime.datetime | None,
                                   is_trial: bool,
                                   trial_used: bool,
                                   session: Any):
@@ -91,7 +93,7 @@ class AsyncOrm:
         try:
             trial_status_row = await session.fetchrow(
                 """
-                SELECT is_trial, trial_used FROM subscriptions 
+                SELECT active, is_trial, trial_used FROM subscriptions 
                 WHERE tg_id = $1
                 """,
                 tg_id
@@ -118,3 +120,43 @@ class AsyncOrm:
             return user_with_sub
         except Exception as e:
             logger.error(f"Ошибка получения пользователя с подпиской {tg_id}: {e}")
+
+    @staticmethod
+    async def activate_trial_subscription(tg_id: str, session: Any) -> None:
+        """Активация пробной подписки"""
+        start_date = datetime.datetime.now()
+        expire_date = start_date + datetime.timedelta(days=settings.trial_days)
+
+        try:
+            await session.execute(
+                """
+                UPDATE subscriptions
+                SET active = true, start_date = $1, expire_date = $2, is_trial = true
+                WHERE tg_id = $3 
+                """,
+                start_date, expire_date, tg_id
+            )
+        except Exception as e:
+            logger.error(f"Ошибка активации пробной подписки пользователя {tg_id}: {e}")
+
+        pass
+
+    @staticmethod
+    async def create_key(tg_id: str, ui_key: str, description: str, session: Any) -> str:
+        """Создание ключа
+            return: key str
+        """
+        try:
+            key = await session.fetchval(
+                """
+                INSERT INTO keys (tg_id, key, description) 
+                VALUES($1, $2, $3)
+                RETURNING key 
+                """,
+                tg_id, ui_key, description
+
+            )
+            return key
+
+        except Exception as e:
+            logger.error(f"Ошибка при создании ключа: {ui_key} пользователю: {tg_id} - {e}")

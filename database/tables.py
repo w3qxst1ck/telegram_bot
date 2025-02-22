@@ -58,3 +58,12 @@ class Payment(Base):
     user: Mapped["User"] = relationship(back_populates="payments")
 
 
+class Key(Base):
+    """Ключи пользователей"""
+    __tablename__ = "keys"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tg_id: Mapped[str] = mapped_column(index=True)
+    key: Mapped[str]
+    description: Mapped[str]
+

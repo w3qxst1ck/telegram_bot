@@ -11,4 +11,3 @@ class Subscription(BaseModel):
     expire_date: datetime.datetime | None
     is_trial: bool
     trial_used: bool
-

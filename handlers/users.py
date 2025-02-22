@@ -23,12 +23,39 @@ async def help_handler(message: types.Message) -> None:
 
 
 @router.message(Command(f"{cmd.MENU[0]}"))
-@router.callback_query(F.data == "main_menu")
+@router.callback_query(F.data == "menu")
 async def main_menu(message: types.Message | types.CallbackQuery, admin: bool) -> None:
     """Отправка приветственного сообщения"""
     name: str = message.from_user.first_name if message.from_user.first_name else message.from_user.username
 
     msg = f"Рады видеть тебя, <b>{name}</b>!\n\n" \
           f"Пополняйте баланс и оформляйте подписку для доступа к VPN"
-    await message.answer(msg, reply_markup=menu_kb.main_menu_keyboard(admin).as_markup())
+    if type(message) == types.Message:
+        await message.answer(msg, reply_markup=menu_kb.main_menu_keyboard(admin).as_markup())
+    else:
+        await message.message.answer(msg, reply_markup=menu_kb.main_menu_keyboard(admin).as_markup())
+
+
+@router.callback_query(F.data == "trial_key")
+async def send_trial_key(message: types.CallbackQuery, session: Any) -> None:
+    """Отправка пользователю ключа для пробного периода"""
+    tg_id = str(message.from_user.id)
+
+    # получаем ключ
+    ui_key = "SOME KEY"    # todo добавить функцию получения ключа через апи 3x-ui
+
+    # активируем пользователю пробную подписку
+    await AsyncOrm.activate_trial_subscription(tg_id, session)
+    # записываем ключ
+    key = await AsyncOrm.create_key(tg_id, ui_key, "trial", session)
+
+    await message.message.answer(
+        "Ваш ключ нажмите чтобы скопировать ⬇️\n\n"
+        f"`{key}`",
+        parse_mode=ParseMode.MARKDOWN_V2
+    )
+    await message.message.answer(
+        f"Инструкцию по установке и настройке VPN вы можете посмотреть здесь /{cmd.INSTRUCTION[0]}",
+        reply_markup=menu_kb.to_menu_keyboard().as_markup()
+    )
 

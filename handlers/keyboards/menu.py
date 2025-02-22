@@ -2,6 +2,7 @@ from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from handlers.buttons import menu as btn
+from handlers.buttons import commands as cmd
 
 
 def main_menu_keyboard(admin: bool) -> InlineKeyboardBuilder:
@@ -19,5 +20,13 @@ def main_menu_keyboard(admin: bool) -> InlineKeyboardBuilder:
 
     if admin:
         keyboard.row(InlineKeyboardButton(text=f"{btn.ADMIN}", callback_data="menu|admin"))
+
+    return keyboard
+
+
+def to_menu_keyboard() -> InlineKeyboardBuilder:
+    """Клавиатура с кнопкой назад в получении пробного ключа"""
+    keyboard = InlineKeyboardBuilder()
+    keyboard.row(InlineKeyboardButton(text=f"{cmd.MENU[1]}", callback_data="menu"))
 
     return keyboard
