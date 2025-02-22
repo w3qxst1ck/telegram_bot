@@ -19,16 +19,15 @@ router = Router()
 
 
 @router.message(Command(f"{cmd.START[0]}"))
-async def start_handler(message: types.Message | types.CallbackQuery, admin:bool, session: Any) -> None:
+async def start_handler(message: types.Message | types.CallbackQuery, admin: bool, session: Any) -> None:
     """Сообщение по команде /start"""
     tg_id: str = str(message.from_user.id)
 
     await create_user_if_not_exists(tg_id, message, session)
-    await send_hello_message(message, session)
-    # await main_menu(message, admin)
+    await send_hello_message(message, admin, session)
 
 
-async def send_hello_message(message: types.Message, session: Any) -> None:
+async def send_hello_message(message: types.Message, admin: bool, session: Any) -> None:
     """Стартовое сообщение"""
     name: str = message.from_user.first_name if message.from_user.first_name else message.from_user.username
     trial_status: asyncpg.Record = await AsyncOrm.get_trial_subscription_status(str(message.from_user.id), session)
@@ -47,8 +46,8 @@ async def send_hello_message(message: types.Message, session: Any) -> None:
 
     # если пробный период уже истек
     else:
-        msg += f"Бесплатный пробный период истек :(\nВы можете <b>пополнить баланс своего профиля /{cmd.BALANCE[0]}</b>" \
-               f" и приобрести <b>ключ доступа по команде /{cmd.BUY[0]}</b>\n\n"
+        msg += f"Посмотреть свои ключи, профиль, пополнить баланс и купить подписку вы можете в /{cmd.MENU[0]}\n" \
+               f"Инструкцию по установке vpn можно посмотреть по команде /{cmd.INSTRUCTION[0]}\n\n"
 
     msg += f"Если у вас остались вопросы, вы можете обратиться в поддержку /{cmd.HELP[0]}"
 
@@ -71,6 +70,7 @@ async def send_hello_message(message: types.Message, session: Any) -> None:
                     photo=BufferedInputFile(image_buffer.read(), filename="start.png"),
                     caption=msg,
                 )
+                await main_menu(message, admin)
 
 
 async def create_user_if_not_exists(tg_id: str, message: types.Message, session: Any) -> None:
