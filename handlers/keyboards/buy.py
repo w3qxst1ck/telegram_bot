@@ -15,3 +15,21 @@ def buy_keyboard(back_bnt: bool = None) -> InlineKeyboardBuilder:
     keyboard.adjust(1)
 
     return keyboard
+
+
+def payment_confirm_keyboard() -> InlineKeyboardBuilder:
+    """Клавиатура с кнопкой подтверждения оплаты"""
+    keyboard = InlineKeyboardBuilder()
+    keyboard.row(
+        InlineKeyboardButton(
+            text="Оплатил(а)", callback_data=f"paid")
+    )
+
+    return keyboard
+
+
+def cancel_keyboard() -> InlineKeyboardBuilder:
+    """Клавиатура для отмены пополнения баланса"""
+    keyboard = InlineKeyboardBuilder()
+    keyboard.row(InlineKeyboardButton(text="❌ Отмена", callback_data="button_cancel"))
+    return keyboard

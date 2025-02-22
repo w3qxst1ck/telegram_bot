@@ -7,7 +7,6 @@ from aiogram.enums import ParseMode
 from database.orm import AsyncOrm
 from handlers.buttons import commands as cmd
 from handlers.keyboards import menu as menu_kb
-from handlers.keyboards import buy as buy_kb
 
 router = Router()
 
@@ -35,7 +34,7 @@ async def main_menu(message: types.Message | types.CallbackQuery, admin: bool) -
     if type(message) == types.Message:
         await message.answer(msg, reply_markup=menu_kb.main_menu_keyboard(admin).as_markup())
     else:
-        await message.message.answer(msg, reply_markup=menu_kb.main_menu_keyboard(admin).as_markup())
+        await message.message.edit_text(msg, reply_markup=menu_kb.main_menu_keyboard(admin).as_markup())
 
 
 @router.callback_query(F.data == "trial_key")
