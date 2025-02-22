@@ -1,6 +1,4 @@
-import time
-
-from aiogram import Router
+from aiogram import Router, F
 from aiogram import types
 from typing import Any
 
@@ -11,15 +9,16 @@ from handlers.messages.profile import profile_message
 from cache import r
 from schemas.user import UserSubscription
 from handlers.keyboards import profile as kb
+from handlers.buttons import commands as cmd
 
 router = Router()
 
 
-@router.callback_query(lambda c: c.data == "profile")
-@router.message(Command("profile"))
-async def profile(callback: types.CallbackQuery, session: Any):
+@router.callback_query(F.data.split("|")[1] == "profile")
+@router.message(Command(cmd.PROFILE[0]))
+async def profile(message: types.Message | types.CallbackQuery, session: Any):
     """Карточка профиля"""
-    tg_id = str(callback.from_user.id)
+    tg_id = str(message.from_user.id)
 
     cached_data = r.get(f"profile:{tg_id}")
     if cached_data:
@@ -33,5 +32,15 @@ async def profile(callback: types.CallbackQuery, session: Any):
         r.setex(f"profile:{tg_id}", 300, user_with_sub_json)
 
     msg = await profile_message(user_with_sub)
-    await callback.message.answer(msg, reply_markup=kb.profile_keyboard(user_with_sub.active).as_markup())
+
+    if type(message) == types.Message:
+        await message.answer(
+            msg,
+            reply_markup=kb.profile_keyboard().as_markup()
+        )
+    elif type(message) == types.CallbackQuery:
+        await message.message.edit_text(
+            msg,
+            reply_markup=kb.profile_keyboard(back_btn=True).as_markup()
+        )
 

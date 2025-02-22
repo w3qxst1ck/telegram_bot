@@ -1,11 +1,10 @@
+from settings import settings
 from schemas.user import UserSubscription
 from utils.date_time_service import convert_date_time
-from handlers.buttons import commands as cmd
-from handlers.buttons import menu as btn
 
 
-async def profile_message(user_with_sub: UserSubscription) -> str:
-    """Сообщение с карточкой профиля"""
+async def buy_message(user_with_sub: UserSubscription) -> str:
+    """Сообщение для команды /buy"""
     date, time = convert_date_time(user_with_sub.expire_date)
 
     # если активна пробная или основная подписка
@@ -21,9 +20,11 @@ async def profile_message(user_with_sub: UserSubscription) -> str:
 
     # если подписка неактивна
     else:
-        message = f"❌ Ваша подписка <b>неактивна</b>\n\n" \
-                  f"Вы можете приобрести ее с помощью команды /{cmd.BUY[0]} или в разделе \"{btn.BUY}\" главного меню\n\n"
+        message = f"❌ Ваша подписка <b>неактивна</b>\n\n"
 
-    # TODO когда будет готова БД
-    message += "Какая-то статистика в том числе баланс"
+    message += f"Стоимость подписки VPN на месяц <b>{settings.price}р</b>\n" \
+               f"У вас на балансе ..... \n\n" \
+               f"Вы можете купить или продлить (оплаченный период будет добавлен к текущему) подписку, " \
+               f"а также пополнить баланс с помощью соответствующих кнопок ниже"
+
     return message
