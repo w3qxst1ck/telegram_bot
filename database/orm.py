@@ -167,4 +167,36 @@ class AsyncOrm:
     #
     #     pass
 
+    @staticmethod
+    async def buy_subscription_first_time(
+            tg_id: str,
+            expire_date: datetime.datetime,
+            balance: int,
+            session: Any) -> None:
+        """Первая покупка подписки"""
+        try:
+            await session.execute("""
+                UPDATE subscriptions
+                SET balance = $1, expire_date = $2, active = true, is_trial = false, trial_used = true
+                WHERE tg_id = $3 
+                """, balance, expire_date, tg_id)
+            logger.info(f"Пользователь {tg_id} продлил подписку до {expire_date} (при активной пробной подписке)")
+        except Exception as e:
+            logger.error(f"Ошибка покупки подписки пользователя {tg_id}: {e}")
 
+    @staticmethod
+    async def buy_subscription(
+            tg_id: str,
+            expire_date: datetime.datetime,
+            balance: int,
+            session: Any) -> None:
+        """Покупка|продление подписки"""
+        try:
+            await session.execute("""
+                UPDATE subscriptions
+                SET balance = $1, expire_date = $2, active = true
+                WHERE tg_id = $3 
+                """, balance, expire_date, tg_id)
+            logger.info(f"Пользователь {tg_id} продлил подписку до {expire_date}")
+        except Exception as e:
+            logger.error(f"Ошибка покупки/продления подписки пользователя {tg_id}: {e}")

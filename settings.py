@@ -1,7 +1,15 @@
 import os
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings
 from pydantic import Field
+
+
+PRICES = {
+    "1": 100,
+    "3": 300,
+    "6": 600,
+    "12": 1200
+}
 
 
 class Database(BaseSettings):
@@ -22,23 +30,24 @@ class Redis(BaseSettings):
 
 
 class Settings(BaseSettings):
-    bot_token: str = Field(..., env='BOT_TOKEN')
     bot_name: str = "Vless VPN bot"
+    bot_token: str = Field(..., env='BOT_TOKEN')
     admins: list = Field(..., env='ADMINS')
-    db: Database = Database()
-    redis: Redis = Redis()
     timezone: str = "Europe/Moscow"
     trial_days: int = 1
-    price: int = 200
     servers: dict = {
         "am-1": {
-            "url": "https://somedomain123.store:2053/jA7PFJItw5/",
-            "hostname": "admin",
-            "password": "Dn39xe53MpZ2",
+            "url": Field(..., env='URL'),
+            "hostname": Field(..., env='HOSTNAME'),
+            "password": Field(..., env='PASSWORD'),
             "domain": "somedomain123.store",
             "flow": "xtls-rprx-vision",
         }
     }
+    price_list: dict = PRICES
+
+    db: Database = Database()
+    redis: Redis = Redis()
 
 
 settings = Settings()

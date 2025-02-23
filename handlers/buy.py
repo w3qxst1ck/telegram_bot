@@ -1,12 +1,15 @@
+import datetime
 from typing import Any
 
 from aiogram import Router, types, F
+from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 
 from handlers.buttons import commands as cmd
 from handlers.keyboards import buy as buy_kb
+from handlers.keyboards import menu as menu_kb
 from database.orm import AsyncOrm
 from schemas.user import UserConnection
 from handlers.messages import buy as ms
@@ -66,21 +69,73 @@ async def confirm_up_balance_handler(message: types.Message, state: FSMContext) 
         msg = await message.answer(f"Указан неверный формат\n\n"
                                    f"Необходимо указать сумму одним <b>числом</b> без букв, знаков препинания "
                                    f"и других специальных символов (например: 300)\n"
-                                   f"Сумма не может быть меньше {settings.price}",
+                                   f"Сумма не может быть меньше {settings.price_list['1']}",
                                    reply_markup=buy_kb.cancel_keyboard().as_markup())
         await state.update_data(prev_mess=msg)
         return
     else:
         await state.clear()
-        invoice_message = ms.invoice_message(summ, str(message.from_user.id))
-        await message.answer(invoice_message, reply_markup=buy_kb.payment_confirm_keyboard().as_markup())
+        invoice_message = await ms.invoice_message(summ, str(message.from_user.id))
+        await message.answer(
+            invoice_message,
+            reply_markup=buy_kb.payment_confirm_keyboard().as_markup(),
+            parse_mode=ParseMode.MARKDOWN_V2
+        )
 
 
 # BUY SUBSCRIPTION
-@router.callback_query(F.data == "buy_sub")
-async def buy_sub_handler(callback: types.CallbackQuery) -> None:
+@router.callback_query(F.data.split("|")[0] == "buy_sub")
+async def buy_sub_handler(callback: types.CallbackQuery, session: Any) -> None:
     """Покупка подписки"""
-    await callback.message.edit_text("Buying subscription message")
+
+
+    # TODO подтверждение покупки подписки
+
+
+    period = callback.data.split("|")[1]
+    price = settings.price_list[period]
+
+    tg_id = str(callback.from_user.id)
+
+    cached_data = r.get(f"profile:{tg_id}")
+    if cached_data:
+        # from cache
+        user_with_sub = UserSubscription.model_validate_json(cached_data)
+    else:
+        # from DB
+        user_with_sub = await AsyncOrm.get_user_with_subscription(tg_id, session)
+        user_with_sub_json = user_with_sub.model_dump_json()
+        r.setex(f"profile:{tg_id}", 300, user_with_sub_json)
+
+    # успешная покупка
+    if user_with_sub.balance >= price:
+        # продление подписки
+        if user_with_sub.active:
+            new_expire_date = user_with_sub.expire_date + datetime.timedelta(days=int(period)*30)
+        # покупка подписки
+        else:
+            new_expire_date = datetime.datetime.now() + datetime.timedelta(days=int(period)*30)
+        new_balance = user_with_sub.balance - price
+
+        # покупка первый раз
+        if user_with_sub.is_trial:
+            await AsyncOrm.buy_subscription_first_time(tg_id, new_expire_date, new_balance, session)
+        # покупка или продление не первый раз
+        else:
+            await AsyncOrm.buy_subscription(tg_id, new_expire_date, new_balance, session)
+
+        msg = await ms.buy_subscription_message(period, price, user_with_sub.active, new_expire_date)
+        await callback.message.edit_text(msg, reply_markup=menu_kb.to_menu_keyboard().as_markup())
+
+        # обновление кэша
+        user_with_sub = await AsyncOrm.get_user_with_subscription(tg_id, session)
+        user_with_sub_json = user_with_sub.model_dump_json()
+        r.setex(f"profile:{tg_id}", 300, user_with_sub_json)
+
+    # недостаточно средств на балансе
+    else:
+        msg = await ms.not_enough_balance_message(period, price, user_with_sub)
+        await callback.message.edit_text(msg, reply_markup=buy_kb.not_enough_balance_keyboard().as_markup())
 
 
 @router.callback_query(lambda callback: callback.data == "button_cancel", StateFilter("*"))

@@ -1,7 +1,6 @@
 import os
 from typing import Any
 
-import asyncpg
 from aiogram import Router, types
 from aiogram.filters import Command
 from aiogram.types import BufferedInputFile, InlineKeyboardButton
@@ -84,6 +83,5 @@ async def create_user_if_not_exists(tg_id: str, message: types.Message, session:
             trial_used=False
         )
         await AsyncOrm.create_user(user, session)
-
 
 
