@@ -1,7 +1,13 @@
-import os
-
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings
 from pydantic import Field
+
+
+PRICES = {
+    "1": 100,
+    "3": 300,
+    "6": 600,
+    "12": 1200
+}
 
 
 class Database(BaseSettings):
@@ -30,6 +36,7 @@ class Settings(BaseSettings):
     timezone: str = "Europe/Moscow"
     trial_days: int = 1
     price: int = 200
+    price_list: dict = PRICES
 
 
 settings = Settings()

@@ -43,6 +43,7 @@ class Subscription(Base):
     expire_date: Mapped[datetime.datetime] = mapped_column(nullable=True, default=None)
     is_trial: Mapped[bool] = mapped_column(default=True)
     trial_used: Mapped[bool] = mapped_column(default=False)
+    balance: Mapped[int] = mapped_column(default=0)
 
 
 class Payment(Base):

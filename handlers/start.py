@@ -95,6 +95,7 @@ async def create_user_if_not_exists(tg_id: str, message: types.Message, session:
             expire_date=None,
             is_trial=False,
             trial_used=False,
+            balance=0,
             session=session
         )
 

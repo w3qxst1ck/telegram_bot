@@ -55,12 +55,13 @@ class AsyncOrm:
                                   expire_date: datetime.datetime | None,
                                   is_trial: bool,
                                   trial_used: bool,
+                                  balance: int,
                                   session: Any):
         """Создание подписки для пользователя"""
         try:
             await session.execute("""
-                INSERT INTO subscriptions (tg_id, active, start_date, expire_date, is_trial, trial_used)
-                VALUES ($1, $2, $3, $4, $5, $6)
+                INSERT INTO subscriptions (tg_id, active, start_date, expire_date, is_trial, trial_used, balance)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
                 ON CONFLICT (tg_id) DO NOTHING
                 """,
                 tg_id,
@@ -68,7 +69,8 @@ class AsyncOrm:
                 start_date,
                 expire_date,
                 is_trial,
-                trial_used
+                trial_used,
+                balance
             )
         except Exception as e:
             logger.error(f"Ошибка при создании подписки {tg_id}: {e}")
@@ -139,8 +141,6 @@ class AsyncOrm:
         except Exception as e:
             logger.error(f"Ошибка активации пробной подписки пользователя {tg_id}: {e}")
 
-        pass
-
     @staticmethod
     async def create_key(tg_id: str, ui_key: str, description: str, session: Any) -> str:
         """Создание ключа
@@ -160,3 +160,37 @@ class AsyncOrm:
 
         except Exception as e:
             logger.error(f"Ошибка при создании ключа: {ui_key} пользователю: {tg_id} - {e}")
+
+    @staticmethod
+    async def buy_subscription_first_time(
+            tg_id: str,
+            expire_date: datetime.datetime,
+            balance: int,
+            session: Any) -> None:
+        """Первая покупка подписки"""
+        try:
+            await session.execute("""
+                UPDATE subscriptions
+                SET balance = $1, expire_date = $2, active = true, is_trial = false, trial_used = true
+                WHERE tg_id = $3 
+                """, balance, expire_date, tg_id)
+            logger.info(f"Пользователь {tg_id} продлил подписку до {expire_date} (при активной пробной подписке)")
+        except Exception as e:
+            logger.error(f"Ошибка покупки подписки пользователя {tg_id}: {e}")
+
+    @staticmethod
+    async def buy_subscription(
+            tg_id: str,
+            expire_date: datetime.datetime,
+            balance: int,
+            session: Any) -> None:
+        """Покупка|продление подписки"""
+        try:
+            await session.execute("""
+                UPDATE subscriptions
+                SET balance = $1, expire_date = $2, active = true
+                WHERE tg_id = $3 
+                """, balance, expire_date, tg_id)
+            logger.info(f"Пользователь {tg_id} продлил подписку до {expire_date}")
+        except Exception as e:
+            logger.error(f"Ошибка покупки/продления подписки пользователя {tg_id}: {e}")
