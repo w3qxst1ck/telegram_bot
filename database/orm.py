@@ -7,7 +7,7 @@ import asyncpg
 from database.database import async_engine
 from database.tables import Base
 
-from schemas.user import UserAdd, UserSubscription
+from schemas.user import UserAdd, UserConnection
 from settings import settings
 from logger import logger
 
@@ -31,47 +31,60 @@ class AsyncOrm:
             await conn.run_sync(Base.metadata.drop_all)
 
     @staticmethod
-    async def create_user(user: UserAdd, session: Any):
+    async def create_user(user: UserAdd, session: Any) -> None:
         """Создание пользователя"""
         try:
             await session.execute("""
-                INSERT INTO users (tg_id, username, firstname, lastname)
-                VALUES ($1, $2, $3, $4)
+                INSERT INTO users (tg_id, username, firstname, lastname, balance, trial_used)
+                VALUES ($1, $2, $3, $4, $5, $6)
                 ON CONFLICT (tg_id) DO NOTHING
                 """,
                 user.tg_id,
                 user.username,
                 user.firstname,
-                user.lastname
+                user.lastname,
+                user.balance,
+                user.trial_used,
             )
         except Exception as e:
             logger.error(f"Ошибка при создании пользователя {user.tg_id} "
                          f"{'@' + user.username if user.username else ''}: {e}")
 
     @staticmethod
-    async def create_subscription(tg_id: str,
-                                  active: bool,
-                                  start_date: datetime.datetime | None,
-                                  expire_date: datetime.datetime | None,
-                                  is_trial: bool,
-                                  trial_used: bool,
-                                  session: Any):
-        """Создание подписки для пользователя"""
+    async def get_user_id(tg_id: str, session: Any) -> int:
+        """Получает id пользователя по tg_id"""
         try:
-            await session.execute("""
-                INSERT INTO subscriptions (tg_id, active, start_date, expire_date, is_trial, trial_used)
-                VALUES ($1, $2, $3, $4, $5, $6)
-                ON CONFLICT (tg_id) DO NOTHING
+            user_id = await session.fetchval(
+                """
+                SELECT id FROM users WHERE tg_id=$1
                 """,
-                tg_id,
-                active,
-                start_date,
-                expire_date,
-                is_trial,
-                trial_used
+                tg_id
             )
+            return user_id
         except Exception as e:
-            logger.error(f"Ошибка при создании подписки {tg_id}: {e}")
+            logger.error(f"Не удалось получить id пользователя {tg_id}: {e}")
+
+    @staticmethod
+    async def create_connection(tg_id: str,
+                                active: bool,
+                                start_date: datetime.datetime,
+                                expire_date: datetime.datetime,
+                                is_trial: bool,
+                                user_id: int,
+                                session: Any) -> int:
+        """Создание подключения для пользователя"""
+        try:
+            connection_id = await session.fetchval(
+                """
+                INSERT INTO connections (tg_id, active, start_date, expire_date, is_trial, user_id)
+                VALUES ($1, $2, $3, $4, $5, $6)
+                RETURNING id
+                """,
+                tg_id, active, start_date, expire_date, is_trial, user_id
+            )
+            return connection_id
+        except Exception as e:
+            logger.error(f"Ошибка при создании подключения {tg_id}: {e}")
 
     @staticmethod
     async def check_user_already_exists(tg_id: str, session: Any) -> bool:
@@ -88,75 +101,70 @@ class AsyncOrm:
             logger.error(f"Ошибка при проверке регистрации пользователя {tg_id}: {e}")
 
     @staticmethod
-    async def get_trial_subscription_status(tg_id: str, session: Any) -> asyncpg.Record:
+    async def create_key(tg_id: str, email: str, ui_key: str, description: str, connection_id: int, session: Any) -> None:
+        """Создание ключа"""
+        try:
+            await session.execute(
+                """
+                INSERT INTO keys (tg_id, email, key, description, connection_id) 
+                VALUES($1, $2, $3, $4, $5)
+                """,
+                tg_id, email, ui_key, description, connection_id
+            )
+        except Exception as e:
+            logger.error(f"Ошибка при создании ключа {ui_key} пользователю {tg_id}: {e}")
+
+    @staticmethod
+    async def get_trial_subscription_status(tg_id: str, session: Any) -> bool:
         """Получение статуса использования пробной подписки"""
         try:
-            trial_status_row = await session.fetchrow(
+            trial_used: bool = await session.fetchval(
                 """
-                SELECT active, is_trial, trial_used FROM subscriptions 
+                SELECT trial_used FROM users 
                 WHERE tg_id = $1
                 """,
                 tg_id
             )
-
-            return trial_status_row
-
-        except Exception as e:
-            logger.error(f"Ошибка при получении статуса пробной подписки {tg_id}: {e}")
-
-    @staticmethod
-    async def get_user_with_subscription(tg_id: str, session: Any) -> UserSubscription:
-        """Получение user с подпиской"""
-        try:
-            row = await session.fetchrow(
-                """
-                SELECT * FROM users u
-                JOIN subscriptions s ON u.tg_id = s.tg_id
-                WHERE u.tg_id = $1
-                """,
-                tg_id
-            )
-            user_with_sub = UserSubscription.model_validate(row)
-            return user_with_sub
-        except Exception as e:
-            logger.error(f"Ошибка получения пользователя с подпиской {tg_id}: {e}")
-
-    @staticmethod
-    async def activate_trial_subscription(tg_id: str, session: Any) -> None:
-        """Активация пробной подписки"""
-        start_date = datetime.datetime.now()
-        expire_date = start_date + datetime.timedelta(days=settings.trial_days)
-
-        try:
-            await session.execute(
-                """
-                UPDATE subscriptions
-                SET active = true, start_date = $1, expire_date = $2, is_trial = true
-                WHERE tg_id = $3 
-                """,
-                start_date, expire_date, tg_id
-            )
-        except Exception as e:
-            logger.error(f"Ошибка активации пробной подписки пользователя {tg_id}: {e}")
-
-        pass
-
-    @staticmethod
-    async def create_key(tg_id: str, ui_key: str, description: str, session: Any) -> str:
-        """Создание ключа
-            return: key str
-        """
-        try:
-            key = await session.fetchval(
-                """
-                INSERT INTO keys (tg_id, key, description) 
-                VALUES($1, $2, $3)
-                RETURNING key 
-                """,
-                tg_id, ui_key, description
-
-            )
-            return key
+            return trial_used
 
         except Exception as e:
-            logger.error(f"Ошибка при создании ключа: {ui_key} пользователю: {tg_id} - {e}")
+            logger.error(f"Ошибка при получении статуса использования пробной подписки {tg_id}: {e}")
+
+    # @staticmethod
+    # async def get_user_with_subscription(tg_id: str, session: Any) -> UserSubscription:
+    #     """Получение user с подпиской"""
+    #     try:
+    #         row = await session.fetchrow(
+    #             """
+    #             SELECT * FROM users u
+    #             JOIN subscriptions s ON u.tg_id = s.tg_id
+    #             WHERE u.tg_id = $1
+    #             """,
+    #             tg_id
+    #         )
+    #         user_with_sub = UserSubscription.model_validate(row)
+    #         return user_with_sub
+    #     except Exception as e:
+    #         logger.error(f"Ошибка получения пользователя с подпиской {tg_id}: {e}")
+    #
+    # @staticmethod
+    # async def activate_trial_subscription(tg_id: str, session: Any) -> None:
+    #     """Активация пробной подписки"""
+    #     start_date = datetime.datetime.now()
+    #     expire_date = start_date + datetime.timedelta(days=settings.trial_days)
+    #
+    #     try:
+    #         await session.execute(
+    #             """
+    #             UPDATE subscriptions
+    #             SET active = true, start_date = $1, expire_date = $2, is_trial = true
+    #             WHERE tg_id = $3
+    #             """,
+    #             start_date, expire_date, tg_id
+    #         )
+    #     except Exception as e:
+    #         logger.error(f"Ошибка активации пробной подписки пользователя {tg_id}: {e}")
+    #
+    #     pass
+
+

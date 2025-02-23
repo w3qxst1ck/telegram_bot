@@ -30,6 +30,15 @@ class Settings(BaseSettings):
     timezone: str = "Europe/Moscow"
     trial_days: int = 1
     price: int = 200
+    servers: dict = {
+        "am-1": {
+            "url": "https://somedomain123.store:2053/jA7PFJItw5/",
+            "hostname": "admin",
+            "password": "Dn39xe53MpZ2",
+            "domain": "somedomain123.store",
+            "flow": "xtls-rprx-vision",
+        }
+    }
 
 
 settings = Settings()

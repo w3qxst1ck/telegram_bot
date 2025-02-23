@@ -1,3 +1,5 @@
+import datetime
+import uuid
 from typing import Any
 
 from aiogram import Router, types, F
@@ -7,6 +9,7 @@ from aiogram.enums import ParseMode
 from database.orm import AsyncOrm
 from handlers.buttons import commands as cmd
 from handlers.keyboards import menu as menu_kb
+from settings import settings
 
 router = Router()
 
@@ -41,21 +44,33 @@ async def main_menu(message: types.Message | types.CallbackQuery, admin: bool) -
 async def send_trial_key(message: types.CallbackQuery, session: Any) -> None:
     """Отправка пользователю ключа для пробного периода"""
     tg_id = str(message.from_user.id)
+    user_id = await AsyncOrm.get_user_id(tg_id, session)
+
+    # активируем пользователю пробное подключение
+    connection_id = await AsyncOrm.create_connection(
+        tg_id=tg_id,
+        active=True,
+        start_date=datetime.datetime.now(),
+        expire_date=datetime.datetime.now() + datetime.timedelta(days=settings.trial_days),
+        is_trial=True,
+        user_id=user_id,
+        session=session
+    )
 
     # получаем ключ
-    ui_key = "SOME KEY"    # todo добавить функцию получения ключа через апи 3x-ui
-
-    # активируем пользователю пробную подписку
-    await AsyncOrm.activate_trial_subscription(tg_id, session)
-    # записываем ключ
-    key = await AsyncOrm.create_key(tg_id, ui_key, "trial", session)
+    email = str(uuid.uuid4())
+    ui_key = "SOME KEY"  # todo добавить функцию получения ключа через апи 3x-ui
 
     await message.message.answer(
         "Ваш ключ нажмите чтобы скопировать ⬇️\n\n"
-        f"`{key}`",
+        f"`{ui_key}`",
         parse_mode=ParseMode.MARKDOWN_V2
     )
     await message.message.answer(
         f"Инструкцию по установке и настройке VPN вы можете посмотреть здесь /{cmd.INSTRUCTION[0]}",
         reply_markup=menu_kb.to_menu_keyboard().as_markup()
     )
+
+    # записываем ключ
+    await AsyncOrm.create_key(tg_id, email, ui_key, "trial", connection_id, session)
+

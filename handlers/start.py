@@ -29,15 +29,13 @@ async def start_handler(message: types.Message | types.CallbackQuery, admin: boo
 async def send_hello_message(message: types.Message, admin: bool, session: Any) -> None:
     """Стартовое сообщение"""
     name: str = message.from_user.first_name if message.from_user.first_name else message.from_user.username
-    trial_status: asyncpg.Record = await AsyncOrm.get_trial_subscription_status(str(message.from_user.id), session)
+    trial_status: bool = await AsyncOrm.get_trial_subscription_status(str(message.from_user.id), session)
 
     msg = f"Привет, <b>{name}</b>!\n{settings.bot_name} предоставляет доступ к свободному интернету без " \
           f"ограничений!\n\n"
 
-    trial_period: bool = not trial_status["is_trial"] and not trial_status["trial_used"] and not trial_status["active"]
-
     # для пробного периода
-    if trial_period:
+    if not trial_status:
         msg += f"Вам доступен <b>бесплатный пробный период на {settings.trial_days} день</b>.\n" \
                "Ваш ключ доступа ниже по кнопке\n\n" \
                f"Посмотреть свои ключи, профиль, пополнить баланс и купить подписку вы можете в /{cmd.MENU[0]}\n" \
@@ -54,7 +52,7 @@ async def send_hello_message(message: types.Message, admin: bool, session: Any) 
     if os.path.isfile(image_path):
         with open(image_path, "rb") as image_buffer:
 
-            if trial_period:
+            if not trial_status:
                 keyboard = InlineKeyboardBuilder()
                 keyboard.row(InlineKeyboardButton(text=f"{TRIAL_KEY}", callback_data=f"trial_key"))
 
@@ -81,22 +79,11 @@ async def create_user_if_not_exists(tg_id: str, message: types.Message, session:
             tg_id=tg_id,
             username=message.from_user.username,
             firstname=message.from_user.first_name,
-            lastname=message.from_user.last_name
+            lastname=message.from_user.last_name,
+            balance=0,
+            trial_used=False
         )
         await AsyncOrm.create_user(user, session)
-
-        # создаем подписку
-        await AsyncOrm.create_subscription(
-            tg_id=tg_id,
-            active=False,
-            # start_date=datetime.datetime.now(),
-            start_date=None,
-            # expire_date=datetime.datetime.now() + datetime.timedelta(days=settings.trial_days),
-            expire_date=None,
-            is_trial=False,
-            trial_used=False,
-            session=session
-        )
 
 
 

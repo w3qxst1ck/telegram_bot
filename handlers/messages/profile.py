@@ -1,10 +1,10 @@
-from schemas.user import UserSubscription
+from schemas.user import UserConnection
 from utils.date_time_service import convert_date_time
 from handlers.buttons import commands as cmd
 from handlers.buttons import menu as btn
 
 
-async def profile_message(user_with_sub: UserSubscription) -> str:
+async def profile_message(user_with_sub: UserConnection) -> str:
     """Сообщение с карточкой профиля"""
     date, time = convert_date_time(user_with_sub.expire_date)
 

@@ -8,7 +8,7 @@ from aiogram.fsm.context import FSMContext
 from handlers.buttons import commands as cmd
 from handlers.keyboards import buy as buy_kb
 from database.orm import AsyncOrm
-from schemas.user import UserSubscription
+from schemas.user import UserConnection
 from handlers.messages import buy as ms
 from handlers.states.buy import UpBalanceFSM
 from cache import r
@@ -26,7 +26,7 @@ async def buy_handler(message: types.Message | types.CallbackQuery, session: Any
     cached_data = r.get(f"profile:{tg_id}")
     if cached_data:
         # from cache
-        user_with_sub = UserSubscription.model_validate_json(cached_data)
+        user_with_sub = UserConnection.model_validate_json(cached_data)
     else:
         # from DB
         user_with_sub = await AsyncOrm.get_user_with_subscription(tg_id, session)

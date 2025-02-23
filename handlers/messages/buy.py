@@ -1,9 +1,9 @@
 from settings import settings
-from schemas.user import UserSubscription
+from schemas.user import UserConnection
 from utils.date_time_service import convert_date_time
 
 
-async def buy_message(user_with_sub: UserSubscription) -> str:
+async def buy_message(user_with_sub: UserConnection) -> str:
     """Сообщение для команды /buy"""
     date, time = convert_date_time(user_with_sub.expire_date)
 
