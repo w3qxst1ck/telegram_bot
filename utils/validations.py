@@ -7,7 +7,7 @@ def is_valid_summ(summ: str) -> bool:
         return False
     try:
         result = int(summ)
-        if result < settings.price:
+        if result < settings.price_list['1']:
             return False
     except ValueError:
         return False

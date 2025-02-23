@@ -69,7 +69,7 @@ async def confirm_up_balance_handler(message: types.Message, state: FSMContext) 
         msg = await message.answer(f"Указан неверный формат\n\n"
                                    f"Необходимо указать сумму одним <b>числом</b> без букв, знаков препинания "
                                    f"и других специальных символов (например: 300)\n"
-                                   f"Сумма не может быть меньше {settings.price}",
+                                   f"Сумма не может быть меньше {settings.price_list['1']}",
                                    reply_markup=buy_kb.cancel_keyboard().as_markup())
         await state.update_data(prev_mess=msg)
         return
@@ -115,14 +115,14 @@ async def buy_sub_handler(callback: types.CallbackQuery, session: Any) -> None:
         # покупка подписки
         else:
             new_expire_date = datetime.datetime.now() + datetime.timedelta(days=int(period)*30)
-        balance = user_with_sub.balance - price
+        new_balance = user_with_sub.balance - price
 
         # покупка первый раз
         if user_with_sub.is_trial:
-            await AsyncOrm.buy_subscription_first_time(tg_id, new_expire_date, balance, session)
+            await AsyncOrm.buy_subscription_first_time(tg_id, new_expire_date, new_balance, session)
         # покупка или продление не первый раз
         else:
-            await AsyncOrm.buy_subscription(tg_id, new_expire_date, balance, session)
+            await AsyncOrm.buy_subscription(tg_id, new_expire_date, new_balance, session)
 
         msg = await ms.buy_subscription_message(period, price, user_with_sub.active, new_expire_date)
         await callback.message.edit_text(msg, reply_markup=menu_kb.to_menu_keyboard().as_markup())

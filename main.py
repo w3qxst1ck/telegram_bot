@@ -31,7 +31,7 @@ async def set_commands(bot: io.Bot):
 async def set_description(bot: io.Bot):
     """Описание бота до запуска"""
     await bot.set_my_description(f"Бот предоставляет доступ к VPN с самым совершенным алгоритмом шифрования VLESS\n\n"
-                                 f"1 день бесплатно\nА затем {settings.price}р в месяц")
+                                 f"1 день бесплатно\nА затем {settings.price_list['1']}р в месяц")
 
 
 async def start_bot() -> None:
