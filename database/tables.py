@@ -65,6 +65,22 @@ class Payment(Base):
     user: Mapped["User"] = relationship(back_populates="payments")
 
 
+class Server(Base):
+    """Сервера с vpn"""
+    __tablename__ = "servers"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(unique=True)
+    region: Mapped[str]
+    api_url: Mapped[str]
+    domain: Mapped[str]
+    inbound_id: Mapped[int] = mapped_column(default=1)
+
+    keys: Mapped[list["Key"]] = relationship(
+        back_populates="server",
+    )
+
+
 class Key(Base):
     """Ключи пользователей"""
     __tablename__ = "keys"
@@ -77,3 +93,6 @@ class Key(Base):
 
     connection_id: Mapped[int] = mapped_column(ForeignKey("connections.id", ondelete="CASCADE"), unique=True)
     connection: Mapped["Connection"] = relationship(back_populates="key", uselist=False)
+
+    server_id: Mapped[int] = mapped_column(ForeignKey("servers.id", ondelete="CASCADE"))
+    server: Mapped["Server"] = relationship(back_populates="keys")
