@@ -7,7 +7,7 @@ import asyncpg
 from database.database import async_engine
 from database.tables import Base
 
-from schemas.user import UserAdd, UserConnection
+from schemas.user import UserAdd, UserConnection, UserConnList, Connection, User
 from settings import settings
 from logger import logger
 
@@ -130,22 +130,35 @@ class AsyncOrm:
         except Exception as e:
             logger.error(f"Ошибка при получении статуса использования пробной подписки {tg_id}: {e}")
 
-    # @staticmethod
-    # async def get_user_with_subscription(tg_id: str, session: Any) -> UserSubscription:
-    #     """Получение user с подпиской"""
-    #     try:
-    #         row = await session.fetchrow(
-    #             """
-    #             SELECT * FROM users u
-    #             JOIN subscriptions s ON u.tg_id = s.tg_id
-    #             WHERE u.tg_id = $1
-    #             """,
-    #             tg_id
-    #         )
-    #         user_with_sub = UserSubscription.model_validate(row)
-    #         return user_with_sub
-    #     except Exception as e:
-    #         logger.error(f"Ошибка получения пользователя с подпиской {tg_id}: {e}")
+    @staticmethod
+    async def get_user_with_connection_list(tg_id: str, session: Any) -> UserConnList:
+        """Получение списка user с connection"""
+        try:
+            user_row = await session.fetchrow(
+                """
+                SELECT * FROM users
+                WHERE tg_id = $1
+                """,
+                tg_id
+            )
+            user_conns: UserConnList = UserConnList.model_validate(user_row)
+            print(user_conns)
+
+            conns_rows = await session.fetch(
+                """
+                SELECT * FROM connections
+                WHERE tg_id = $1
+                """
+            )
+            if conns_rows:
+                conns: List[Connection] = [Connection.model_validate(row) for row in conns_rows]
+                user_conns.connections = conns
+
+            print(user_conns)
+
+            return user_conns
+        except Exception as e:
+            logger.error(f"Ошибка получения пользователя с коннектами {tg_id}: {e}")
     #
     # @staticmethod
     # async def activate_trial_subscription(tg_id: str, session: Any) -> None:

@@ -97,7 +97,7 @@ class ClientService:
         """Создание строки подключения"""
         server = await self.get_inbound()
 
-        key = f"{server.protocol}://{client_uuid}@{settings.servers['am-1']['domain']}:{server.port}" \
+        key = f"{server.protocol}://{client_uuid}@{settings.server.domain}:{server.port}" \
               f"?type={server.stream_settings.network}" \
               f"&security={server.stream_settings.security}" \
               f"&pbk={server.stream_settings.reality_settings['settings']['publicKey']}" \
@@ -105,7 +105,7 @@ class ClientService:
               f"&sni={server.stream_settings.reality_settings['serverNames'][0]}" \
               f"&sid={server.stream_settings.reality_settings['shortIds'][0]}" \
               f"&spx={'%2F' if server.stream_settings.reality_settings['settings']['spiderX'] == '/' else ''}" \
-              f"&flow={settings.servers['am-1']['flow']}"
+              f"&flow={settings.server.flow}"
         return key
 
     @staticmethod
@@ -116,9 +116,9 @@ class ClientService:
 
 
 am_client = ClientService(
-    url=settings.servers["am-1"]["url"],
-    hostname=settings.servers["am-1"]["hostname"],
-    password=settings.servers["am-1"]["password"],
-    domain=settings.servers["am-1"]["domain"],
-    flow=settings.servers["am-1"]["flow"],
+    url=settings.server.url,
+    hostname=settings.server.hostname,
+    password=settings.server.password,
+    domain=settings.server.domain,
+    flow=settings.server.flow,
 )

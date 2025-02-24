@@ -29,25 +29,26 @@ class Redis(BaseSettings):
     redis_password: str = Field(..., env='REDIS_PASSWORD')
 
 
+class Server(BaseSettings):
+    url: str = Field(..., env='URL')
+    hostname: str = Field(..., env='HOSTNAME')
+    password: str = Field(..., env='PASSWORD')
+    domain: str = "somedomain123.store"
+    flow: str = "xtls-rprx-vision"
+
+
 class Settings(BaseSettings):
-    bot_name: str = "Vless VPN bot"
+    bot_name: str = "VLESS VPN bot"
     bot_token: str = Field(..., env='BOT_TOKEN')
     admins: list = Field(..., env='ADMINS')
     timezone: str = "Europe/Moscow"
     trial_days: int = 1
-    servers: dict = {
-        "am-1": {
-            "url": Field(..., env='URL'),
-            "hostname": Field(..., env='HOSTNAME'),
-            "password": Field(..., env='PASSWORD'),
-            "domain": "somedomain123.store",
-            "flow": "xtls-rprx-vision",
-        }
-    }
+
     price_list: dict = PRICES
 
     db: Database = Database()
     redis: Redis = Redis()
+    server: Server = Server()
 
 
 settings = Settings()

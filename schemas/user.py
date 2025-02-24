@@ -1,4 +1,5 @@
 import datetime
+from typing import List
 
 from pydantic import BaseModel
 from schemas.connection import Connection
@@ -20,4 +21,8 @@ class User(UserAdd):
 
 class UserConnection(User, Connection):
     pass
+
+
+class UserConnList(User):
+    connections: List[Connection]
 
