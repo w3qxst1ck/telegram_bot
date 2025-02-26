@@ -19,10 +19,6 @@ class User(UserAdd):
     created_at: datetime.datetime
 
 
-class UserConnection(User, Connection):
-    pass
-
-
 class UserConnList(User):
     connections: List[Connection]
 
