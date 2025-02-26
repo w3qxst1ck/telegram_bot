@@ -40,16 +40,20 @@ class Connection(Base):
     __tablename__ = "connections"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    tg_id: Mapped[str] = mapped_column(index=True)
+    tg_id: Mapped[str] = mapped_column(ForeignKey("users.tg_id", ondelete="CASCADE"))
     active: Mapped[bool] = mapped_column(default=False)
     start_date: Mapped[datetime.datetime] = mapped_column(nullable=True, default=None)
     expire_date: Mapped[datetime.datetime] = mapped_column(nullable=True, default=None)
     is_trial: Mapped[bool] = mapped_column(default=True)
+    email: Mapped[str] = mapped_column(index=True, unique=True)
+    key: Mapped[str]
+    description: Mapped[str]
 
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    # user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     user: Mapped["User"] = relationship(back_populates="connections")
 
-    key: Mapped["Key"] = relationship(back_populates="connection", uselist=False)
+    server_id: Mapped[int] = mapped_column(ForeignKey("servers.id", ondelete="CASCADE"))
+    server: Mapped["Server"] = relationship(back_populates="connections")
 
 
 class Payment(Base):
@@ -76,23 +80,7 @@ class Server(Base):
     domain: Mapped[str]
     inbound_id: Mapped[int] = mapped_column(default=1)
 
-    keys: Mapped[list["Key"]] = relationship(
+    connections: Mapped[list["Connection"]] = relationship(
         back_populates="server",
     )
 
-
-class Key(Base):
-    """Ключи пользователей"""
-    __tablename__ = "keys"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    tg_id: Mapped[str] = mapped_column(index=True)
-    email: Mapped[str] = mapped_column(index=True, unique=True)
-    key: Mapped[str]
-    description: Mapped[str]
-
-    connection_id: Mapped[int] = mapped_column(ForeignKey("connections.id", ondelete="CASCADE"), unique=True)
-    connection: Mapped["Connection"] = relationship(back_populates="key", uselist=False)
-
-    server_id: Mapped[int] = mapped_column(ForeignKey("servers.id", ondelete="CASCADE"))
-    server: Mapped["Server"] = relationship(back_populates="keys")

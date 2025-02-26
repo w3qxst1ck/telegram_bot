@@ -7,7 +7,7 @@ import asyncpg
 from database.database import async_engine
 from database.tables import Base
 
-from schemas.user import UserAdd, UserConnection, UserConnList, Connection, User
+from schemas.user import UserAdd, UserConnList, Connection
 from settings import settings
 from logger import logger
 
@@ -71,18 +71,20 @@ class AsyncOrm:
                                 expire_date: datetime.datetime,
                                 is_trial: bool,
                                 user_id: int,
-                                session: Any) -> int:
+                                email: str,
+                                key: str,
+                                description: str,
+                                session: Any):
         """Создание подключения для пользователя"""
         try:
-            connection_id = await session.fetchval(
+            await session.execute(
                 """
-                INSERT INTO connections (tg_id, active, start_date, expire_date, is_trial, user_id)
-                VALUES ($1, $2, $3, $4, $5, $6)
-                RETURNING id
+                INSERT INTO connections (tg_id, active, start_date, expire_date, is_trial, user_id, email, key, description)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
                 """,
-                tg_id, active, start_date, expire_date, is_trial, user_id
+                tg_id, active, start_date, expire_date, is_trial, user_id, email, key, description
             )
-            return connection_id
+            logger.info(f"Создан коннект с ключом {key} для пользователя {tg_id}")
         except Exception as e:
             logger.error(f"Ошибка при создании подключения {tg_id}: {e}")
 
@@ -100,19 +102,19 @@ class AsyncOrm:
         except Exception as e:
             logger.error(f"Ошибка при проверке регистрации пользователя {tg_id}: {e}")
 
-    @staticmethod
-    async def create_key(tg_id: str, email: str, ui_key: str, description: str, connection_id: int, session: Any) -> None:
-        """Создание ключа"""
-        try:
-            await session.execute(
-                """
-                INSERT INTO keys (tg_id, email, key, description, connection_id) 
-                VALUES($1, $2, $3, $4, $5)
-                """,
-                tg_id, email, ui_key, description, connection_id
-            )
-        except Exception as e:
-            logger.error(f"Ошибка при создании ключа {ui_key} пользователю {tg_id}: {e}")
+    # @staticmethod
+    # async def create_key(tg_id: str, email: str, ui_key: str, description: str, connection_id: int, session: Any) -> None:
+    #     """Создание ключа"""
+    #     try:
+    #         await session.execute(
+    #             """
+    #             INSERT INTO keys (tg_id, email, key, description, connection_id)
+    #             VALUES($1, $2, $3, $4, $5)
+    #             """,
+    #             tg_id, email, ui_key, description, connection_id
+    #         )
+    #     except Exception as e:
+    #         logger.error(f"Ошибка при создании ключа {ui_key} пользователю {tg_id}: {e}")
 
     @staticmethod
     async def get_trial_subscription_status(tg_id: str, session: Any) -> bool:
@@ -141,22 +143,36 @@ class AsyncOrm:
                 """,
                 tg_id
             )
-            user_conns: UserConnList = UserConnList.model_validate(user_row)
-            print(user_conns)
+
+            user_conns: UserConnList = UserConnList(
+                id=user_row["id"],
+                created_at=user_row["created_at"],
+                tg_id=user_row["tg_id"],
+                username=user_row["username"],
+                firstname=user_row["firstname"],
+                lastname=user_row["lastname"],
+                balance=user_row["balance"],
+                trial_used=user_row["trial_used"],
+                connections=[]
+            )
 
             conns_rows = await session.fetch(
                 """
-                SELECT * FROM connections
+                SELECT * 
+                FROM connections  
                 WHERE tg_id = $1
-                """
+                ORDER BY active DESC
+                """,
+                tg_id
             )
+
+            # если есть коннекты
             if conns_rows:
                 conns: List[Connection] = [Connection.model_validate(row) for row in conns_rows]
                 user_conns.connections = conns
 
-            print(user_conns)
-
             return user_conns
+
         except Exception as e:
             logger.error(f"Ошибка получения пользователя с коннектами {tg_id}: {e}")
     #
@@ -198,18 +214,27 @@ class AsyncOrm:
             logger.error(f"Ошибка покупки подписки пользователя {tg_id}: {e}")
 
     @staticmethod
-    async def buy_subscription(
-            tg_id: str,
-            expire_date: datetime.datetime,
+    async def buy_new_key(
+            c: Connection,
             balance: int,
             session: Any) -> None:
-        """Покупка|продление подписки"""
+        """Покупка нового ключа и транзакционное уменьшение баланса"""
         try:
-            await session.execute("""
-                UPDATE subscriptions
-                SET balance = $1, expire_date = $2, active = true
-                WHERE tg_id = $3 
-                """, balance, expire_date, tg_id)
-            logger.info(f"Пользователь {tg_id} продлил подписку до {expire_date}")
+            async with session.transaction():
+                await session.execute(
+                    """
+                    INSERT INTO connections (tg_id, active, start_date, expire_date, is_trial, user_id, email, key, description)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);
+                    """,
+                    c.tg_id, c.active, c.start_date, c.expire_date, c.is_trial, c.user_id, c.email, c.key, c.description)
+                await session.execute(
+                    """
+                    UPDATE users
+                    SET balance = $1 
+                    WHERE tg_id = $2;
+                    """,
+                    balance, c.tg_id
+                )
+                logger.info(f"Пользователь {c.tg_id} купил новый ключ сроком до {c.expire_date}")
         except Exception as e:
-            logger.error(f"Ошибка покупки/продления подписки пользователя {tg_id}: {e}")
+            logger.error(f"Ошибка покупки/продления подписки пользователя {c.tg_id}: {e}")

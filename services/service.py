@@ -122,7 +122,7 @@ def _generate_key(server: Inbound, client_uuid: str) -> str:
           f"&sni={server.stream_settings.reality_settings['serverNames'][0]}" \
           f"&sid={server.stream_settings.reality_settings['shortIds'][0]}" \
           f"&spx={'%2F' if server.stream_settings.reality_settings['settings']['spiderX'] == '/' else ''}" \
-          f"&flow={settings.server.flow}"
+          f"&flow={settings.server.flow}#{client_uuid}"
     return key
 
 

@@ -47,17 +47,6 @@ async def send_trial_key(message: types.CallbackQuery, session: Any) -> None:
     tg_id = str(message.from_user.id)
     user_id = await AsyncOrm.get_user_id(tg_id, session)
 
-    # активируем пользователю пробное подключение
-    connection_id = await AsyncOrm.create_connection(
-        tg_id=tg_id,
-        active=True,
-        start_date=datetime.datetime.now(),
-        expire_date=datetime.datetime.now() + datetime.timedelta(days=settings.trial_days),
-        is_trial=True,
-        user_id=user_id,
-        session=session
-    )
-
     # получаем ключ
     email = str(uuid.uuid4())
     ui_key = "SOME KEY"
@@ -72,6 +61,17 @@ async def send_trial_key(message: types.CallbackQuery, session: Any) -> None:
         reply_markup=menu_kb.to_menu_keyboard().as_markup()
     )
 
-    # записываем ключ
-    await AsyncOrm.create_key(tg_id, email, ui_key, "trial", connection_id, session)
+    # активируем пользователю пробное подключение
+    await AsyncOrm.create_connection(
+        tg_id=tg_id,
+        active=True,
+        start_date=datetime.datetime.now(),
+        expire_date=datetime.datetime.now() + datetime.timedelta(days=settings.trial_days),
+        is_trial=True,
+        user_id=user_id,
+        email=email,
+        key=ui_key,
+        description="trial",
+        session=session
+    )
 
