@@ -52,6 +52,9 @@ class Connection(Base):
     # user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     user: Mapped["User"] = relationship(back_populates="connections")
 
+    server_id: Mapped[int] = mapped_column(ForeignKey("servers.id", ondelete="CASCADE"))
+    server: Mapped["Server"] = relationship(back_populates="connections")
+
 
 class Payment(Base):
     """Платежи"""
@@ -64,3 +67,20 @@ class Payment(Base):
 
     user_tg_id: Mapped[int] = mapped_column(ForeignKey("users.tg_id", ondelete="CASCADE"))
     user: Mapped["User"] = relationship(back_populates="payments")
+
+
+class Server(Base):
+    """Сервера с vpn"""
+    __tablename__ = "servers"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(unique=True)
+    region: Mapped[str]
+    api_url: Mapped[str]
+    domain: Mapped[str]
+    inbound_id: Mapped[int] = mapped_column(default=1)
+
+    connections: Mapped[list["Connection"]] = relationship(
+        back_populates="server",
+    )
+

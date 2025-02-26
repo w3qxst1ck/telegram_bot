@@ -9,6 +9,7 @@ from aiogram.enums import ParseMode
 from database.orm import AsyncOrm
 from handlers.buttons import commands as cmd
 from handlers.keyboards import menu as menu_kb
+from services import service
 from settings import settings
 
 router = Router()
@@ -48,7 +49,7 @@ async def send_trial_key(message: types.CallbackQuery, session: Any) -> None:
 
     # получаем ключ
     email = str(uuid.uuid4())
-    ui_key = "SOME KEY"  # todo добавить функцию получения ключа через апи 3x-ui
+    ui_key = "SOME KEY"
 
     await message.message.answer(
         "Ваш ключ нажмите чтобы скопировать ⬇️\n\n"

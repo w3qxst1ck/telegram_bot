@@ -4,121 +4,129 @@ import pytz
 from py3xui import AsyncApi, Inbound, Client
 
 from settings import settings
+from logger import logger
 
 
-class ClientService:
+async def get_client(xui: AsyncApi, email: str) -> Client:
+    """Получение клиента по email из панели 3x-ui"""
+    await xui.login()
 
-    def __init__(self, url: str, hostname: str, password: str, domain: str, flow: str):
-        self.api = AsyncApi(url, hostname, password)
-        self.url = url
-        self.domain = domain
-        self.flow = flow
+    try:
+        response = await xui.client.get_by_email(email)
+        return response
 
-    async def login(self):
-        """Логин по username и password для vless panel"""
-        await self.api.login()
+    except Exception as e:
+        logger.error(f"Ошибка при получении из панели пользователя {email}: {e}")
 
-    async def get_inbound(self) -> Inbound:
-        """Получение подключения"""
-        servers = await self.api.inbound.get_list()
-        return servers[0]
 
-    async def get_client(self, email: str) -> Client:
-        """Получение клиента по email"""
-        client = await self.api.client.get_by_email(email)
-        return client
+async def create_client(xui: AsyncApi, inbound_id: int, client_uuid: str, tg_id: str) -> str:
+    """Создание клиента в панели 3x-ui"""
+    await xui.login()
 
-    async def get_clients(self) -> list:
-        """Получение клиентов из inbound"""
-        server = await self.get_inbound()
-        clients = server.client_stats
-
-        result = []
-        for client in clients:
-            result.append(client)
-
-        return result
-
-    async def add_client(self, client_uuid: str, tg_id: str) -> str:
-        """Создание клиента и генерация ключа"""
-        await self.api.client.add(
-            1,
+    try:
+        await xui.client.add(
+            inbound_id,
             [
                 Client(
+                    # TODO добавить ограничение по трафику?
                     email=client_uuid,
                     enable=True,
                     tg_id=tg_id,
                     id=client_uuid,
-                    flow=self.flow,
+                    flow=settings.server_flow,
                 )
             ]
         )
-        key = await self._generate_key(client_uuid)
+
+        # генерация ключа для пользователя
+        server = await xui.inbound.get_by_id(inbound_id)
+        key = _generate_key(server, client_uuid)
         return key
 
-    async def block_client(self, email: str, tg_id: str):
-        """Блокировка ключа (устанавливаем прошедшую дату)"""
-        client: Client = await self.api.client.get_by_email(email)
+    except Exception as e:
+        logger.error(f"Ошибка при создании ключа {client_uuid} пользователю {tg_id}: {e}")
+
+
+async def block_client(xui: AsyncApi, email: str, tg_id: str) -> None:
+    """Блокировка ключа (устанавливаем прошедшую дату)"""
+    await xui.login()
+
+    try:
+        client: Client = await xui.client.get_by_email(email)
         # добавляем недостающие данные
         client.id = email
         client.tg_id = tg_id
-        client.flow = self.flow
+        client.flow = settings.server_flow
 
         client.enable = False
         client.expiry_time = int((datetime.datetime.now(tz=pytz.timezone("Europe/Moscow")) - datetime.timedelta(
             days=1)).timestamp() * 1000)
 
-        await self.api.client.update(email, client)
+        await xui.client.update(email, client)
 
-    async def activate_client(self, email: str, tg_id: str):
-        """Разблокировка ключа (снятие ограничения по дате)"""
-        client: Client = await self.api.client.get_by_email(email)
+    except Exception as e:
+        logger.error(f"Ошибка при блокировке клиента {email} в панели: {e}")
+
+
+async def activate_client(xui: AsyncApi, email: str, tg_id: str):
+    """Разблокировка ключа (снятие ограничения по дате)"""
+    await xui.login()
+
+    try:
+        client: Client = await xui.client.get_by_email(email)
         # добавляем недостающие данные
         client.id = email
         client.tg_id = tg_id
-        client.flow = self.flow
+        client.flow = settings.flow
 
         client.enable = True
         client.expiry_time = 0
 
-        await self.api.client.update(email, client)
+        await xui.client.update(email, client)
 
-    async def delete_client(self, email: str):
-        """Удаление клиента из сервиса"""
-        await self.api.client.delete(1, email)
+    except Exception as e:
+        logger.error(f"Ошибка при активации клиента {email} в панели: {e}")
 
-    async def get_current_traffic(self, email: str) -> float:
-        """Получает потраченный клиентом трафик в Gb"""
-        client: Client = await self.get_client(email)
-        traffic = await self.convert_traffic(client.up, client.down)
+
+async def delete_client(xui: AsyncApi, email: str):
+    """Удаление клиента из сервиса"""
+    await xui.login()
+
+    try:
+        await xui.client.delete(1, email)
+
+    except Exception as e:
+        logger.error(f"Ошибка при удалении клиента {email} в панели: {e}")
+
+
+async def get_current_traffic(xui: AsyncApi, email: str) -> float:
+    """Получает потраченный клиентом трафик в Gb"""
+    await xui.login()
+
+    try:
+        client: Client = await xui.client.get_by_email(email)
+        traffic = _convert_traffic(client.up, client.down)
         return traffic
 
-    async def _generate_key(self, client_uuid: str) -> str:
-        """Создание строки подключения"""
-        server = await self.get_inbound()
-
-        key = f"{server.protocol}://{client_uuid}@{settings.server.domain}:{server.port}" \
-              f"?type={server.stream_settings.network}" \
-              f"&security={server.stream_settings.security}" \
-              f"&pbk={server.stream_settings.reality_settings['settings']['publicKey']}" \
-              f"&fp={server.stream_settings.reality_settings['settings']['fingerprint']}" \
-              f"&sni={server.stream_settings.reality_settings['serverNames'][0]}" \
-              f"&sid={server.stream_settings.reality_settings['shortIds'][0]}" \
-              f"&spx={'%2F' if server.stream_settings.reality_settings['settings']['spiderX'] == '/' else ''}" \
-              f"&flow={settings.server.flow}#{client_uuid}"
-        return key
-
-    @staticmethod
-    async def convert_traffic(up: int, down: int) -> float:
-        """Переводит из байт в Гб"""
-        summ = (up + down) / 1024 / 1024 / 1024
-        return round(summ, 2)
+    except Exception as e:
+        logger.error(f"Ошибка при получении трафика клиента {email}: {e}")
 
 
-am_client = ClientService(
-    url=settings.server.url,
-    hostname=settings.server.hostname,
-    password=settings.server.password,
-    domain=settings.server.domain,
-    flow=settings.server.flow,
-)
+def _generate_key(server: Inbound, client_uuid: str) -> str:
+    """Создание строки подключения"""
+    key = f"{server.protocol}://{client_uuid}@{settings.server.domain}:{server.port}" \
+          f"?type={server.stream_settings.network}" \
+          f"&security={server.stream_settings.security}" \
+          f"&pbk={server.stream_settings.reality_settings['settings']['publicKey']}" \
+          f"&fp={server.stream_settings.reality_settings['settings']['fingerprint']}" \
+          f"&sni={server.stream_settings.reality_settings['serverNames'][0]}" \
+          f"&sid={server.stream_settings.reality_settings['shortIds'][0]}" \
+          f"&spx={'%2F' if server.stream_settings.reality_settings['settings']['spiderX'] == '/' else ''}" \
+          f"&flow={settings.server.flow}#{client_uuid}"
+    return key
+
+
+def _convert_traffic(up: int, down: int) -> float:
+    """Переводит из байт в Гб"""
+    summ = (up + down) / 1024 / 1024 / 1024
+    return round(summ, 2)
