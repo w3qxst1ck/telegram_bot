@@ -7,7 +7,7 @@ from handlers.buttons import menu as btn
 from handlers.buttons import commands as cmd
 
 
-async def buy_message(user_with_conn: UserConnList) -> str:
+def buy_message(user_with_conn: UserConnList) -> str:
     """Сообщение для команды /buy"""
     message = ""
 
@@ -46,7 +46,7 @@ async def buy_message(user_with_conn: UserConnList) -> str:
     return message
 
 
-async def new_key_message(balance: int) -> str:
+def new_key_message(balance: int) -> str:
     """Сообщение для покупки нового ключа"""
     message = f"У вас на балансе <b>{balance}р</b>\n\n" \
                f"Стоимость ключа VPN\n" \
@@ -54,18 +54,18 @@ async def new_key_message(balance: int) -> str:
                f"• 3 месяца <b>{settings.price_list['3']}р</b>\n" \
                f"• 6 месяцев <b>{settings.price_list['6']}р</b>\n" \
                f"• 12 месяцев <b>{settings.price_list['12']}р</b>\n\n" \
-               f"Для покупки ключа выберите необходимый период подписки с помощью кнопок ниже"
+               f"Для покупки ключа выберите необходимый срок действия с помощью кнопок ниже"
     return message
 
 
-async def new_key_confirm_message(period: str) -> str:
+def new_key_confirm_message(period: str) -> str:
     """Сообщение подтверждения покупки нового ключа"""
     message = f"Купить новый ключ на <b>{period} мес.</b>?\n\n" \
               f"У вас с баланса будет списано <b>{settings.price_list[period]}р.</b>"
     return message
 
 
-async def invoice_message(summ: str, tg_id: str) -> str:
+def invoice_message(summ: str, tg_id: str) -> str:
     """Сообщение о переводе денег"""
     message = ""
     message += f"Для зачисления суммы на баланс необходимо перевести {summ} руб\. по указанным реквизитам \(нажмите, чтобы скопировать реквизиты\)\n\n" \
@@ -76,7 +76,7 @@ async def invoice_message(summ: str, tg_id: str) -> str:
     return message
 
 
-async def buy_new_key_message(period: str, price: int, expire_date: datetime.datetime) -> str:
+def buy_new_key_message(period: str, price: int, expire_date: datetime.datetime) -> str:
     """Сообщение при покупке нового ключа за счет баланса"""
     date, time = convert_date_time(expire_date)
 
@@ -84,12 +84,12 @@ async def buy_new_key_message(period: str, price: int, expire_date: datetime.dat
               f"С баланса списано {price}р.\n"
 
     message += f"Дата истечения ключа <b>{time} {date}</b>\n\n" \
-               f"Вы всегда можете узнать актуальный статус и срок окончания подписки во вкладке \"{btn.PROFILE}\" главного меню " \
-               f"или с помощью команды /{cmd.PROFILE[0]}"
+               f"Вы всегда можете узнать актуальный статус и срок окончания подписки во вкладке \"{btn.KEYS}\" главного меню " \
+               f"или с помощью команды /{cmd.KEYS[0]}"
     return message
 
 
-async def not_enough_balance_message(period: str, price: int, balance: int) -> str:
+def not_enough_balance_message(period: str, price: int, balance: int) -> str:
     """Сообщение при отказе в покупке подписки за счет баланса"""
     message = f"⚠️ Недостаточно средств для покупки/продления подписки на {period} мес.\n" \
               f"Необходимо {price}р., ваш остаток на балансе {balance}р.\n\n" \

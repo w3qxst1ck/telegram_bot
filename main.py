@@ -18,7 +18,7 @@ async def set_commands(bot: io.Bot):
     commands = [
         BotCommand(command=f"{cmd.START[0]}", description=f"{cmd.START[1]}"),
         BotCommand(command=f"{cmd.MENU[0]}", description=f"{cmd.MENU[1]}"),
-        BotCommand(command=f"{cmd.PROFILE[0]}", description=f"{cmd.PROFILE[1]}"),
+        BotCommand(command=f"{cmd.KEYS[0]}", description=f"{cmd.KEYS[1]}"),
         BotCommand(command=f"{cmd.BUY[0]}", description=f"{cmd.BUY[1]}"),
         BotCommand(command=f"{cmd.INSTRUCTION[0]}", description=f"{cmd.INSTRUCTION[1]}"),
         BotCommand(command=f"{cmd.HELP[0]}", description=f"{cmd.HELP[1]}"),

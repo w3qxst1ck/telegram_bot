@@ -3,7 +3,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from handlers.buttons import menu as btn
 
 
-def profile_keyboard(back_btn: bool = False) -> InlineKeyboardBuilder:
+def keys_keyboard(back_btn: bool = False) -> InlineKeyboardBuilder:
     """Клавиатура профиля пользователя"""
     keyboard = InlineKeyboardBuilder()
 

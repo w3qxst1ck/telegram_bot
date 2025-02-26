@@ -45,7 +45,6 @@ async def main_menu(message: types.Message | types.CallbackQuery, admin: bool) -
 async def send_trial_key(message: types.CallbackQuery, session: Any) -> None:
     """Отправка пользователю ключа для пробного периода"""
     tg_id = str(message.from_user.id)
-    user_id = await AsyncOrm.get_user_id(tg_id, session)
 
     # получаем ключ
     email = str(uuid.uuid4())
@@ -68,7 +67,6 @@ async def send_trial_key(message: types.CallbackQuery, session: Any) -> None:
         start_date=datetime.datetime.now(),
         expire_date=datetime.datetime.now() + datetime.timedelta(days=settings.trial_days),
         is_trial=True,
-        user_id=user_id,
         email=email,
         key=ui_key,
         description="trial",

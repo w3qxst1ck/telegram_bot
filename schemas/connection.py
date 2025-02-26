@@ -4,7 +4,6 @@ from pydantic import BaseModel
 
 
 class Connection(BaseModel):
-    user_id: int
     tg_id: str
     active: bool
     start_date: datetime.datetime | None

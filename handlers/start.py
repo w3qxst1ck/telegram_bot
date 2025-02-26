@@ -28,7 +28,7 @@ async def start_handler(message: types.Message | types.CallbackQuery, admin: boo
 async def send_hello_message(message: types.Message, admin: bool, session: Any) -> None:
     """Стартовое сообщение"""
     name: str = message.from_user.first_name if message.from_user.first_name else message.from_user.username
-    trial_status: bool = await AsyncOrm.get_trial_subscription_status(str(message.from_user.id), session)
+    trial_status: bool = await AsyncOrm.get_trial_connection_status(str(message.from_user.id), session)
 
     msg = f"Привет, <b>{name}</b>!\n{settings.bot_name} предоставляет доступ к свободному интернету без " \
           f"ограничений!\n\n"
