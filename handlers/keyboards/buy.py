@@ -25,12 +25,12 @@ def new_key_keyboard() -> InlineKeyboardBuilder:
     keyboard = InlineKeyboardBuilder()
 
     keyboard.row(
-        InlineKeyboardButton(text=f"1 мес. {settings.price_list['1']}р.", callback_data="new_key_period|1"),
-        InlineKeyboardButton(text=f"3 мес. {settings.price_list['3']}р.", callback_data="new_key_period|3")
+        InlineKeyboardButton(text=f"1 мес. ({settings.price_list['1']}р.)", callback_data="new_key_period|1"),
+        InlineKeyboardButton(text=f"3 мес. ({settings.price_list['3']}р.)", callback_data="new_key_period|3")
     )
     keyboard.row(
-        InlineKeyboardButton(text=f"6 мес. {settings.price_list['6']}р.", callback_data="new_key_period|6"),
-        InlineKeyboardButton(text=f"12 мес. {settings.price_list['12']}р.", callback_data="new_key_period|12")
+        InlineKeyboardButton(text=f"6 мес. ({settings.price_list['6']}р.)", callback_data="new_key_period|6"),
+        InlineKeyboardButton(text=f"12 мес. ({settings.price_list['12']}р.)", callback_data="new_key_period|12")
     )
 
     keyboard.row(InlineKeyboardButton(text=f"{btn.BACK}", callback_data="menu|buy"))

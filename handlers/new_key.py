@@ -120,7 +120,7 @@ async def new_key_create_handler(callback: types.CallbackQuery, session: Any) ->
         await AsyncOrm.buy_new_key(new_conn, new_balance, session)
 
         # TODO обновить кэш
-        user_with_conn.balance = new_balance
-        user_with_conn.connections.append(new_conn)
-        user_with_conn_json = user_with_conn.model_dump_json()
-        r.setex(f"profile:{tg_id}", 300, user_with_conn_json)
+        # user_with_conn.balance = new_balance
+        # user_with_conn.connections.append(new_conn)
+        # user_with_conn_json = user_with_conn.model_dump_json()
+        # r.setex(f"profile:{tg_id}", 300, user_with_conn_json)
