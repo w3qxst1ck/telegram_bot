@@ -12,6 +12,7 @@ class Connection(BaseModel):
     email: str
     key: str
     description: str
+    server_id: int
 
 
 

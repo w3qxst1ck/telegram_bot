@@ -30,7 +30,7 @@ class Redis(BaseSettings):
 
 
 class Server(BaseSettings):
-    username: str = Field(..., env='HOSTNAME')
+    username: str = Field(..., env='USERNAME')
     password: str = Field(..., env='PASSWORD')
     flow: str = "xtls-rprx-vision"
 

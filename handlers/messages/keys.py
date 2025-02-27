@@ -4,12 +4,11 @@ from handlers.buttons import commands as cmd
 from handlers.buttons import menu as btn
 
 
-async def profile_message(user_with_conn: UserConnList) -> str:
-    """Сообщение с карточкой профиля"""
+def keys_message(user_with_conn: UserConnList) -> str:
+    """Сообщение с ключами пользователя"""
     # если есть ключи
     if user_with_conn.connections:
-        message = "ВАШИ ПОДПИСКИ\n\n"
-        # sorted_connection = sorted(user_with_conn.connections, key=lambda c: c.active, reverse=True)
+        message = "🔑 ВАШИ КЛЮЧИ\n\n"
 
         for idx, conn in enumerate(user_with_conn.connections, start=1):
             date, time = convert_date_time(conn.expire_date)
@@ -19,18 +18,21 @@ async def profile_message(user_with_conn: UserConnList) -> str:
 
                 # если активна пробная подписка
                 if conn.is_trial:
-                    message += f"<b>{idx}.</b> ✅ <b>Пробная подписка на 1 день</b> активна до <b>{date} {time}</b> " \
-                               f"(ключ <i>{conn.email}</i>)\n\n"
+                    message += f"*{idx}.* ✅ *Пробная подписка на 1 день* активна до *{date} {time}*\n" \
+                               f"```{conn.key}```\n\n"
 
                 # если активна основная подписка
                 else:
-                    message += f"<b>{idx}.</b> ✅ <b>Ключ</b> <i>{conn.email}</i> активен до <b>{date} {time}</b>\n" \
-                               f"Какая-то инфа по ключу...\n\n"
+                    message += f"*{idx}.* ✅ *Ключ* {conn.email} активен до *{date} {time}*\n" \
+                               f"Какая-то инфа по ключу\n" \
+                               f"```{conn.key}```\n\n"
 
             # если подписка неактивна
             else:
-                message += f"<b>{idx}.</b> ❌ Ключ <i>{conn.email}</i> <b>неактивен</b>\n\n"
+                message += f"*{idx}.* ❌ Ключ {conn.email} *неактивен*\n" \
+                           f"```{conn.key}```\n\n"
 
+        message += f"Нажмите на ключ, чтобы скопировать\n\n"
         message += f"Вы можете продлить ключ с помощью команды /{cmd.BUY[0]} или в разделе \"{btn.BUY}\" главного меню"
         # TODO когда будет готова БД
 

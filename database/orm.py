@@ -104,23 +104,9 @@ class AsyncOrm:
         except Exception as e:
             logger.error(f"Ошибка при проверке регистрации пользователя {tg_id}: {e}")
 
-    # @staticmethod
-    # async def create_key(tg_id: str, email: str, ui_key: str, description: str, connection_id: int, session: Any) -> None:
-    #     """Создание ключа"""
-    #     try:
-    #         await session.execute(
-    #             """
-    #             INSERT INTO keys (tg_id, email, key, description, connection_id)
-    #             VALUES($1, $2, $3, $4, $5)
-    #             """,
-    #             tg_id, email, ui_key, description, connection_id
-    #         )
-    #     except Exception as e:
-    #         logger.error(f"Ошибка при создании ключа {ui_key} пользователю {tg_id}: {e}")
-
     @staticmethod
-    async def get_trial_subscription_status(tg_id: str, session: Any) -> bool:
-        """Получение статуса использования пробной подписки"""
+    async def get_trial_connection_status(tg_id: str, session: Any) -> bool:
+        """Получение статуса использования пробного ключа"""
         try:
             trial_used: bool = await session.fetchval(
                 """
@@ -132,10 +118,10 @@ class AsyncOrm:
             return trial_used
 
         except Exception as e:
-            logger.error(f"Ошибка при получении статуса использования пробной подписки {tg_id}: {e}")
+            logger.error(f"Ошибка при получении статуса использования пробного ключа {tg_id}: {e}")
 
     @staticmethod
-    async def get_user_with_connection_list(tg_id: str, session: Any) -> UserConnList:
+    async def get_user_with_connection_list(tg_id: str, session: Any, need_trial: bool = True) -> UserConnList:
         """Получение списка user с connection"""
         try:
             user_row = await session.fetchrow(
@@ -158,15 +144,26 @@ class AsyncOrm:
                 connections=[]
             )
 
-            conns_rows = await session.fetch(
-                """
-                SELECT * 
-                FROM connections  
-                WHERE tg_id = $1
-                ORDER BY active DESC
-                """,
-                tg_id
-            )
+            # с пробным ключом
+            if need_trial:
+                conns_rows = await session.fetch(
+                    """
+                    SELECT * 
+                    FROM connections  
+                    WHERE tg_id = $1
+                    ORDER BY active DESC
+                    """,
+                    tg_id
+                )
+            else:
+                conns_rows = await session.fetch(
+                    """
+                    SELECT * 
+                    FROM connections  
+                    WHERE tg_id = $1 AND is_trial = False
+                    ORDER BY active DESC
+                    """,
+                    tg_id)
 
             # если есть коннекты
             if conns_rows:
@@ -199,23 +196,6 @@ class AsyncOrm:
     #     pass
 
     @staticmethod
-    async def buy_subscription_first_time(
-            tg_id: str,
-            expire_date: datetime.datetime,
-            balance: int,
-            session: Any) -> None:
-        """Первая покупка подписки"""
-        try:
-            await session.execute("""
-                UPDATE subscriptions
-                SET balance = $1, expire_date = $2, active = true, is_trial = false, trial_used = true
-                WHERE tg_id = $3 
-                """, balance, expire_date, tg_id)
-            logger.info(f"Пользователь {tg_id} продлил подписку до {expire_date} (при активной пробной подписке)")
-        except Exception as e:
-            logger.error(f"Ошибка покупки подписки пользователя {tg_id}: {e}")
-
-    @staticmethod
     async def buy_new_key(
             c: Connection,
             balance: int,
@@ -225,10 +205,10 @@ class AsyncOrm:
             async with session.transaction():
                 await session.execute(
                     """
-                    INSERT INTO connections (tg_id, active, start_date, expire_date, is_trial, user_id, email, key, description)
+                    INSERT INTO connections (tg_id, active, start_date, expire_date, is_trial, email, key, description)
                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);
                     """,
-                    c.tg_id, c.active, c.start_date, c.expire_date, c.is_trial, c.user_id, c.email, c.key, c.description)
+                    c.tg_id, c.active, c.start_date, c.expire_date, c.is_trial, c.email, c.key, c.description)
                 await session.execute(
                     """
                     UPDATE users

@@ -6,3 +6,4 @@ def convert_date_time(date: datetime) -> (str, str):
     return date.date().strftime("%d.%m.%Y"), date.time().strftime("%H:%M")
 
 
+
