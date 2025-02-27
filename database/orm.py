@@ -295,4 +295,18 @@ class AsyncOrm:
             )
 
         except Exception as e:
-            logger.error(f"Ощибка при создании сервера {Server}: {e}")
+            logger.error(f"Ошибка при создании сервера {Server}: {e}")
+
+    @staticmethod
+    async def get_servers_ids(session: Any) -> list[int]:
+        """Получение id всех серверов"""
+        try:
+            query = await session.fetch(
+                """
+                SELECT id from servers
+                """
+            )
+            return [server["id"] for server in query]
+
+        except Exception as e:
+            logger.error(f"Оибка при получении id серверов: {e}")

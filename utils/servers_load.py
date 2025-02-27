@@ -11,7 +11,8 @@ async def get_less_loaded_server(session: Any) -> int:
 
     # при отсутствии созданных ранее подключений
     if not servers_ids_connections:
-        return 1
+        all_servers = await AsyncOrm.get_servers_ids(session)
+        return all_servers[0]
 
     for server in servers_ids_connections:
         if server in servers_load:
