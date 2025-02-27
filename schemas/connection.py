@@ -4,7 +4,6 @@ from pydantic import BaseModel
 
 
 class Connection(BaseModel):
-    user_id: int
     tg_id: str
     active: bool
     start_date: datetime.datetime | None
@@ -14,3 +13,15 @@ class Connection(BaseModel):
     key: str
     description: str
 
+
+
+class ServerAdd(BaseModel):
+    name: str
+    region: str
+    api_url: str
+    domain: str
+    inbound_id: int
+
+
+class Server(ServerAdd):
+    id: int

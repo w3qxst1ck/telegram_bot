@@ -47,7 +47,7 @@ class Connection(Base):
     is_trial: Mapped[bool] = mapped_column(default=True)
     email: Mapped[str] = mapped_column(index=True, unique=True)
     key: Mapped[str]
-    description: Mapped[str]
+    description: Mapped[str] = mapped_column(nullable=True)
 
     # user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     user: Mapped["User"] = relationship(back_populates="connections")

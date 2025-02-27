@@ -9,7 +9,7 @@ from aiogram.enums import ParseMode
 from database.orm import AsyncOrm
 from handlers.buttons import commands as cmd
 from handlers.keyboards import menu as menu_kb
-from services import service
+from services import panel
 from settings import settings
 
 router = Router()
