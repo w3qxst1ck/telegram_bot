@@ -1,5 +1,5 @@
 from schemas.user import UserConnList
-from utils.date_time_service import convert_date_time_markdown_v2
+from utils.date_time_service import convert_date_time
 from handlers.buttons import commands as cmd
 from handlers.buttons import menu as btn
 
@@ -11,25 +11,28 @@ def keys_message(user_with_conn: UserConnList) -> str:
         message = "🔑 ВАШИ КЛЮЧИ\n\n"
 
         for idx, conn in enumerate(user_with_conn.connections, start=1):
-            date, time = convert_date_time_markdown_v2(conn.expire_date)
+            date, time = convert_date_time(conn.expire_date)
 
             # если активна пробная или основная подписка
             if conn.active:
 
                 # если активна пробная подписка
                 if conn.is_trial:
-                    message += f"*{idx}\.* ✅ *Пробная подписка на 1 день* активна до *{date} {time}* " \
-                               f"(ключ `{conn.email}`)\n\n"
+                    message += f"*{idx}.* ✅ *Пробная подписка на 1 день* активна до *{date} {time}*\n" \
+                               f"```{conn.key}```\n\n"
 
                 # если активна основная подписка
                 else:
-                    message += f"*{idx}\.* ✅ *Ключ* `{conn.email}` активен до *{date} {time}*\n" \
-                               f"Какая-то инфа по ключу\n\n"
+                    message += f"*{idx}.* ✅ *Ключ* {conn.email} активен до *{date} {time}*\n" \
+                               f"Какая-то инфа по ключу\n" \
+                               f"```{conn.key}```\n\n"
 
             # если подписка неактивна
             else:
-                message += f"*{idx}\.* ❌ Ключ `{conn.email}` *неактивен*\n\n"
+                message += f"*{idx}.* ❌ Ключ {conn.email} *неактивен*\n" \
+                           f"```{conn.key}```\n\n"
 
+        message += f"Нажмите на ключ, чтобы скопировать\n\n"
         message += f"Вы можете продлить ключ с помощью команды /{cmd.BUY[0]} или в разделе \"{btn.BUY}\" главного меню"
         # TODO когда будет готова БД
 

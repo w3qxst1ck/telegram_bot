@@ -42,12 +42,12 @@ async def profile(message: types.Message | types.CallbackQuery, session: Any):
         await message.answer(
             msg,
             reply_markup=kb.keys_keyboard().as_markup(),
-            parse_mode=ParseMode.MARKDOWN_V2
+            parse_mode=ParseMode.MARKDOWN
         )
     elif type(message) == types.CallbackQuery:
         await message.message.edit_text(
             msg,
             reply_markup=kb.keys_keyboard(back_btn=True).as_markup(),
-            parse_mode=ParseMode.MARKDOWN_V2
+            parse_mode=ParseMode.MARKDOWN
         )
 
