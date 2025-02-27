@@ -118,7 +118,7 @@ class AsyncOrm:
             logger.error(f"Ошибка при получении статуса использования пробного ключа {tg_id}: {e}")
 
     @staticmethod
-    async def get_user_with_connection_list(tg_id: str, session: Any) -> UserConnList:
+    async def get_user_with_connection_list(tg_id: str, session: Any, need_trial: bool = True) -> UserConnList:
         """Получение списка user с connection"""
         try:
             user_row = await session.fetchrow(
@@ -141,15 +141,26 @@ class AsyncOrm:
                 connections=[]
             )
 
-            conns_rows = await session.fetch(
-                """
-                SELECT * 
-                FROM connections  
-                WHERE tg_id = $1
-                ORDER BY active DESC
-                """,
-                tg_id
-            )
+            # с пробным ключом
+            if need_trial:
+                conns_rows = await session.fetch(
+                    """
+                    SELECT * 
+                    FROM connections  
+                    WHERE tg_id = $1
+                    ORDER BY active DESC
+                    """,
+                    tg_id
+                )
+            else:
+                conns_rows = await session.fetch(
+                    """
+                    SELECT * 
+                    FROM connections  
+                    WHERE tg_id = $1 AND is_trial = False
+                    ORDER BY active DESC
+                    """,
+                    tg_id)
 
             # если есть коннекты
             if conns_rows:

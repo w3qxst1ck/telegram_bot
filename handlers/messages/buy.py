@@ -9,39 +9,14 @@ from handlers.buttons import commands as cmd
 
 def buy_message(user_with_conn: UserConnList) -> str:
     """Сообщение для команды /buy"""
-    message = ""
-
-    # if user_with_conn.connections:
-    #     for idx, conn in enumerate(user_with_conn.connections, start=1):
-    #         date, time = convert_date_time(user_with_conn.expire_date)
-    #
-    #         # если активна пробная или основная подписка
-    #         if conn.active:
-    #
-    #             # если активна пробная подписка
-    #             if conn.is_trial:
-    #                 message += f"<b>{idx}.</b> ✅ <b>Пробная подписка</b> на 1 день, она истекает <b>{date} в {time}</b> " \
-    #                            f"(ключ {conn.email})\n\n"
-    #
-    #             # если активна основная подписка
-    #             else:
-    #                 message += f"<b>{idx}.</b> ✅ Ключ {conn.email} активен до <b>{date} {time}</b>\n" \
-    #                            f"Какая-то инфа по ключу\n"
-    #
-    #         # если подписка неактивна
-    #         else:
-    #             message += f"<b>{idx}.</b> ❌ Ключ {conn.email} <b>неактивен</b>\n\n"
-    # else:
-    #     message += f"У вас еще нет приобретенных ключей для подключения VPN\n\n"
-
-    message += f"У вас на балансе <b>{user_with_conn.balance}р</b>\n\n" \
-               f"Стоимость ключа VPN\n" \
-               f"• 1 месяц <b>{settings.price_list['1']}р</b>\n" \
-               f"• 3 месяца <b>{settings.price_list['3']}р</b>\n" \
-               f"• 6 месяцев <b>{settings.price_list['6']}р</b>\n" \
-               f"• 12 месяцев <b>{settings.price_list['12']}р</b>\n\n" \
-               f"Вы можете купить или продлить (оплаченный период будет добавлен к текущему) имеющийся ключ, " \
-               f"а также пополнить баланс с помощью соответствующих кнопок ниже"
+    message = f"У вас на балансе <b>{user_with_conn.balance}р</b>\n\n" \
+              f"Стоимость ключа VPN\n" \
+              f"• 1 месяц <b>{settings.price_list['1']}р</b>\n" \
+              f"• 3 месяца <b>{settings.price_list['3']}р</b>\n" \
+              f"• 6 месяцев <b>{settings.price_list['6']}р</b>\n" \
+              f"• 12 месяцев <b>{settings.price_list['12']}р</b>\n\n" \
+              f"Вы можете купить или продлить (оплаченный период будет добавлен к текущему) имеющийся ключ, " \
+              f"а также пополнить баланс с помощью соответствующих кнопок ниже"
 
     return message
 
@@ -94,5 +69,26 @@ def not_enough_balance_message(period: str, price: int, balance: int) -> str:
     message = f"⚠️ Недостаточно средств для покупки/продления подписки на {period} мес.\n" \
               f"Необходимо {price}р., ваш остаток на балансе {balance}р.\n\n" \
               f"Вы можете пополнить баланс на необходимую сумму по кнопке ниже"
+
+    return message
+
+
+def extend_key_menu_message(user_with_conns: UserConnList) -> str:
+    """Сообщение в меню продления ключа"""
+    if user_with_conns.connections:
+        message = f"У вас на балансе <b>{user_with_conns.balance}р</b>\n\n" \
+                  f"Стоимость продления ключа VPN\n" \
+                  f"• 1 месяц <b>{settings.price_list['1']}р</b>\n" \
+                  f"• 3 месяца <b>{settings.price_list['3']}р</b>\n" \
+                  f"• 6 месяцев <b>{settings.price_list['6']}р</b>\n" \
+                  f"• 12 месяцев <b>{settings.price_list['12']}р</b>\n\n" \
+                  f"Выберите ключ, который необходимо продлить, с помощью кнопок ниже (если ключ еще активен, " \
+                  f"срок продления будет прибавлен к текущему)\n\n" \
+                  f"✅ - Активные ключи\n" \
+                  f"❌ - Неактивные ключи"
+    else:
+        message = f"У вас еще нет купленных ключей для подключения VPN. Вы можете купить новый ключ с помощью" \
+                  f"команды /{cmd.BUY[0]} или в разделе \"{btn.BUY}\" главного меню"
+
 
     return message

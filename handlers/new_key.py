@@ -36,7 +36,7 @@ async def new_key_menu_handler(callback: types.CallbackQuery, session: Any) -> N
     await callback.message.edit_text(msg, reply_markup=buy_kb.new_key_keyboard().as_markup())
 
 
-@router.callback_query(F.data.split("|")[0] == "new_key")
+@router.callback_query(F.data.split("|")[0] == "new_key_period")
 async def new_key_confirm_handler(callback: types.CallbackQuery, session: Any) -> None:
     """Подтверждение покупки нового ключа"""
     period = callback.data.split("|")[1]
@@ -99,7 +99,8 @@ async def new_key_create_handler(callback: types.CallbackQuery, session: Any) ->
         key = "SOME KEY FOR TEST" # TODO поправить
         description = "SOME DESCRIPTION" # TODO поправить
         new_balance = user_with_conn.balance - price
-        conn = Connection(
+        server_id = 1 # TODO поправить
+        new_conn = Connection(
             user_id=user_id,
             tg_id=tg_id,
             active=True,
@@ -108,12 +109,18 @@ async def new_key_create_handler(callback: types.CallbackQuery, session: Any) ->
             is_trial=False,
             email=email,
             key=key,
-            description=description
+            description=description,
+            server_id=server_id
         )
-        # создание connection в бд
-        await AsyncOrm.buy_new_key(conn, new_balance, session)
-        # TODO выписать новый ключ
-        # TODO списать с баланса деньги
 
-        msg = ms.buy_new_key_message(period, price, conn.expire_date)
+        msg = ms.buy_new_key_message(period, price, new_conn.expire_date)
         await callback.message.edit_text(msg)
+
+        # создание connection в бд
+        await AsyncOrm.buy_new_key(new_conn, new_balance, session)
+
+        # TODO обновить кэш
+        user_with_conn.balance = new_balance
+        user_with_conn.connections.append(new_conn)
+        user_with_conn_json = user_with_conn.model_dump_json()
+        r.setex(f"profile:{tg_id}", 300, user_with_conn_json)
