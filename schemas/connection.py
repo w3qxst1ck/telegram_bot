@@ -14,3 +14,15 @@ class Connection(BaseModel):
     description: str
     server_id: int
 
+
+
+class ServerAdd(BaseModel):
+    name: str
+    region: str
+    api_url: str
+    domain: str
+    inbound_id: int
+
+
+class Server(ServerAdd):
+    id: int

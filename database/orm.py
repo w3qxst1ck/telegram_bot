@@ -7,7 +7,8 @@ import asyncpg
 from database.database import async_engine
 from database.tables import Base
 
-from schemas.user import UserAdd, UserConnList, Connection
+from schemas.user import UserAdd, UserConnList
+from schemas.connection import Connection, Server, ServerAdd
 from settings import settings
 from logger import logger
 
@@ -39,13 +40,13 @@ class AsyncOrm:
                 VALUES ($1, $2, $3, $4, $5, $6)
                 ON CONFLICT (tg_id) DO NOTHING
                 """,
-                user.tg_id,
-                user.username,
-                user.firstname,
-                user.lastname,
-                user.balance,
-                user.trial_used,
-            )
+                                  user.tg_id,
+                                  user.username,
+                                  user.firstname,
+                                  user.lastname,
+                                  user.balance,
+                                  user.trial_used,
+                                  )
         except Exception as e:
             logger.error(f"Ошибка при создании пользователя {user.tg_id} "
                          f"{'@' + user.username if user.username else ''}: {e}")
@@ -72,16 +73,18 @@ class AsyncOrm:
                                 is_trial: bool,
                                 email: str,
                                 key: str,
-                                description: str,
+                                description: str | None,
+                                server_id: int,
                                 session: Any):
         """Создание подключения для пользователя"""
         try:
             await session.execute(
                 """
-                INSERT INTO connections (tg_id, active, start_date, expire_date, is_trial, email, key, description)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                INSERT INTO connections (tg_id, active, start_date, expire_date, 
+                is_trial, email, key, description, server_id)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
                 """,
-                tg_id, active, start_date, expire_date, is_trial, email, key, description
+                tg_id, active, start_date, expire_date, is_trial, email, key, description, server_id
             )
             logger.info(f"Создан коннект с ключом {key} для пользователя {tg_id}")
         except Exception as e:
@@ -129,7 +132,7 @@ class AsyncOrm:
                 tg_id
             )
 
-            user_conns: UserConnList = UserConnList(
+            user_conns = UserConnList(
                 id=user_row["id"],
                 created_at=user_row["created_at"],
                 tg_id=user_row["tg_id"],
@@ -217,3 +220,93 @@ class AsyncOrm:
                 logger.info(f"Пользователь {c.tg_id} купил новый ключ сроком до {c.expire_date}")
         except Exception as e:
             logger.error(f"Ошибка покупки/продления подписки пользователя {c.tg_id}: {e}")
+
+    @staticmethod
+    async def get_all_servers(session: Any) -> list[Server]:
+        """Получение всех серверов"""
+        try:
+            query = await session.fetch(
+                """
+                SELECT * FROM servers;
+                """
+            )
+            servers_list = [
+                Server(
+                    id=query["id"],
+                    name=query["name"],
+                    region=query["region"],
+                    api_url=query["api_url"],
+                    domain=query["domain"],
+                    inbound_id=query["inbound_id"]
+                )
+            ]
+            return servers_list
+
+        except Exception as e:
+            logger.error(f"Ошибка при получение всех серверов: {e}")
+
+    @staticmethod
+    async def get_server(server_id: int, session: Any) -> Server:
+        """Получает сервер по id"""
+        try:
+            query = await session.fetchrow(
+                """
+                SELECT * from servers
+                WHERE id=$1
+                """,
+                server_id
+            )
+            server = Server(
+                id=query["id"],
+                name=query["name"],
+                region=query["region"],
+                api_url=query["api_url"],
+                domain=query["domain"],
+                inbound_id=query["inbound_id"]
+
+            )
+            return server
+        except Exception as e:
+            logger.error(f"Ошибка при получение сервера {server_id}: {e}")
+
+    @staticmethod
+    async def get_all_servers_id_from_connections(session: Any) -> list[int]:
+        """Получает list всех server_id из таблицы connections"""
+        try:
+            query = await session.fetch(
+                """
+                SELECT server_id from connections
+                """
+            )
+            return query
+        except Exception as e:
+            logger.error(f"Ошибка при получении id всех серверов из connections: {e}")
+
+    @staticmethod
+    async def create_server(server: ServerAdd, session: Any) -> None:
+        """Создание сервера"""
+        try:
+            await session.execute(
+                """
+                INSERT INTO servers (name, region, api_url, domain, inbound_id) 
+                VALUES($1, $2, $3, $4, $5)
+                """,
+                server.name, server.region, server.api_url, server.domain, server.inbound_id
+            )
+
+        except Exception as e:
+            logger.error(f"Ошибка при создании сервера {Server}: {e}")
+
+    @staticmethod
+    async def get_servers_ids(session: Any) -> list[int]:
+        """Получение id всех серверов"""
+        try:
+            query = await session.fetch(
+                """
+                SELECT id from servers
+                """
+            )
+            return [server["id"] for server in query]
+
+        except Exception as e:
+            logger.error(f"Оибка при получении id серверов: {e}")
