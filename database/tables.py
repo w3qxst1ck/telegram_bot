@@ -49,7 +49,6 @@ class Connection(Base):
     key: Mapped[str]
     description: Mapped[str]
 
-    # user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     user: Mapped["User"] = relationship(back_populates="connections")
 
     server_id: Mapped[int] = mapped_column(ForeignKey("servers.id", ondelete="CASCADE"))
