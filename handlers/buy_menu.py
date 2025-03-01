@@ -4,7 +4,7 @@ from aiogram import Router, types, F
 from aiogram.filters import Command
 
 from handlers.buttons import commands as cmd
-from handlers.keyboards import buy as buy_kb
+from handlers.keyboards import buy as kb
 from database.orm import AsyncOrm
 from handlers.messages import buy as ms
 
@@ -34,6 +34,6 @@ async def buy_handler(message: types.Message | types.CallbackQuery, session: Any
     msg = ms.buy_message(user_with_conn)
 
     if type(message) == types.Message:
-        await message.answer(msg, reply_markup=buy_kb.buy_keyboard().as_markup())
+        await message.answer(msg, reply_markup=kb.buy_keyboard().as_markup())
     elif type(message) == types.CallbackQuery:
-        await message.message.edit_text(msg, reply_markup=buy_kb.buy_keyboard(back_bnt=True).as_markup())
+        await message.message.edit_text(msg, reply_markup=kb.buy_keyboard(back_bnt=True).as_markup())

@@ -6,10 +6,10 @@ from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 
-from handlers.keyboards import buy as buy_kb
+from handlers.keyboards import balance as kb
 from database.orm import AsyncOrm
 from schemas.connection import Connection
-from handlers.messages import buy as ms
+from handlers.messages import balance as ms
 from handlers.states.buy import UpBalanceFSM
 from handlers.buy_menu import buy_handler
 from cache import r
@@ -27,7 +27,7 @@ async def balance_handler(callback: types.CallbackQuery, state: FSMContext) -> N
     await state.set_state(UpBalanceFSM.summ)
 
     text = "Введите сумму, на которую хотите пополнить баланс"
-    msg = await callback.message.edit_text(text, reply_markup=buy_kb.cancel_keyboard().as_markup())
+    msg = await callback.message.edit_text(text, reply_markup=kb.cancel_keyboard().as_markup())
     await state.update_data(prev_mess=msg)
 
 
@@ -46,7 +46,7 @@ async def confirm_up_balance_handler(message: types.Message, state: FSMContext) 
                                    f"Необходимо указать сумму одним <b>числом</b> без букв, знаков препинания "
                                    f"и других специальных символов (например: 300)\n"
                                    f"Сумма не может быть меньше {settings.price_list['1']}",
-                                   reply_markup=buy_kb.cancel_keyboard().as_markup())
+                                   reply_markup=kb.cancel_keyboard().as_markup())
         await state.update_data(prev_mess=msg)
         return
     else:
@@ -54,7 +54,7 @@ async def confirm_up_balance_handler(message: types.Message, state: FSMContext) 
         invoice_message = ms.invoice_message(summ, str(message.from_user.id))
         await message.answer(
             invoice_message,
-            reply_markup=buy_kb.payment_confirm_keyboard().as_markup(),
+            reply_markup=kb.payment_confirm_keyboard().as_markup(),
             parse_mode=ParseMode.MARKDOWN_V2
         )
 

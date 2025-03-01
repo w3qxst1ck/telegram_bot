@@ -48,17 +48,24 @@ async def send_trial_key(message: types.CallbackQuery, session: Any) -> None:
 
     # получаем ключ
     email = str(uuid.uuid4())
-    ui_key = "SOME KEY"
+    # TODO поправить
+    ui_key = "vless://9ea0e3b8-c7f6-4224-92b2-631cee4aeaf5@somedomain123.store:443?type=tcp&security=reality&pbk=_V7Joja7EM0GukBFX7M_HBqtlJAz0hQuYIhoGqWVBwI&fp=chrome&sni=www.google.com&sid=6977dfdb8b9c54&spx=%2F"
 
+    # await message.message.answer(
+    #     "Ваш ключ, нажмите чтобы скопировать ⬇️\n\n"
+    #     f"```{ui_key}```",
+    #     parse_mode=ParseMode.MARKDOWN
+    # )
     await message.message.answer(
-        "Ваш ключ нажмите чтобы скопировать ⬇️\n\n"
-        f"`{ui_key}`",
-        parse_mode=ParseMode.MARKDOWN_V2
-    )
-    await message.message.answer(
+        "Ваш ключ, нажмите чтобы скопировать ⬇️\n\n"
+        f"```{ui_key}```\n\n"
         f"Инструкцию по установке и настройке VPN вы можете посмотреть здесь /{cmd.INSTRUCTION[0]}",
-        reply_markup=menu_kb.to_menu_keyboard().as_markup()
+        reply_markup=menu_kb.to_menu_keyboard().as_markup(),
+        parse_mode=ParseMode.MARKDOWN
     )
+
+    # TODO поправить
+    server_id = 1
 
     # активируем пользователю пробное подключение
     await AsyncOrm.create_connection(
@@ -70,6 +77,7 @@ async def send_trial_key(message: types.CallbackQuery, session: Any) -> None:
         email=email,
         key=ui_key,
         description="trial",
+        server_id=server_id,
         session=session
     )
 

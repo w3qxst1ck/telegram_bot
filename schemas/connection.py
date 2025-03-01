@@ -15,7 +15,6 @@ class Connection(BaseModel):
     server_id: int
 
 
-
 class ServerAdd(BaseModel):
     name: str
     region: str

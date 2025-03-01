@@ -205,10 +205,10 @@ class AsyncOrm:
             async with session.transaction():
                 await session.execute(
                     """
-                    INSERT INTO connections (tg_id, active, start_date, expire_date, is_trial, email, key, description)
+                    INSERT INTO connections (tg_id, active, start_date, expire_date, is_trial, email, key, description, server_id)
                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);
                     """,
-                    c.tg_id, c.active, c.start_date, c.expire_date, c.is_trial, c.email, c.key, c.description)
+                    c.tg_id, c.active, c.start_date, c.expire_date, c.is_trial, c.email, c.key, c.description, c.server_id)
                 await session.execute(
                     """
                     UPDATE users
@@ -219,7 +219,47 @@ class AsyncOrm:
                 )
                 logger.info(f"Пользователь {c.tg_id} купил новый ключ сроком до {c.expire_date}")
         except Exception as e:
-            logger.error(f"Ошибка покупки/продления подписки пользователя {c.tg_id}: {e}")
+            logger.error(f"Ошибка покупки ключа пользователя {c.tg_id}: {e}")
+
+    @staticmethod
+    async def extend_key(email: str, expire_date: datetime.datetime, tg_id: str, balance: int, session: Any) -> None:
+        """Продления ключа и транзакционное уменьшение баланса"""
+        try:
+            async with session.transaction():
+                await session.execute(
+                    """
+                    UPDATE connections SET expire_date = $1, active=true
+                    WHERE email = $2;
+                    """,
+                    expire_date, email
+                )
+                await session.execute(
+                    """
+                    UPDATE users
+                    SET balance = $1
+                    WHERE tg_id = $2;
+                    """,
+                    balance, tg_id
+                )
+                logger.info(f"Пользователь {tg_id} продлил ключ {email} до {expire_date}")
+        except Exception as e:
+            logger.error(f"Ошибка продления ключа {email} пользователя {tg_id}: {e}")
+
+    @staticmethod
+    async def get_connection(email: str, session) -> Connection:
+        """Получение connection по email"""
+        try:
+            row = await session.fetchrow(
+                """
+                SELECT * FROM connections
+                WHERE email = $1
+                """,
+                email
+            )
+            conn = Connection.model_validate(row)
+            return conn
+        except Exception as e:
+            logger.error(f"Ошибка получения connection с email {email}: {e}")
 
     @staticmethod
     async def get_all_servers(session: Any) -> list[Server]:
