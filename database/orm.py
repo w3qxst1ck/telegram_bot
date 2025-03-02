@@ -349,4 +349,4 @@ class AsyncOrm:
             return [server["id"] for server in query]
 
         except Exception as e:
-            logger.error(f"Оибка при получении id серверов: {e}")
+            logger.error(f"Ошибка при получении id серверов: {e}")

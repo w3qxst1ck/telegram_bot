@@ -28,13 +28,13 @@ async def start_handler(message: types.Message | types.CallbackQuery, admin: boo
 async def send_hello_message(message: types.Message, admin: bool, session: Any) -> None:
     """Стартовое сообщение"""
     name: str = message.from_user.first_name if message.from_user.first_name else message.from_user.username
-    trial_status: bool = await AsyncOrm.get_trial_connection_status(str(message.from_user.id), session)
+    trial_used: bool = await AsyncOrm.get_trial_connection_status(str(message.from_user.id), session)
 
     msg = f"Привет, <b>{name}</b>!\n{settings.bot_name} предоставляет доступ к свободному интернету без " \
           f"ограничений!\n\n"
 
     # для пробного периода
-    if not trial_status:
+    if not trial_used:
         msg += f"Вам доступен <b>бесплатный пробный период на {settings.trial_days} день</b>.\n" \
                "Ваш ключ доступа ниже по кнопке\n\n" \
                f"Посмотреть свои ключи, профиль, пополнить баланс и купить подписку вы можете в /{cmd.MENU[0]}\n" \
@@ -51,7 +51,7 @@ async def send_hello_message(message: types.Message, admin: bool, session: Any) 
     if os.path.isfile(image_path):
         with open(image_path, "rb") as image_buffer:
 
-            if not trial_status:
+            if not trial_used:
                 keyboard = InlineKeyboardBuilder()
                 keyboard.row(InlineKeyboardButton(text=f"{TRIAL_KEY}", callback_data=f"trial_key"))
 

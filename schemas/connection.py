@@ -11,7 +11,7 @@ class Connection(BaseModel):
     is_trial: bool
     email: str
     key: str
-    description: str
+    description: str | None
     server_id: int
 
 
