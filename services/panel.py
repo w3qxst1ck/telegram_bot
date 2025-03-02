@@ -88,7 +88,7 @@ async def activate_client(xui: AsyncApi, email: str, tg_id: str):
         logger.error(f"Ошибка при активации клиента {email} в панели: {e}")
 
 
-async def delete_client(xui: AsyncApi, email: str):
+async def delete_key(xui: AsyncApi, email: str):
     """Удаление клиента из сервиса"""
     await xui.login()
 

@@ -33,10 +33,21 @@ async def off_expired_connections(session: Any):
     all_connections = await AsyncOrm.get_active_connections(session)
 
     for conn in all_connections:
+        # TODO разобраться с time zones
         print(f"expire: {conn.expire_date}")
         print(f"now: {datetime.datetime.now()}")
 
-        if conn.expire_date < datetime.datetime.now():  # TODO разобраться с time zones
+        if conn.expire_date < datetime.datetime.now():
+
+            # если ключ пробный - удаляем его
+            if conn.is_trial:
+                server: Server = await AsyncOrm.get_server(conn.server_id, session)
+                # удаление в панели
+                await service.delete_client(server, conn.email)
+                # удаление в БД
+                await AsyncOrm.delete_connection(conn.email, session)
+                # TODO оповестить пользователя
+                continue
 
             # переводим подписку в неактивные в БД
             await AsyncOrm.deactivate_connection(conn.email, session)

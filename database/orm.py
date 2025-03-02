@@ -380,3 +380,18 @@ class AsyncOrm:
             )
         except Exception as e:
             logger.error(f"Ошибка при переводе connection.action в false: {e}")
+
+    @staticmethod
+    async def delete_connection(email: str, session: Any):
+        """Удаление connection"""
+        try:
+            await session.execute(
+                """
+                DELETE from connections 
+                WHERE email=$1
+                """,
+                email
+            )
+
+        except Exception as e:
+            logger.error(f"Ошибка при удалении connection {email}: {e}")
