@@ -350,3 +350,33 @@ class AsyncOrm:
 
         except Exception as e:
             logger.error(f"Ошибка при получении id серверов: {e}")
+
+    @staticmethod
+    async def get_active_connections(session: Any) -> list[Connection]:
+        """Получает все активные подключения"""
+        try:
+            query = await session.fetch(
+                """
+                SELECT * FROM connections
+                WHERE active=true
+                """
+            )
+            connections: list[Connection] = [Connection.model_validate(conn) for conn in query]
+            return connections
+
+        except Exception as e:
+            logger.error(f"Ошибка при получении всех connections: {e}")
+
+    @staticmethod
+    async def deactivate_connection(email: str, session: Any):
+        """Перевод active в False"""
+        try:
+            await session.execute(
+                """
+                UPDATE connections SET active=false
+                WHERE email=$1
+                """,
+                email
+            )
+        except Exception as e:
+            logger.error(f"Ошибка при переводе connection.action в false: {e}")

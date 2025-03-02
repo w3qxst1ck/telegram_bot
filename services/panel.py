@@ -47,7 +47,7 @@ async def create_client(xui: AsyncApi, inbound_id: int, client_uuid: str, tg_id:
         logger.error(f"Ошибка при создании ключа {client_uuid} пользователю {tg_id}: {e}")
 
 
-async def block_client(xui: AsyncApi, email: str, tg_id: str) -> None:
+async def block_key(xui: AsyncApi, email: str, tg_id: str) -> None:
     """Блокировка ключа (устанавливаем прошедшую дату)"""
     await xui.login()
 
@@ -56,7 +56,7 @@ async def block_client(xui: AsyncApi, email: str, tg_id: str) -> None:
         # добавляем недостающие данные
         client.id = email
         client.tg_id = tg_id
-        client.flow = settings.server_flow
+        client.flow = settings.server.flow
 
         client.enable = False
         client.expiry_time = int((datetime.datetime.now(tz=pytz.timezone("Europe/Moscow")) - datetime.timedelta(

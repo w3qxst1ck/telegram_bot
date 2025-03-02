@@ -1,16 +1,19 @@
 import asyncio
+from datetime import datetime
 
 import aiogram as io
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import BotCommand, BotCommandScopeDefault
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from middlewares.database import DatabaseMiddleware
 from middlewares.admin import AdminMiddleware
 from settings import settings
 from handlers import main_router
 from handlers.buttons import commands as cmd
+from schedulers import keys_schedule
 
 
 async def set_commands(bot: io.Bot):
@@ -41,6 +44,15 @@ async def start_bot() -> None:
 
     storage = MemoryStorage()
     dp = io.Dispatcher(storage=storage)
+
+    # SCHEDULER
+    scheduler = AsyncIOScheduler(timezone="Europe/Moscow")
+
+    # перевод закончившихся подписок в неактивные, удаление пробных
+    scheduler.add_job(keys_schedule.run_every_hour, trigger="cron", year='*', month='*', day="*", hour="*", minute=1,
+                      second=0, start_date=datetime.now(), kwargs={})
+
+    scheduler.start()
 
     # ROUTERS
     dp.include_router(main_router)
