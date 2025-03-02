@@ -3,7 +3,7 @@ from typing import Any
 from py3xui import AsyncApi
 
 from settings import settings
-from services.panel import create_client, block_key, delete_key
+from services.panel import create_client, block_key, delete_key, activate_key
 from schemas.connection import Server
 
 
@@ -25,7 +25,7 @@ async def add_client(server: Server, client_email: str, tg_id: str) -> str:
     return key
 
 
-async def delete_client(server: Server, client_email: str):
+async def delete_client(server: Server, client_email: str) -> None:
     """Удаляет ключ в панели 3x-ui"""
     xui = AsyncApi(
         host=server.api_url,
@@ -35,7 +35,7 @@ async def delete_client(server: Server, client_email: str):
     await delete_key(xui, client_email)
 
 
-async def block_client(server: Server, client_email: str, tg_id: str):
+async def block_client(server: Server, client_email: str, tg_id: str) -> None:
     """Блокировка ключа в панели 3x-ui"""
     xui = AsyncApi(
         host=server.api_url,
@@ -44,3 +44,12 @@ async def block_client(server: Server, client_email: str, tg_id: str):
     )
     await block_key(xui, client_email, tg_id)
 
+
+async def activate_client(server: Server, client_email: str, tg_id: str) -> None:
+    """Активация клиента (ключа)"""
+    xui = AsyncApi(
+        host=server.api_url,
+        username=settings.server.username,
+        password=settings.server.password
+    )
+    await activate_key(xui, client_email, tg_id)

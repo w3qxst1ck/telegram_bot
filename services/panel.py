@@ -68,7 +68,7 @@ async def block_key(xui: AsyncApi, email: str, tg_id: str) -> None:
         logger.error(f"Ошибка при блокировке клиента {email} в панели: {e}")
 
 
-async def activate_client(xui: AsyncApi, email: str, tg_id: str):
+async def activate_key(xui: AsyncApi, email: str, tg_id: str):
     """Разблокировка ключа (снятие ограничения по дате)"""
     await xui.login()
 
@@ -77,7 +77,7 @@ async def activate_client(xui: AsyncApi, email: str, tg_id: str):
         # добавляем недостающие данные
         client.id = email
         client.tg_id = tg_id
-        client.flow = settings.flow
+        client.flow = settings.server.flow
 
         client.enable = True
         client.expiry_time = 0
