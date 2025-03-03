@@ -9,11 +9,13 @@ from handlers.keyboards import new_key as kb
 from handlers.keyboards.balance import not_enough_balance_keyboard
 from handlers.keyboards.menu import to_menu_keyboard
 from database.orm import AsyncOrm
-from schemas.connection import Connection
+from schemas.connection import Connection, Server
 from handlers.messages import new_key as ms
 from handlers.messages.balance import not_enough_balance_message
+from services.service import add_client
 from cache import r
 from settings import settings
+from utils.servers_load import get_less_loaded_server
 
 router = Router()
 
@@ -93,16 +95,18 @@ async def new_key_create_handler(callback: types.CallbackQuery, session: Any) ->
     #     user_with_conn_json = user_with_conn.model_dump_json()
     #     r.setex(f"profile:{tg_id}", 300, user_with_conn_json)
 
-    # подготовка нового Connection
-    user_id = 1 # TODO поправить
+    # добавление клиента в панель
+    server_id = await get_less_loaded_server(session)
+    print("type:", type(server_id))
+    server: Server = await AsyncOrm.get_server(server_id["id"], session)
+    print("server:", server)
     email = str(uuid.uuid4())
-    # TODO поправить
-    key = "vless://9ea0e3b8-c7f6-4224-92b1-631cee4aeaf5@somedomain123.store:443?type=tcp&security=reality&pbk=_V7Joja7EM0GukBFX7M_HBqtlJAz0hQuYIhoGqWVBwI&fp=chrome&sni=www.google.com&sid=6977dfdb8b9c54&spx=%2F#leva"
+    key = await add_client(server, email, tg_id)
+
+    # подготовка нового Connection
     description = "SOME DESCRIPTION" # TODO поправить
     new_balance = user_with_conn.balance - price
-    server_id = 1 # TODO поправить
     new_conn = Connection(
-        user_id=user_id,
         tg_id=tg_id,
         active=True,
         start_date=datetime.datetime.now(),
