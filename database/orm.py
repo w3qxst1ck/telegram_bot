@@ -174,26 +174,6 @@ class AsyncOrm:
 
         except Exception as e:
             logger.error(f"Ошибка получения пользователя с коннектами {tg_id}: {e}")
-    #
-    # @staticmethod
-    # async def activate_trial_subscription(tg_id: str, session: Any) -> None:
-    #     """Активация пробной подписки"""
-    #     start_date = datetime.datetime.now()
-    #     expire_date = start_date + datetime.timedelta(days=settings.trial_days)
-    #
-    #     try:
-    #         await session.execute(
-    #             """
-    #             UPDATE subscriptions
-    #             SET active = true, start_date = $1, expire_date = $2, is_trial = true
-    #             WHERE tg_id = $3
-    #             """,
-    #             start_date, expire_date, tg_id
-    #         )
-    #     except Exception as e:
-    #         logger.error(f"Ошибка активации пробной подписки пользователя {tg_id}: {e}")
-    #
-    #     pass
 
     @staticmethod
     async def buy_new_key(
@@ -270,16 +250,7 @@ class AsyncOrm:
                 SELECT * FROM servers;
                 """
             )
-            servers_list = [
-                Server(
-                    id=query["id"],
-                    name=query["name"],
-                    region=query["region"],
-                    api_url=query["api_url"],
-                    domain=query["domain"],
-                    inbound_id=query["inbound_id"]
-                )
-            ]
+            servers_list = [Server.model_validate(row) for row in query]
             return servers_list
 
         except Exception as e:
@@ -318,7 +289,7 @@ class AsyncOrm:
                 SELECT server_id from connections
                 """
             )
-            return query
+            return [row["id"] for row in query]
         except Exception as e:
             logger.error(f"Ошибка при получении id всех серверов из connections: {e}")
 
@@ -380,3 +351,33 @@ class AsyncOrm:
             )
         except Exception as e:
             logger.error(f"Ошибка при переводе connection.action в false: {e}")
+
+    @staticmethod
+    async def delete_connection(email: str, session: Any):
+        """Удаление connection"""
+        try:
+            await session.execute(
+                """
+                DELETE from connections 
+                WHERE email=$1
+                """,
+                email
+            )
+
+        except Exception as e:
+            logger.error(f"Ошибка при удалении connection {email}: {e}")
+
+    @staticmethod
+    async def set_trial_used_true(tg_id: str, session: Any):
+        """Перевод trial_used в значение True"""
+        try:
+            await session.execute(
+                """
+                UPDATE users SET trial_used=true 
+                WHERE tg_id=$1
+                """,
+                tg_id
+            )
+
+        except Exception as e:
+            logger.error(f"Ошибка при обновлении статуса об использовании пробного периода у польз-ля {tg_id}: {e}")

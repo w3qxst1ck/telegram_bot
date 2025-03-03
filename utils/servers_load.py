@@ -7,7 +7,7 @@ async def get_less_loaded_server(session: Any) -> int:
     """Возвращает id самого ненагруженного сервера"""
     servers_load: dict[int:int] = {}
 
-    servers_ids_connections = await AsyncOrm.get_all_servers_id_from_connections(session)
+    servers_ids_connections: list[int] = await AsyncOrm.get_all_servers_id_from_connections(session)
 
     # при отсутствии созданных ранее подключений
     if not servers_ids_connections:
