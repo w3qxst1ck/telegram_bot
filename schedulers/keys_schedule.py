@@ -3,15 +3,17 @@ import datetime
 
 import aiogram
 import asyncpg
+from aiogram.enums import ParseMode
 
 from database.orm import AsyncOrm
 from logger import logger
 from schemas.connection import Server
 from settings import settings
 from services import service
+from handlers.messages import scheduler as msg
 
 
-async def run_every_hour() -> None:
+async def run_every_hour(bot: aiogram.Bot) -> None:
     """Выполняется каждый час"""
     session = await asyncpg.connect(
         user=settings.db.postgres_user,
@@ -21,14 +23,14 @@ async def run_every_hour() -> None:
         database=settings.db.postgres_db
     )
     try:
-        await off_expired_connections(session)
+        await off_expired_connections(session, bot)
         # TODO раз в час сюда
 
     finally:
         await session.close()
 
 
-async def off_expired_connections(session: Any):
+async def off_expired_connections(session: Any, bot: aiogram.Bot):
     """Проверяет активность подписок"""
     all_connections = await AsyncOrm.get_active_connections(session)
 
@@ -42,11 +44,20 @@ async def off_expired_connections(session: Any):
             # если ключ пробный - удаляем его
             if conn.is_trial:
                 server: Server = await AsyncOrm.get_server(conn.server_id, session)
+
                 # удаление в панели
                 await service.delete_client(server, conn.email)
+
                 # удаление в БД
                 await AsyncOrm.delete_connection(conn.email, session)
-                # TODO оповестить пользователя
+
+                # перевод trial_used в True у пользователя
+                await AsyncOrm.set_trial_used_true(conn.tg_id, session)
+
+                # оповещение пользователя
+                message = msg.expire_trial_key(conn.key)
+                await bot.send_message(conn.tg_id, message, parse_mode=ParseMode.MARKDOWN)
+
                 continue
 
             # переводим подписку в неактивные в БД
@@ -56,6 +67,6 @@ async def off_expired_connections(session: Any):
             server: Server = await AsyncOrm.get_server(conn.server_id, session)
             await service.block_client(server, conn.email, conn.tg_id)
 
-            # TODO оповестить пользователя
-
-
+            # оповещение пользователя
+            message = msg.expire_key(conn.key)
+            await bot.send_message(conn.tg_id, message)

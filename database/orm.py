@@ -395,3 +395,18 @@ class AsyncOrm:
 
         except Exception as e:
             logger.error(f"Ошибка при удалении connection {email}: {e}")
+
+    @staticmethod
+    async def set_trial_used_true(tg_id: str, session: Any):
+        """Перевод trial_used в значение True"""
+        try:
+            await session.execute(
+                """
+                UPDATE users SET trial_used=true 
+                WHERE tg_id=$1
+                """,
+                tg_id
+            )
+
+        except Exception as e:
+            logger.error(f"Ошибка при обновлении статуса об использовании пробного периода у польз-ля {tg_id}: {e}")
