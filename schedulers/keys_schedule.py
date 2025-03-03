@@ -69,4 +69,4 @@ async def off_expired_connections(session: Any, bot: aiogram.Bot):
 
             # оповещение пользователя
             message = msg.expire_key(conn.key)
-            await bot.send_message(conn.tg_id, message)
+            await bot.send_message(conn.tg_id, message, parse_mode=ParseMode.MARKDOWN)
