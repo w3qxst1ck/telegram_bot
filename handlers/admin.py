@@ -8,6 +8,7 @@ from aiogram.filters import Command
 from services import service
 from schemas.connection import ServerAdd
 from database.orm import AsyncOrm
+from services.service import get_client_traffic
 from utils.servers_load import get_less_loaded_server
 
 
@@ -98,7 +99,7 @@ async def add_server(message: types.Message, session: Any) -> None:
 #
 #
 # @router.message(Command("traf"))
-# async def delete_client(message: types.Message) -> None:
-#     await am_client.login()
-#     summ = await am_client.get_current_traffic(email='kill_rill')
-#     await message.answer(f"{summ}")
+# async def delete_client(message: types.Message, session: Any) -> None:
+#     server = await AsyncOrm.get_server(1, session)
+#     traffic = await get_client_traffic(server, "rzhep")
+#     await message.answer(f"Трафик: {traffic}Гб")

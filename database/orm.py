@@ -200,6 +200,7 @@ class AsyncOrm:
                 logger.info(f"Пользователь {c.tg_id} купил новый ключ сроком до {c.expire_date}")
         except Exception as e:
             logger.error(f"Ошибка покупки ключа пользователя {c.tg_id}: {e}")
+            raise
 
     @staticmethod
     async def extend_key(email: str, expire_date: datetime.datetime, tg_id: str, balance: int, session: Any) -> None:

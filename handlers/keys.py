@@ -1,3 +1,6 @@
+import datetime
+import time
+
 from aiogram import Router, F
 from aiogram import types
 from typing import Any
@@ -11,6 +14,7 @@ from cache import r
 from schemas.user import UserConnList
 from handlers.keyboards import keys as kb
 from handlers.buttons import commands as cmd
+from services.service import get_client_traffic, get_client_traffic_for_all_keys
 
 router = Router()
 
@@ -21,8 +25,23 @@ async def profile(message: types.Message | types.CallbackQuery, session: Any):
     """Карточка профиля с ключами"""
     tg_id = str(message.from_user.id)
 
+    start = time.time()
+
     # todo test version
     user_with_conn = await AsyncOrm.get_user_with_connection_list(tg_id, session)
+
+    # FAST VERSION 2.55
+    conns_with_traffic = await get_client_traffic_for_all_keys(user_with_conn.connections, session)
+    user_with_conn.connections = conns_with_traffic
+
+    # SLOW VERSION 5.11
+    # conns_with_traffic = []
+    # for conn in user_with_conn.connections:
+    #     server = await AsyncOrm.get_server(conn.server_id, session)
+    #     traffic = await get_client_traffic(server, conn.email)
+    #     conn.traffic = traffic
+    #     conns_with_traffic.append(conn)
+    # user_with_conn.connections = conns_with_traffic
 
     # todo prod version
     # cached_data = r.get(f"profile:{tg_id}")
@@ -32,6 +51,17 @@ async def profile(message: types.Message | types.CallbackQuery, session: Any):
     # else:
     #     # from DB
     #     user_with_conn = await AsyncOrm.get_user_with_connection_list(tg_id, session)
+    #
+    #     # получение трафика
+    #     # TODO что-то сделать со временем выполнения c FAST VERSION
+    #     conns_with_traffic = []
+    #     for conn in user_with_conn.connections:
+    #         server = await AsyncOrm.get_server(conn.server_id, session)
+    #         traffic = await get_client_traffic(server, conn.email)
+    #         conn.traffic = traffic
+    #         conns_with_traffic.append(conn)
+    #     user_with_conn.connections = conns_with_traffic
+    #
     #     # user to json (str) for redis storing
     #     user_with_conn_json = user_with_conn.model_dump_json()
     #     r.setex(f"profile:{tg_id}", 300, user_with_conn_json)
@@ -50,4 +80,7 @@ async def profile(message: types.Message | types.CallbackQuery, session: Any):
             reply_markup=kb.keys_keyboard(back_btn=True).as_markup(),
             parse_mode=ParseMode.MARKDOWN
         )
+
+    end = time.time()
+    print(end - start)
 

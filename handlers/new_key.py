@@ -5,6 +5,7 @@ from typing import Any
 from aiogram import Router, types, F
 from aiogram.enums import ParseMode
 
+from handlers.buttons.commands import HELP
 from handlers.keyboards import new_key as kb
 from handlers.keyboards.balance import not_enough_balance_keyboard
 from handlers.keyboards.menu import to_menu_keyboard
@@ -77,6 +78,9 @@ async def new_key_confirm_handler(callback: types.CallbackQuery, session: Any) -
 @router.callback_query(F.data.split("|")[0] == "new_key_confirm")
 async def new_key_create_handler(callback: types.CallbackQuery, session: Any) -> None:
     """Обработка подтверждения покупки нового ключа"""
+    # исключение двойного нажатия
+    await callback.message.delete()
+
     period = callback.data.split("|")[1]
     price = settings.price_list[period]
     tg_id = str(callback.from_user.id)
@@ -97,9 +101,7 @@ async def new_key_create_handler(callback: types.CallbackQuery, session: Any) ->
 
     # добавление клиента в панель
     server_id = await get_less_loaded_server(session)
-    print("type:", type(server_id))
-    server: Server = await AsyncOrm.get_server(server_id["id"], session)
-    print("server:", server)
+    server: Server = await AsyncOrm.get_server(server_id, session)
     email = str(uuid.uuid4())
     key = await add_client(server, email, tg_id)
 
@@ -118,11 +120,15 @@ async def new_key_create_handler(callback: types.CallbackQuery, session: Any) ->
         server_id=server_id
     )
 
-    msg = ms.buy_new_key_message(period, price, new_conn.expire_date, new_balance, key)
-    await callback.message.edit_text(msg, reply_markup=to_menu_keyboard().as_markup(), parse_mode=ParseMode.MARKDOWN)
-
     # создание connection в бд
-    await AsyncOrm.buy_new_key(new_conn, new_balance, session)
+    try:
+        await AsyncOrm.buy_new_key(new_conn, new_balance, session)
+        msg = ms.buy_new_key_message(period, price, new_conn.expire_date, new_balance, key)
+        await callback.message.answer(msg, reply_markup=to_menu_keyboard().as_markup(), parse_mode=ParseMode.MARKDOWN)
+    except Exception:
+        error_msg = f"😕 Что-то пошло не так...\n\nДеньги с баланса списаны не будут. Попробуйте повторить запрос позже. " \
+                    f"При повторном возникновении ошибки обратитесь к администрации с помощью команды /{HELP[0]}"
+        await callback.message.answer(error_msg, reply_markup=to_menu_keyboard().as_markup())
 
     # TODO обновить кэш
     # user_with_conn.balance = new_balance

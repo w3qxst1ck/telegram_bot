@@ -13,6 +13,7 @@ class Connection(BaseModel):
     key: str
     description: str | None
     server_id: int
+    traffic: float | None = None
 
 
 class ServerAdd(BaseModel):

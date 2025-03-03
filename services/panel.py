@@ -112,6 +112,17 @@ async def get_current_traffic(xui: AsyncApi, email: str) -> float:
         logger.error(f"Ошибка при получении трафика клиента {email}: {e}")
 
 
+async def get_current_traffic_without_login(xui: AsyncApi, email: str) -> float:
+    """Получает потраченный клиентом трафик в Gb"""
+    try:
+        client: Client = await xui.client.get_by_email(email)
+        traffic = _convert_traffic(client.up, client.down)
+        return traffic
+
+    except Exception as e:
+        logger.error(f"Ошибка при получении трафика клиента {email}: {e}")
+
+
 def _generate_key(server: Inbound, client_uuid: str, domain: str) -> str:
     """Создание строки подключения"""
     key = f"{server.protocol}://{client_uuid}@{domain}:{server.port}" \
