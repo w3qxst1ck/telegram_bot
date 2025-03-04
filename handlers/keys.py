@@ -31,8 +31,7 @@ async def profile(message: types.Message | types.CallbackQuery, session: Any):
     user_with_conn = await AsyncOrm.get_user_with_connection_list(tg_id, session)
 
     # FAST VERSION 2.55
-    conns_with_traffic = await get_client_traffic_for_all_keys(user_with_conn.connections, session)
-    user_with_conn.connections = conns_with_traffic
+    user_with_conn.connections = await get_client_traffic_for_all_keys(user_with_conn.connections, session)
 
     # SLOW VERSION 5.11
     # conns_with_traffic = []

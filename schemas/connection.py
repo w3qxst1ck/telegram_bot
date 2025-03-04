@@ -3,6 +3,18 @@ import datetime
 from pydantic import BaseModel
 
 
+class ServerAdd(BaseModel):
+    name: str
+    region: str
+    api_url: str
+    domain: str
+    inbound_id: int
+
+
+class Server(ServerAdd):
+    id: int
+
+
 class Connection(BaseModel):
     tg_id: str
     active: bool
@@ -16,13 +28,8 @@ class Connection(BaseModel):
     traffic: float | None = None
 
 
-class ServerAdd(BaseModel):
-    name: str
-    region: str
-    api_url: str
-    domain: str
-    inbound_id: int
+class ConnectionServer(Connection):
+    server: Server
 
 
-class Server(ServerAdd):
-    id: int
+

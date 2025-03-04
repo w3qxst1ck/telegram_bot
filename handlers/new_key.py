@@ -79,7 +79,7 @@ async def new_key_confirm_handler(callback: types.CallbackQuery, session: Any) -
 async def new_key_create_handler(callback: types.CallbackQuery, session: Any) -> None:
     """Обработка подтверждения покупки нового ключа"""
     # исключение двойного нажатия
-    await callback.message.delete()
+    await callback.message.edit_text("Запрос выполняется...⏳")
 
     period = callback.data.split("|")[1]
     price = settings.price_list[period]
@@ -106,7 +106,7 @@ async def new_key_create_handler(callback: types.CallbackQuery, session: Any) ->
     key = await add_client(server, email, tg_id)
 
     # подготовка нового Connection
-    description = "SOME DESCRIPTION" # TODO поправить
+    description = "SOME DESCRIPTION"    # TODO поправить
     new_balance = user_with_conn.balance - price
     new_conn = Connection(
         tg_id=tg_id,
@@ -124,11 +124,12 @@ async def new_key_create_handler(callback: types.CallbackQuery, session: Any) ->
     try:
         await AsyncOrm.buy_new_key(new_conn, new_balance, session)
         msg = ms.buy_new_key_message(period, price, new_conn.expire_date, new_balance, key)
-        await callback.message.answer(msg, reply_markup=to_menu_keyboard().as_markup(), parse_mode=ParseMode.MARKDOWN)
+        await callback.message.edit_text(msg, reply_markup=to_menu_keyboard().as_markup(), parse_mode=ParseMode.MARKDOWN)
+
     except Exception:
         error_msg = f"😕 Что-то пошло не так...\n\nДеньги с баланса списаны не будут. Попробуйте повторить запрос позже. " \
                     f"При повторном возникновении ошибки обратитесь к администрации с помощью команды /{HELP[0]}"
-        await callback.message.answer(error_msg, reply_markup=to_menu_keyboard().as_markup())
+        await callback.message.edit_text(error_msg, reply_markup=to_menu_keyboard().as_markup())
 
     # TODO обновить кэш
     # user_with_conn.balance = new_balance

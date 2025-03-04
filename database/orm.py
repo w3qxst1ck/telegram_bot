@@ -290,7 +290,7 @@ class AsyncOrm:
                 SELECT server_id from connections
                 """
             )
-            return [row["id"] for row in query]
+            return [row["server_id"] for row in query]
         except Exception as e:
             logger.error(f"Ошибка при получении id всех серверов из connections: {e}")
 
