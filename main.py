@@ -49,7 +49,7 @@ async def start_bot() -> None:
     scheduler = AsyncIOScheduler(timezone="Europe/Moscow")
 
     # перевод закончившихся подписок в неактивные, удаление пробных
-    scheduler.add_job(keys_schedule.run_every_hour, trigger="cron", year='*', month='*', day="*", hour="*", minute=0,
+    scheduler.add_job(keys_schedule.run_every_hour, trigger="cron", year='*', month='*', day="*", hour="*", minute="*",
                       second=0, start_date=datetime.now(), kwargs={"bot": bot})
 
     scheduler.start()

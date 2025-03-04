@@ -7,7 +7,7 @@ from aiogram.enums import ParseMode
 
 from database.orm import AsyncOrm
 from logger import logger
-from schemas.connection import Server
+from schemas.connection import Server, ConnectionServer
 from settings import settings
 from services import service
 from handlers.messages import scheduler as msg
@@ -22,9 +22,11 @@ async def run_every_hour(bot: aiogram.Bot) -> None:
         port=settings.db.postgres_port,
         database=settings.db.postgres_db
     )
+
     try:
-        await off_expired_connections(session, bot)
         # TODO раз в час сюда
+        await off_expired_connections(session, bot)
+        await check_traffic_excess(session, bot)
 
     finally:
         await session.close()
@@ -70,3 +72,19 @@ async def off_expired_connections(session: Any, bot: aiogram.Bot):
             # оповещение пользователя
             message = msg.expire_key(conn.key)
             await bot.send_message(conn.tg_id, message, parse_mode=ParseMode.MARKDOWN)
+
+
+async def check_traffic_excess(session: Any, bot: aiogram.Bot) -> None:
+    """Проверяет превышение трафика пользователей и блокирует, тех кто превысил"""
+    active_connections: list[ConnectionServer] = await AsyncOrm.get_connections_with_servers(session)
+
+    for conn in active_connections:
+        current_traffic: float = await service.get_client_traffic(conn.api_url, conn.email)
+
+        if current_traffic > settings.traffic_limit:
+            # TODO подумать как блокировать клиента
+            # TODO оповестить пользователя
+            pass
+
+
+

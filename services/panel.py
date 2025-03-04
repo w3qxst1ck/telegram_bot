@@ -105,7 +105,7 @@ async def get_current_traffic(xui: AsyncApi, email: str) -> float:
 
     try:
         client: Client = await xui.client.get_by_email(email)
-        traffic = _convert_traffic(client.up, client.down)
+        traffic: float = _convert_traffic(client.up, client.down)
         return traffic
 
     except Exception as e:

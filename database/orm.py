@@ -8,7 +8,7 @@ from database.database import async_engine
 from database.tables import Base
 
 from schemas.user import UserAdd, UserConnList
-from schemas.connection import Connection, Server, ServerAdd
+from schemas.connection import Connection, ConnectionServer, Server, ServerAdd
 from settings import settings
 from logger import logger
 
@@ -382,3 +382,22 @@ class AsyncOrm:
 
         except Exception as e:
             logger.error(f"Ошибка при обновлении статуса об использовании пробного периода у польз-ля {tg_id}: {e}")
+
+    @staticmethod
+    async def get_connections_with_servers(session: Any) -> list[ConnectionServer]:
+        """Получение всех активных connections + поля из таблицы servers"""
+        try:
+            rows = await session.fetch(
+                """
+                SELECT tg_id, email, description, api_url, inbound_id
+                FROM connections
+                INNER JOIN servers on connections.server_id = servers.id
+                WHERE active = true
+                """
+            )
+            conn_servers = [ConnectionServer.model_validate(row) for row in rows]
+            return conn_servers
+
+        except Exception as e:
+            logger.error(f"Ошибка при получении данных для ConnectionServer: {e}")
+

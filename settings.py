@@ -40,9 +40,10 @@ class Settings(BaseSettings):
     bot_token: str = Field(..., env='BOT_TOKEN')
     admins: list = Field(..., env='ADMINS')
     timezone: str = "Europe/Moscow"
-    trial_days: int = 1
 
+    trial_days: int = 1
     price_list: dict = PRICES
+    traffic_limit: int = 150
 
     db: Database = Database()
     redis: Redis = Redis()

@@ -62,10 +62,10 @@ async def activate_client(server: Server, client_email: str, tg_id: str) -> None
     logger.info(f"Активирован ключ {client_email} пользователя {tg_id}")
 
 
-async def get_client_traffic(server: Server, email: str) -> float:
+async def get_client_traffic(server_url: str, email: str) -> float:
     """Получение трафика клиента"""
     xui = AsyncApi(
-        host=server.api_url,
+        host=server_url,
         username=settings.server.username,
         password=settings.server.password
     )

@@ -8,7 +8,6 @@ from aiogram.filters import Command
 from services import service
 from schemas.connection import ServerAdd
 from database.orm import AsyncOrm
-from services.service import get_client_traffic
 from utils.servers_load import get_less_loaded_server
 
 

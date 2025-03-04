@@ -28,8 +28,13 @@ class Connection(BaseModel):
     traffic: float | None = None
 
 
-class ConnectionServer(Connection):
-    server: Server
+class ConnectionServer(BaseModel):
+    tg_id: str
+    email: str
+    description: str
+    api_url: str
+    inbound_id: int
+
 
 
 
