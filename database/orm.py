@@ -8,7 +8,7 @@ from database.database import async_engine
 from database.tables import Base
 
 from schemas.user import UserAdd, UserConnList
-from schemas.connection import Connection, ConnectionServer, Server, ServerAdd, ConnectionServerNew
+from schemas.connection import Connection, ConnServerScheduler, Server, ServerAdd, ConnectionServer
 from settings import settings
 from logger import logger
 
@@ -169,7 +169,7 @@ class AsyncOrm:
 
             # если есть коннекты
             if conns_rows:
-                conns: List[ConnectionServerNew] = [ConnectionServerNew.model_validate(row) for row in conns_rows]
+                conns: List[ConnectionServer] = [ConnectionServer.model_validate(row) for row in conns_rows]
                 user_conns.connections = conns
 
             return user_conns
@@ -227,6 +227,7 @@ class AsyncOrm:
                 logger.info(f"Пользователь {tg_id} продлил ключ {email} до {expire_date}")
         except Exception as e:
             logger.error(f"Ошибка продления ключа {email} пользователя {tg_id}: {e}")
+            raise
 
     @staticmethod
     async def get_connection(email: str, session) -> Connection:
@@ -245,7 +246,7 @@ class AsyncOrm:
             logger.error(f"Ошибка получения connection с email {email}: {e}")
 
     @staticmethod
-    async def get_connection_server(email: str, session) -> ConnectionServerNew:
+    async def get_connection_server(email: str, session) -> ConnectionServer:
         """Получение connection с server по email"""
         try:
             row = await session.fetchrow("""
@@ -254,7 +255,7 @@ class AsyncOrm:
                 JOIN servers AS s ON c.server_id = s.id
                 WHERE c.email = $1
                 """, email)
-            conn = ConnectionServerNew.model_validate(row)
+            conn = ConnectionServer.model_validate(row)
             return conn
         except Exception as e:
             logger.error(f"Ошибка получения connection с email {email}: {e}")
@@ -401,7 +402,7 @@ class AsyncOrm:
             logger.error(f"Ошибка при обновлении статуса об использовании пробного периода у польз-ля {tg_id}: {e}")
 
     @staticmethod
-    async def get_connections_with_servers(session: Any) -> list[ConnectionServer]:
+    async def get_connections_with_servers(session: Any) -> list[ConnServerScheduler]:
         """Получение всех активных connections + поля из таблицы servers"""
         try:
             rows = await session.fetch(
@@ -412,9 +413,9 @@ class AsyncOrm:
                 WHERE active = true
                 """
             )
-            conn_servers = [ConnectionServer.model_validate(row) for row in rows]
+            conn_servers = [ConnServerScheduler.model_validate(row) for row in rows]
             return conn_servers
 
         except Exception as e:
-            logger.error(f"Ошибка при получении данных для ConnectionServer: {e}")
+            logger.error(f"Ошибка при получении данных для ConnServerScheduler: {e}")
 

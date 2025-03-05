@@ -2,7 +2,7 @@ import datetime
 from typing import List
 
 from pydantic import BaseModel
-from schemas.connection import ConnectionServerNew
+from schemas.connection import ConnectionServer
 
 
 class UserAdd(BaseModel):
@@ -20,5 +20,5 @@ class User(UserAdd):
 
 
 class UserConnList(User):
-    connections: List[ConnectionServerNew]
+    connections: List[ConnectionServer]
 

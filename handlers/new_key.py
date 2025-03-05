@@ -12,6 +12,7 @@ from handlers.keyboards.menu import to_menu_keyboard
 from database.orm import AsyncOrm
 from schemas.connection import Connection, Server
 from handlers.messages import new_key as ms
+from handlers.messages import errors as err_ms
 from handlers.messages.balance import not_enough_balance_message
 from services.service import add_client
 from cache import r
@@ -126,13 +127,12 @@ async def new_key_create_handler(callback: types.CallbackQuery, session: Any) ->
         msg = ms.buy_new_key_message(period, price, new_conn.expire_date, new_balance, key)
         await callback.message.edit_text(msg, reply_markup=to_menu_keyboard().as_markup(), parse_mode=ParseMode.MARKDOWN)
 
+        # TODO обновить кэш
+        # user_with_conn.balance = new_balance
+        # user_with_conn.connections.append(new_conn)
+        # user_with_conn_json = user_with_conn.model_dump_json()
+        # r.setex(f"profile:{tg_id}", 300, user_with_conn_json)
     except Exception:
-        error_msg = f"😕 Что-то пошло не так...\n\nДеньги с баланса списаны не будут. Попробуйте повторить запрос позже. " \
-                    f"При повторном возникновении ошибки обратитесь к администрации с помощью команды /{HELP[0]}"
+        error_msg = err_ms.error_msg()
         await callback.message.edit_text(error_msg, reply_markup=to_menu_keyboard().as_markup())
 
-    # TODO обновить кэш
-    # user_with_conn.balance = new_balance
-    # user_with_conn.connections.append(new_conn)
-    # user_with_conn_json = user_with_conn.model_dump_json()
-    # r.setex(f"profile:{tg_id}", 300, user_with_conn_json)

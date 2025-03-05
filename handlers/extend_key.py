@@ -5,8 +5,9 @@ from typing import Any
 from aiogram import Router, types, F
 from handlers.keyboards import extend_key as kb
 from database.orm import AsyncOrm
-from schemas.connection import Connection, ConnectionServerNew
+from schemas.connection import Connection, ConnectionServer
 from handlers.messages import extend_key as ms
+from handlers.messages import errors as err_ms
 from handlers.messages.balance import not_enough_balance_message
 from handlers.keyboards.balance import not_enough_balance_keyboard
 from cache import r
@@ -67,7 +68,7 @@ async def extend_key_period_handler(callback: types.CallbackQuery, session: Any)
     # cached_data = r.get(f"conn_server:{email}")
     # if cached_data:
     #     # from cache
-    #     conn_server = ConnectionServerNew.model_validate_json(cached_data)
+    #     conn_server = ConnectionServer.model_validate_json(cached_data)
     # else:
     #     # from DB
     #     conn_server = await AsyncOrm.get_connection_server(email, session)
@@ -108,7 +109,7 @@ async def extend_key_confirm_handler(callback: types.CallbackQuery, session: Any
     # cached_data = r.get(f"conn_server:{email}")
     # if cached_data:
     #     # from cache
-    #     conn_server = ConnectionServerNew.model_validate_json(cached_data)
+    #     conn_server = ConnectionServer.model_validate_json(cached_data)
     # else:
     #     # from DB
     #     conn_server = await AsyncOrm.get_connection_server(email, session)
@@ -155,7 +156,7 @@ async def extend_key_handler(callback: types.CallbackQuery, session: Any) -> Non
     # cached_data = r.get(f"conn_server:{email}")
     # if cached_data:
     #     # from cache
-    #     conn_server = ConnectionServerNew.model_validate_json(cached_data)
+    #     conn_server = ConnectionServer.model_validate_json(cached_data)
     # else:
     #     # from DB
     #     conn_server = await AsyncOrm.get_connection_server(email, session)
@@ -169,18 +170,22 @@ async def extend_key_handler(callback: types.CallbackQuery, session: Any) -> Non
 
     new_balance = user_with_conns.balance - price
 
-    # отправка сообщения
-    msg = ms.extend_key_message(period, price, new_expire_date, email, new_balance, conn_server.region)
-    await callback.message.edit_text(msg, reply_markup=to_menu_keyboard().as_markup())
+    try:
+        # внесение изменений в БД
+        await AsyncOrm.extend_key(email, new_expire_date, tg_id, new_balance, session)
 
-    # внесение изменений в БД
-    await AsyncOrm.extend_key(email, new_expire_date, tg_id, new_balance, session)
-    # TODO обновить кэш
-    # user_with_conns = await AsyncOrm.get_user_with_connection_list(tg_id, session)
-    # user_with_conn_json = user_with_conns.model_dump_json()
-    # r.setex(f"profile:{tg_id}", 300, user_with_conn_json)
+        # отправка сообщения
+        msg = ms.extend_key_message(period, price, new_expire_date, email, new_balance, conn_server.region)
+        await callback.message.edit_text(msg, reply_markup=to_menu_keyboard().as_markup())
 
-    # conn_server_json = conn_server.model_dump_json()
-    # r.setex(f"extend_key:{tg_id}", 100, conn_server_json)
+        # TODO обновить кэш
+        # user_with_conns = await AsyncOrm.get_user_with_connection_list(tg_id, session)
+        # user_with_conn_json = user_with_conns.model_dump_json()
+        # r.setex(f"profile:{tg_id}", 300, user_with_conn_json)
 
+        # conn_server_json = conn_server.model_dump_json()
+        # r.setex(f"extend_key:{tg_id}", 100, conn_server_json)
 
+    except Exception:
+        error_msg = err_ms.error_msg()
+        await callback.message.edit_text(error_msg, reply_markup=to_menu_keyboard().as_markup())

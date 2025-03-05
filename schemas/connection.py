@@ -28,7 +28,7 @@ class Connection(BaseModel):
     traffic: float | None = None
 
 
-class ConnectionServer(BaseModel):
+class ConnServerScheduler(BaseModel):
     tg_id: str
     email: str
     description: str
@@ -36,7 +36,7 @@ class ConnectionServer(BaseModel):
     inbound_id: int
 
 
-class ConnectionServerNew(Connection, ServerAdd):
+class ConnectionServer(Connection, ServerAdd):
     pass
 
 

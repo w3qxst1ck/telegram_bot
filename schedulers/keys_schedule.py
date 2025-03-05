@@ -7,7 +7,7 @@ from aiogram.enums import ParseMode
 
 from database.orm import AsyncOrm
 from logger import logger
-from schemas.connection import Server, ConnectionServer
+from schemas.connection import Server, ConnServerScheduler
 from settings import settings
 from services import service
 from handlers.messages import scheduler as msg
@@ -76,7 +76,7 @@ async def off_expired_connections(session: Any, bot: aiogram.Bot):
 
 async def check_traffic_excess(session: Any, bot: aiogram.Bot) -> None:
     """Проверяет превышение трафика пользователей и блокирует, тех кто превысил"""
-    active_connections: list[ConnectionServer] = await AsyncOrm.get_connections_with_servers(session)
+    active_connections: list[ConnServerScheduler] = await AsyncOrm.get_connections_with_servers(session)
 
     for conn in active_connections:
         current_traffic: float = await service.get_client_traffic(conn.api_url, conn.email)
