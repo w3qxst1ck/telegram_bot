@@ -23,15 +23,14 @@ router = Router()
 @router.message(Command(cmd.KEYS[0]))
 async def profile(message: types.Message | types.CallbackQuery, session: Any):
     """Карточка профиля с ключами"""
-    # сообщение о выполнении запроса
+
+    tg_id = str(message.from_user.id)
+
+    # todo test version
     if type(message) == types.Message:
         waiting_msg = await message.answer("Запрос выполняется...⏳")
     else:
         await message.message.edit_text("Запрос выполняется...⏳")
-
-    tg_id = str(message.from_user.id)
-
-    start = time.time()
 
     # todo test version
     user_with_conn = await AsyncOrm.get_user_with_connection_list(tg_id, session)
@@ -45,15 +44,21 @@ async def profile(message: types.Message | types.CallbackQuery, session: Any):
     #     # from cache
     #     user_with_conn = UserConnList.model_validate_json(cached_data)
     # else:
-    #     # from DB
-    #     user_with_conn = await AsyncOrm.get_user_with_connection_list(tg_id, session)
-    #
-    #     # получение трафика
-    #     user_with_conn.connections = await get_client_traffic_for_all_keys(user_with_conn.connections, session)
-    #
-    #     # user to json (str) for redis storing
-    #     user_with_conn_json = user_with_conn.model_dump_json()
-    #     r.setex(f"user_conn_server:{tg_id}", 300, user_with_conn_json)
+    #     # сообщение о выполнении запроса
+    #     if type(message) == types.Message:
+    #         waiting_msg = await message.answer("Запрос выполняется...⏳")
+    #     else:
+    #         await message.message.edit_text("Запрос выполняется...⏳")
+
+        # # from DB
+        # user_with_conn = await AsyncOrm.get_user_with_connection_list(tg_id, session)
+        #
+        # # получение трафика
+        # user_with_conn.connections = await get_client_traffic_for_all_keys(user_with_conn.connections, session)
+        #
+        # # user to json (str) for redis storing
+        # user_with_conn_json = user_with_conn.model_dump_json()
+        # r.setex(f"user_conn_server:{tg_id}", 300, user_with_conn_json)
 
     msg = keys_message(user_with_conn)
 
@@ -69,7 +74,4 @@ async def profile(message: types.Message | types.CallbackQuery, session: Any):
             reply_markup=kb.keys_keyboard(back_btn=True).as_markup(),
             parse_mode=ParseMode.MARKDOWN
         )
-
-    end = time.time()
-    print(end - start)
 
