@@ -5,7 +5,7 @@ from typing import Any
 from aiogram import Router, types, F
 from handlers.keyboards import extend_key as kb
 from database.orm import AsyncOrm
-from schemas.connection import Connection
+from schemas.connection import Connection, ConnectionServerNew
 from handlers.messages import extend_key as ms
 from handlers.messages.balance import not_enough_balance_message
 from handlers.keyboards.balance import not_enough_balance_keyboard
@@ -60,10 +60,22 @@ async def extend_key_period_handler(callback: types.CallbackQuery, session: Any)
     #     user_with_conn_json = user_with_conn.model_dump_json()
     #     r.setex(f"extend_key:{tg_id}", 300, user_with_conn_json)
 
-    # TODO добавить кэш
-    conn = await AsyncOrm.get_connection(email, session)
+    # TODO test version
+    conn_server = await AsyncOrm.get_connection_server(email, session)
 
-    msg = ms.extend_key_period_message(user_with_conns.balance, email, conn.active, conn.expire_date)
+    # TODO prod version
+    # cached_data = r.get(f"conn_server:{email}")
+    # if cached_data:
+    #     # from cache
+    #     conn_server = ConnectionServerNew.model_validate_json(cached_data)
+    # else:
+    #     # from DB
+    #     conn_server = await AsyncOrm.get_connection_server(email, session)
+    #     conn_server_json = conn_server.model_dump_json()
+    #     r.setex(f"extend_key:{tg_id}", 100, conn_server_json)
+
+    msg = ms.extend_key_period_message(user_with_conns.balance, email, conn_server.active,
+                                       conn_server.expire_date, conn_server.region)
     await callback.message.edit_text(msg, reply_markup=kb.extend_key_period_keyboard(email).as_markup())
 
 
@@ -89,9 +101,23 @@ async def extend_key_confirm_handler(callback: types.CallbackQuery, session: Any
     #     user_with_conn_json = user_with_conn.model_dump_json()
     #     r.setex(f"extend_key:{tg_id}", 300, user_with_conn_json)
 
+    # TODO test version
+    conn_server = await AsyncOrm.get_connection_server(email, session)
+
+    # TODO prod version
+    # cached_data = r.get(f"conn_server:{email}")
+    # if cached_data:
+    #     # from cache
+    #     conn_server = ConnectionServerNew.model_validate_json(cached_data)
+    # else:
+    #     # from DB
+    #     conn_server = await AsyncOrm.get_connection_server(email, session)
+    #     conn_server_json = conn_server.model_dump_json()
+    #     r.setex(f"extend_key:{tg_id}", 100, conn_server_json)
+
     # достаточно средств
     if user_with_conns.balance >= price:
-        msg = ms.extend_key_confirm_message(period, email, price)
+        msg = ms.extend_key_confirm_message(period, email, price, conn_server.region)
         await callback.message.edit_text(msg, reply_markup=kb.extend_key_confirm_keyboard(period, email).as_markup())
     # недостаточно средств на балансе
     else:
@@ -122,18 +148,29 @@ async def extend_key_handler(callback: types.CallbackQuery, session: Any) -> Non
     #     r.setex(f"profile:{tg_id}", 300, user_with_conn_json)
 
     # подготовка данных для обновления connection
-    # TODO добавить кэш
-    conn = await AsyncOrm.get_connection(email, session)
+    # TODO test version
+    conn_server = await AsyncOrm.get_connection_server(email, session)
 
-    if conn.expire_date >= datetime.datetime.now():
-        new_expire_date = conn.expire_date + datetime.timedelta(days=int(period)*30)
+    # TODO prod version
+    # cached_data = r.get(f"conn_server:{email}")
+    # if cached_data:
+    #     # from cache
+    #     conn_server = ConnectionServerNew.model_validate_json(cached_data)
+    # else:
+    #     # from DB
+    #     conn_server = await AsyncOrm.get_connection_server(email, session)
+    #     conn_server_json = conn_server.model_dump_json()
+    #     r.setex(f"extend_key:{tg_id}", 100, conn_server_json)
+
+    if conn_server.expire_date >= datetime.datetime.now():
+        new_expire_date = conn_server.expire_date + datetime.timedelta(days=int(period)*30)
     else:
         new_expire_date = datetime.datetime.now() + datetime.timedelta(days=int(period)*30)
 
     new_balance = user_with_conns.balance - price
 
     # отправка сообщения
-    msg = ms.extend_key_message(period, price, new_expire_date, email, new_balance)
+    msg = ms.extend_key_message(period, price, new_expire_date, email, new_balance, conn_server.region)
     await callback.message.edit_text(msg, reply_markup=to_menu_keyboard().as_markup())
 
     # внесение изменений в БД
@@ -142,5 +179,8 @@ async def extend_key_handler(callback: types.CallbackQuery, session: Any) -> Non
     # user_with_conns = await AsyncOrm.get_user_with_connection_list(tg_id, session)
     # user_with_conn_json = user_with_conns.model_dump_json()
     # r.setex(f"profile:{tg_id}", 300, user_with_conn_json)
+
+    # conn_server_json = conn_server.model_dump_json()
+    # r.setex(f"extend_key:{tg_id}", 100, conn_server_json)
 
 

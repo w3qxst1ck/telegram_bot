@@ -1,6 +1,7 @@
 from schemas.user import UserConnList
 from utils.date_time_service import convert_date_time
 from handlers.buttons import commands as cmd
+from handlers.buttons.regions import REGIONS
 from handlers.buttons import menu as btn
 
 
@@ -20,18 +21,21 @@ def keys_message(user_with_conn: UserConnList) -> str:
                 if conn.is_trial:
                     message += f"*{idx}.* ✅ *Пробная подписка на 1 день*\n" \
                                f"🗓️ Активен до *{time} {date}*\n" \
+                               f"{REGIONS[conn.region]}\n" \
                                f"```{conn.key}```\n\n"
 
                 # если активна основная подписка
                 else:
                     message += f"*{idx}.* ✅ Ключ *{conn.email}*\n" \
                                f"🗓️ Активен до *{time} {date}*\n" \
+                               f"{REGIONS[conn.region]}\n" \
                                f"📊 Траффик за месяц {conn.traffic}Гб\n" \
                                f"```{conn.key}```\n\n"
 
             # если подписка неактивна
             else:
                 message += f"*{idx}.* ❌ Ключ {conn.email} *неактивен*\n" \
+                           f"{REGIONS[conn.region]}\n" \
                            f"```{conn.key}```\n\n"
 
         message += f"Нажмите на ключ, чтобы скопировать\n\n"

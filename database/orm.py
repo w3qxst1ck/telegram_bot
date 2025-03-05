@@ -8,7 +8,7 @@ from database.database import async_engine
 from database.tables import Base
 
 from schemas.user import UserAdd, UserConnList
-from schemas.connection import Connection, ConnectionServer, Server, ServerAdd
+from schemas.connection import Connection, ConnectionServer, Server, ServerAdd, ConnectionServerNew
 from settings import settings
 from logger import logger
 
@@ -148,32 +148,34 @@ class AsyncOrm:
             if need_trial:
                 conns_rows = await session.fetch(
                     """
-                    SELECT * 
-                    FROM connections  
-                    WHERE tg_id = $1
-                    ORDER BY active DESC
+                    SELECT c.*, s.region, s.domain, s.api_url, s.inbound_id, s.name
+                    FROM connections AS c
+                    JOIN servers AS s ON c.server_id = s.id 
+                    WHERE c.tg_id = $1
+                    ORDER BY c.active DESC
                     """,
                     tg_id
                 )
             else:
                 conns_rows = await session.fetch(
                     """
-                    SELECT * 
-                    FROM connections  
-                    WHERE tg_id = $1 AND is_trial = False
-                    ORDER BY active DESC
+                    SELECT c.*, s.region, s.domain, s.api_url, s.inbound_id, s.name
+                    FROM connections AS c
+                    JOIN servers AS s ON c.server_id = s.id
+                    WHERE c.tg_id = $1 AND c.is_trial = false
+                    ORDER BY c.active DESC
                     """,
                     tg_id)
 
             # если есть коннекты
             if conns_rows:
-                conns: List[Connection] = [Connection.model_validate(row) for row in conns_rows]
+                conns: List[ConnectionServerNew] = [ConnectionServerNew.model_validate(row) for row in conns_rows]
                 user_conns.connections = conns
 
             return user_conns
 
         except Exception as e:
-            logger.error(f"Ошибка получения пользователя с коннектами {tg_id}: {e}")
+            logger.error(f"Ошибка получения пользователя с коннектами и серверами {tg_id}: {e}")
 
     @staticmethod
     async def buy_new_key(
@@ -238,6 +240,21 @@ class AsyncOrm:
                 email
             )
             conn = Connection.model_validate(row)
+            return conn
+        except Exception as e:
+            logger.error(f"Ошибка получения connection с email {email}: {e}")
+
+    @staticmethod
+    async def get_connection_server(email: str, session) -> ConnectionServerNew:
+        """Получение connection с server по email"""
+        try:
+            row = await session.fetchrow("""
+                SELECT c.*, s.name, s.region, s.api_url, s.domain, s.inbound_id 
+                FROM connections AS c
+                JOIN servers AS s ON c.server_id = s.id
+                WHERE c.email = $1
+                """, email)
+            conn = ConnectionServerNew.model_validate(row)
             return conn
         except Exception as e:
             logger.error(f"Ошибка получения connection с email {email}: {e}")

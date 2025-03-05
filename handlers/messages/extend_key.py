@@ -1,5 +1,6 @@
 import datetime
 
+from handlers.buttons.regions import FLAGS
 from settings import settings
 from schemas.user import UserConnList
 from utils.date_time_service import convert_date_time
@@ -26,12 +27,13 @@ def extend_key_menu_message(user_with_conns: UserConnList) -> str:
     return message
 
 
-def extend_key_period_message(balance: int, email: str, active: bool, expire_date: datetime.datetime) -> str:
+def extend_key_period_message(balance: int, email: str, active: bool, expire_date: datetime.datetime, region: str) -> str:
     """Сообщение с периодом продления ключа"""
     date, time = convert_date_time(expire_date)
     active_phrase = f"({'✅ активен до ' + time + ' ' + date if active else '❌ неактивен'})"
+    flag = FLAGS[region]
     message = f"У вас на балансе <b>{balance}р</b>\n\n" \
-              f"Стоимость продления ключа <b>{email}</b> {active_phrase}\n" \
+              f"Стоимость продления ключа {flag} <b>{email}</b> {active_phrase}\n" \
               f"• 1 месяц <b>{settings.price_list['1']}р</b>\n" \
               f"• 3 месяца <b>{settings.price_list['3']}р</b>\n" \
               f"• 6 месяцев <b>{settings.price_list['6']}р</b>\n" \
@@ -40,18 +42,20 @@ def extend_key_period_message(balance: int, email: str, active: bool, expire_dat
     return message
 
 
-def extend_key_confirm_message(period: str, email: str, price: int) -> str:
+def extend_key_confirm_message(period: str, email: str, price: int, region: str) -> str:
     """Сообщение подтверждения продления ключа"""
-    message = f"Продлить ключ <b>{email}</b> на <b>{period} мес.</b>?\n\n" \
+    flag = FLAGS[region]
+    message = f"Продлить ключ {flag} <b>{email}</b> на <b>{period} мес.</b>?\n\n" \
               f"У вас с баланса будет списано <b>{price}р.</b>"
     return message
 
 
-def extend_key_message(period: str, price: int, expire_date: datetime.datetime, email: str, balance: int) -> str:
+def extend_key_message(period: str, price: int, expire_date: datetime.datetime, email: str, balance: int, region: str) -> str:
     """Сообщение при продлении ключа за счет баланса"""
     date, time = convert_date_time(expire_date)
+    flag = FLAGS[region]
 
-    message = f"✅ Поздравляем, Вы продлили ключ <b>{email}</b> на <b>{period} мес.</b>!\n\n" \
+    message = f"✅ Поздравляем, Вы продлили ключ {flag} <b>{email}</b> на <b>{period} мес.</b>!\n\n" \
               f"С баланса списано {price}р. (остаток {balance}р.)\n" \
               f"Дата истечения ключа <b>{time} {date}</b>\n\n" \
               f"Вы всегда можете узнать актуальный статус и срок окончания подписки во вкладке \"{btn.KEYS}\" главного меню " \

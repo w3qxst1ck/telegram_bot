@@ -36,5 +36,9 @@ class ConnectionServer(BaseModel):
     inbound_id: int
 
 
+class ConnectionServerNew(Connection, ServerAdd):
+    pass
+
+
 
 

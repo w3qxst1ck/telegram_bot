@@ -1,6 +1,7 @@
 from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from handlers.buttons import menu as btn
+from handlers.buttons.regions import FLAGS
 from schemas.user import UserConnList
 from settings import settings
 
@@ -12,8 +13,9 @@ def extend_key_menu_keyboard(user_with_conns: UserConnList) -> InlineKeyboardBui
     if user_with_conns.connections:
         for conn in user_with_conns.connections:
             emoji = "✅ " if conn.active else "❌ "
+            flag = FLAGS[conn.region]
             keyboard.row(InlineKeyboardButton(
-                text=f"{emoji}{conn.description}",
+                text=f"{emoji}{flag} {conn.description}",
                 callback_data=f"extend_key_email|{conn.email}")
             )
 
