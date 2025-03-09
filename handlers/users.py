@@ -11,7 +11,6 @@ from handlers.buttons import commands as cmd
 from handlers.keyboards import menu as menu_kb
 from schemas.connection import Server
 from services import service
-from settings import settings
 from utils.servers_load import get_less_loaded_server
 
 router = Router()
@@ -35,7 +34,7 @@ async def main_menu(message: types.Message | types.CallbackQuery, admin: bool) -
     name: str = message.from_user.first_name if message.from_user.first_name else message.from_user.username
 
     msg = f"Рады видеть тебя, <b>{name}</b>!\n\n" \
-          f"Пополняйте баланс и оформляйте подписку для доступа к VPN"
+          f"Пополняйте баланс, покупайте и продлевайте ключи для доступа к VPN"
 
     if type(message) == types.Message:
         await message.answer(msg, reply_markup=menu_kb.main_menu_keyboard(admin).as_markup())

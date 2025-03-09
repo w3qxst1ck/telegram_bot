@@ -1,5 +1,7 @@
 import datetime
 
+import pytz
+
 from handlers.buttons.regions import FLAGS
 from settings import settings
 from schemas.user import UserConnList
@@ -22,7 +24,7 @@ def extend_key_menu_message(user_with_conns: UserConnList) -> str:
                   f"✅ - Активные ключи\n" \
                   f"❌ - Неактивные ключи"
     else:
-        message = f"У вас еще нет купленных ключей для подключения VPN. Вы можете купить новый ключ с помощью" \
+        message = f"У вас еще нет купленных ключей для подключения VPN. Вы можете купить новый ключ с помощью " \
                   f"команды /{cmd.BUY[0]} или в разделе \"{btn.BUY}\" главного меню"
     return message
 
@@ -52,12 +54,12 @@ def extend_key_confirm_message(period: str, email: str, price: int, region: str)
 
 def extend_key_message(period: str, price: int, expire_date: datetime.datetime, email: str, balance: int, region: str) -> str:
     """Сообщение при продлении ключа за счет баланса"""
-    date, time = convert_date_time(expire_date)
+    date, time = convert_date_time(expire_date.astimezone(tz=pytz.timezone(settings.timezone)))
     flag = FLAGS[region]
 
     message = f"✅ Поздравляем, Вы продлили ключ {flag} <b>{email}</b> на <b>{period} мес.</b>!\n\n" \
               f"С баланса списано {price}р. (остаток {balance}р.)\n" \
-              f"Дата истечения ключа <b>{time} {date}</b>\n\n" \
+              f"Дата истечения ключа <b>{time} {date} (МСК)</b>\n\n" \
               f"Вы всегда можете узнать актуальный статус и срок окончания подписки во вкладке \"{btn.KEYS}\" главного меню " \
               f"или с помощью команды /{cmd.KEYS[0]}"
     return message

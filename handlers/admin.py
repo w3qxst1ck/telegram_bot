@@ -2,16 +2,20 @@ from datetime import datetime, timedelta
 import uuid
 from typing import Any
 
-from aiogram import Router, types, F
-from aiogram.filters import Command
+from aiogram import Router, types, F, Bot
+from aiogram.filters import Command, or_f
 
+from middlewares.admin import AdminMiddleware
 from services import service
 from schemas.connection import ServerAdd
+from handlers.messages import errors as err_ms
+from handlers.messages.balance import paid_request_for_admin, paid_confirmed_for_user, paid_decline_for_user
 from database.orm import AsyncOrm
 from utils.servers_load import get_less_loaded_server
 
 
 router = Router()
+router.message.middleware.register(AdminMiddleware())
 
 
 @router.message(Command("test"))
@@ -64,6 +68,45 @@ async def add_server(message: types.Message, session: Any) -> None:
     )
     await AsyncOrm.create_server(new_sever, session)
     await message.answer("Сервер успешно добавлен")
+
+
+@router.callback_query(or_f(F.data.split("|")[0] == "admin-payment-confirm",
+                            F.data.split("|")[0] == "admin-payment-cancel"))
+async def confirm_decline_payment_handler(callback: types.CallbackQuery, bot: Bot, session: Any):
+    """Подтверждение или отклонение перевода админом"""
+    tg_id = callback.data.split("|")[1]
+    summ = callback.data.split("|")[2]
+
+    # подтверждение перевода
+    if callback.data.split("|")[0] == "admin-payment-confirm":
+        try:
+            # подтверждение платежа и пополнение баланса пользователю
+            await AsyncOrm.confirm_payment(tg_id, int(summ), session)
+
+            # сообщение админу
+            message_for_admin = paid_request_for_admin(summ, tg_id).split("\n\n")[0]
+            message_for_admin += "\n\nОплата подтверждена ✅\nБаланс пользователя пополнен"
+            await callback.message.edit_text(message_for_admin)
+
+            # сообщение пользователю
+            message_for_user = paid_confirmed_for_user(summ)
+            await bot.send_message(tg_id, message_for_user)
+
+            # TODO Обновить кэш пользователя после пополнения баланса
+        except Exception:
+            err_msg = err_ms.error_balance_for_admin()
+            await callback.message.answer(err_msg)
+
+    # отклонение перевода
+    elif callback.data.split("|")[0] == "admin-payment-cancel":
+        # сообщение админу
+        message_for_admin = paid_request_for_admin(summ, tg_id).split("\n\n")[0]
+        message_for_admin += "\n\nОплата отклонена ❌\nОповещение направлено пользователю"
+        await callback.message.edit_text(message_for_admin)
+
+        # сообщение пользователю
+        message_for_user = paid_decline_for_user(summ)
+        await bot.send_message(tg_id, message_for_user)
 
 
 #

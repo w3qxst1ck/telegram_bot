@@ -3,14 +3,24 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from handlers.buttons import menu as btn
 
 
-def payment_confirm_keyboard() -> InlineKeyboardBuilder:
+def payment_confirm_keyboard(summ: str) -> InlineKeyboardBuilder:
     """Клавиатура с кнопкой подтверждения оплаты"""
     keyboard = InlineKeyboardBuilder()
     keyboard.row(
         InlineKeyboardButton(
-            text="Оплатил(а)", callback_data=f"paid")
+            text="Оплатил(а)", callback_data=f"paid|{summ}")
     )
 
+    return keyboard
+
+
+def payment_confirm_admin_keyboard(tg_id: str, summ: str) -> InlineKeyboardBuilder:
+    """Клавиатура для подтверждения или отклонения платежа админом"""
+    keyboard = InlineKeyboardBuilder()
+    keyboard.row(
+        InlineKeyboardButton(text="Подтвердить ✅", callback_data=f"admin-payment-confirm|{tg_id}|{summ}"),
+        InlineKeyboardButton(text="Отклонить ❌", callback_data=f"admin-payment-cancel|{tg_id}|{summ}")
+    )
     return keyboard
 
 

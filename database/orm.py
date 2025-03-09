@@ -9,7 +9,6 @@ from database.tables import Base
 
 from schemas.user import UserAdd, UserConnList
 from schemas.connection import Connection, ConnServerScheduler, Server, ServerAdd, ConnectionServer
-from settings import settings
 from logger import logger
 
 
@@ -419,3 +418,42 @@ class AsyncOrm:
         except Exception as e:
             logger.error(f"Ошибка при получении данных для ConnServerScheduler: {e}")
 
+    @staticmethod
+    async def init_payment(tg_id: str, amount: int, created_at:datetime.datetime, session: Any) -> None:
+        """Создание еще неподтвержденного платежа"""
+        try:
+            await session.execute(
+                """
+                INSERT INTO payments (created_at, amount, status, user_tg_id)
+                VALUES ($1, $2, $3, $4)
+                """,
+                created_at, amount, False, tg_id
+            )
+        except Exception as e:
+            logger.error(f"Ошибка при создании платежа пользователя {tg_id} на сумму {amount}: {e}")
+            raise
+
+    @staticmethod
+    async def confirm_payment(tg_id: str, amount: int, session: Any) -> None:
+        """Обновление статуса платежа и пополнение баланса"""
+        try:
+            async with session.transaction():
+                await session.execute(
+                    """
+                    UPDATE payments
+                    SET status=true
+                    WHERE user_tg_id = $1
+                    """,
+                    tg_id
+                )
+                await session.execute(
+                    """
+                    UPDATE users
+                    SET balance = balance + $1
+                    WHERE tg_id = $2
+                    """,
+                    amount, tg_id
+                )
+        except Exception as e:
+            logger.error(f"Ошибка при подтверждении платежа пользователя {tg_id} на сумму {amount}: {e}")
+            raise

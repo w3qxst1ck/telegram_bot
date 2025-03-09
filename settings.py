@@ -39,6 +39,7 @@ class Settings(BaseSettings):
     bot_name: str = "VLESS VPN bot"
     bot_token: str = Field(..., env='BOT_TOKEN')
     admins: list = Field(..., env='ADMINS')
+    payment_admin: str = Field(..., env='PAYMENT_ADMIN')
     timezone: str = "Europe/Moscow"
 
     trial_days: int = 1

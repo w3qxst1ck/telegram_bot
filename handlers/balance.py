@@ -1,18 +1,19 @@
+import datetime
 from typing import Any
 
-from aiogram import Router, types, F
+from aiogram import Router, types, F, Bot
 from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 
-from handlers.keyboards import balance as kb
 from database.orm import AsyncOrm
-from schemas.connection import Connection
+from handlers.keyboards import balance as kb
+from handlers.keyboards.menu import to_menu_keyboard
 from handlers.messages import balance as ms
+from handlers.messages import errors as err_ms
 from handlers.states.buy import UpBalanceFSM
 from handlers.buy_menu import buy_handler
-from cache import r
 from settings import settings
 from utils.validations import is_valid_summ
 
@@ -20,7 +21,6 @@ from utils.validations import is_valid_summ
 router = Router()
 
 
-# BALANCE
 @router.callback_query(F.data == "balance")
 async def balance_handler(callback: types.CallbackQuery, state: FSMContext) -> None:
     """Пополнение баланса. Начало UpBalanceFSM"""
@@ -54,9 +54,35 @@ async def confirm_up_balance_handler(message: types.Message, state: FSMContext) 
         invoice_message = ms.invoice_message(summ, str(message.from_user.id))
         await message.answer(
             invoice_message,
-            reply_markup=kb.payment_confirm_keyboard().as_markup(),
+            reply_markup=kb.payment_confirm_keyboard(summ).as_markup(),
             parse_mode=ParseMode.MARKDOWN_V2
         )
+
+
+@router.callback_query(F.data.split("|")[0] == "paid")
+async def balance_paid_handler(callback: types.CallbackQuery, bot: Bot, session: Any):
+    """Подтверждение перевода пользователем"""
+    summ = callback.data.split("|")[1]
+    tg_id = str(callback.from_user.id)
+
+    # оповещение пользователя
+    message_for_user = ms.paid_request_for_user(summ)
+    await callback.message.edit_text(message_for_user, reply_markup=to_menu_keyboard().as_markup())
+
+    # создание платежа
+    try:
+        created_at = datetime.datetime.now()
+        await AsyncOrm.init_payment(tg_id, int(summ), created_at, session)
+        # оповещение администратора
+        message_for_admin = ms.paid_request_for_admin(summ, tg_id)
+        await bot.send_message(
+            settings.payment_admin,
+            message_for_admin,
+            reply_markup=kb.payment_confirm_admin_keyboard(tg_id, summ).as_markup()
+        )
+    except Exception:
+        error_msg = err_ms.error_balance_msg()
+        await callback.message.edit_text(error_msg, reply_markup=to_menu_keyboard().as_markup())
 
 
 @router.callback_query(lambda callback: callback.data == "button_cancel", StateFilter("*"))

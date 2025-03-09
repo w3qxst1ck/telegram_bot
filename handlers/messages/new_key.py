@@ -1,5 +1,7 @@
 import datetime
 
+import pytz
+
 from settings import settings
 from utils.date_time_service import convert_date_time
 from handlers.buttons import menu as btn
@@ -27,11 +29,11 @@ def new_key_confirm_message(period: str, price: int) -> str:
 
 def buy_new_key_message(period: str, price: int, expire_date: datetime.datetime, balance: int, key: str) -> str:
     """Сообщение при покупке нового ключа за счет баланса"""
-    date, time = convert_date_time(expire_date)
+    date, time = convert_date_time(expire_date.astimezone(tz=pytz.timezone(settings.timezone)))
 
     message = f"✅ Поздравляем, Вы купили ключ на *{period} мес.*!\n" \
               f"С баланса списано {price}р. (остаток {balance}р.)\n"\
-              f"Дата истечения ключа *{time} {date}*\n\n" \
+              f"Дата истечения ключа *{time} {date} (МСК)*\n\n" \
               f"Нажмите на ключ, чтобы его скопировать\n" \
               f"```{key}```\n\n" \
               f"Вы всегда можете узнать актуальный статус и срок окончания подписки во вкладке \"{btn.KEYS}\" главного меню " \
