@@ -32,3 +32,14 @@ def new_key_confirm_keyboard(period: str) -> InlineKeyboardBuilder:
     )
 
     return keyboard
+
+
+def skip_keyboard() -> InlineKeyboardBuilder:
+    """Клавиатура для пропуска названия ключа"""
+    keyboard = InlineKeyboardBuilder()
+
+    keyboard.row(
+        InlineKeyboardButton(text="Пропустить", callback_data=f"key_description")
+    )
+
+    return keyboard

@@ -22,14 +22,14 @@ def keys_message(user_with_conn: UserConnList) -> str:
 
                 # если активна пробная подписка
                 if conn.is_trial:
-                    message += f"*{idx}.* ✅ *Пробная подписка на 1 день*\n" \
+                    message += f"*{idx}.* ✅ *Пробная ключ на 1 день*\n" \
                                f"🗓️ Активен до *{time} {date} (МСК)*\n" \
                                f"{REGIONS[conn.region]}\n" \
                                f"```{conn.key}```\n\n"
 
                 # если активна основная подписка
                 else:
-                    message += f"*{idx}.* ✅ Ключ *{conn.email}*\n" \
+                    message += f"*{idx}.* ✅ Ключ *{conn.description}*\n" \
                                f"🗓️ Активен до *{time} {date} (МСК)*\n" \
                                f"{REGIONS[conn.region]}\n" \
                                f"📊 Траффик за месяц {conn.traffic}Гб\n" \
@@ -37,7 +37,7 @@ def keys_message(user_with_conn: UserConnList) -> str:
 
             # если подписка неактивна
             else:
-                message += f"*{idx}.* ❌ Ключ {conn.email} *неактивен*\n" \
+                message += f"*{idx}.* ❌ Ключ {conn.description} *неактивен*\n" \
                            f"{REGIONS[conn.region]}\n" \
                            f"```{conn.key}```\n\n"
 

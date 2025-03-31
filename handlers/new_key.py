@@ -4,9 +4,11 @@ from typing import Any
 
 from aiogram import Router, types, F
 from aiogram.enums import ParseMode
+from aiogram.exceptions import TelegramBadRequest
+from aiogram.fsm.context import FSMContext
 
-from handlers.buttons.commands import HELP
 from handlers.keyboards import new_key as kb
+from handlers.states.new_key import KeyDescriptionFSM
 from handlers.keyboards.balance import not_enough_balance_keyboard
 from handlers.keyboards.menu import to_menu_keyboard
 from database.orm import AsyncOrm
@@ -77,14 +79,43 @@ async def new_key_confirm_handler(callback: types.CallbackQuery, session: Any) -
 
 
 @router.callback_query(F.data.split("|")[0] == "new_key_confirm")
-async def new_key_create_handler(callback: types.CallbackQuery, session: Any) -> None:
-    """Обработка подтверждения покупки нового ключа"""
-    # исключение двойного нажатия
-    await callback.message.edit_text("Запрос выполняется...⏳")
-
+async def create_description(callback: types.CallbackQuery,  state: FSMContext) -> None:
+    """Выбор description для ключа, начало KeyDescriptionFSM"""
     period = callback.data.split("|")[1]
     price = settings.price_list[period]
     tg_id = str(callback.from_user.id)
+
+    await state.set_state(KeyDescriptionFSM.description)
+    await state.update_data(period=period)
+    await state.update_data(price=price)
+    await state.update_data(tg_id=tg_id)
+
+    msg = ms.key_description()
+    prev_mess = await callback.message.edit_text(msg, reply_markup=kb.skip_keyboard().as_markup())
+    await state.update_data(prev_mess=prev_mess)
+
+
+@router.callback_query(F.data.split("|")[0] == "key_description", KeyDescriptionFSM.description)
+@router.message(KeyDescriptionFSM.description)
+async def new_key_create_handler(callback: types.CallbackQuery | types.Message, state: FSMContext, session: Any) -> None:
+    """Обработка подтверждения покупки нового ключа"""
+    # получение описания
+    if type(callback) == types.CallbackQuery:
+        await callback.message.edit_text("Запрос выполняется...⏳")
+        description = ""
+    else:
+        wait_msg = await callback.answer("Запрос выполняется...⏳")
+        description = callback.text
+
+    data = await state.get_data()
+    period = data["period"]
+    price = data["price"]
+    tg_id = data["tg_id"]
+
+    # убираем клавиатуру "Пропустить" если название было введено
+    if type(callback) == types.Message:
+        prev_mess = data.get("prev_mess")
+        await prev_mess.edit_text(ms.key_description())
 
     # TODO test version
     user_with_conn = await AsyncOrm.get_user_with_connection_list(tg_id, session)
@@ -107,7 +138,8 @@ async def new_key_create_handler(callback: types.CallbackQuery, session: Any) ->
     key = await add_client(server, email, tg_id)
 
     # подготовка нового Connection
-    description = "SOME DESCRIPTION"    # TODO поправить
+    if not description:
+        description = server.region + f"-{len(user_with_conn.connections)}"    # TODO поправить
     new_balance = user_with_conn.balance - price
     new_conn = Connection(
         tg_id=tg_id,
@@ -125,7 +157,23 @@ async def new_key_create_handler(callback: types.CallbackQuery, session: Any) ->
     try:
         await AsyncOrm.buy_new_key(new_conn, new_balance, session)
         msg = ms.buy_new_key_message(period, price, new_conn.expire_date, new_balance, key)
-        await callback.message.edit_text(msg, reply_markup=to_menu_keyboard().as_markup(), parse_mode=ParseMode.MARKDOWN)
+        # отправка ключа пользователю при пропуске названия
+        if type(callback) == types.CallbackQuery:
+            await callback.message.edit_text(msg,
+                                             reply_markup=to_menu_keyboard().as_markup(),
+                                             parse_mode=ParseMode.MARKDOWN)
+        # отправка ключа пользователю при введенном названии
+        else:
+            # удаление сообщения ожидания
+            try:
+                await wait_msg.delete()
+            except TelegramBadRequest:
+                pass
+            except Exception:
+                error_msg = err_ms.general_error_msg()
+                await callback.answer(error_msg)
+
+            await callback.answer(msg, reply_markup=to_menu_keyboard().as_markup(), parse_mode=ParseMode.MARKDOWN)
 
         # TODO обновить кэш
         # user_with_conn.balance = new_balance
@@ -134,5 +182,14 @@ async def new_key_create_handler(callback: types.CallbackQuery, session: Any) ->
         # r.setex(f"profile:{tg_id}", 300, user_with_conn_json)
     except Exception:
         error_msg = err_ms.error_msg()
-        await callback.message.edit_text(error_msg, reply_markup=to_menu_keyboard().as_markup())
+        if type(callback) == types.CallbackQuery:
+            await callback.message.edit_text(error_msg, reply_markup=to_menu_keyboard().as_markup())
+        else:
+            try:
+                await wait_msg.delete()
+            except Exception:
+                pass
+            await callback.edit_text(error_msg, reply_markup=to_menu_keyboard().as_markup(), parse_mode=ParseMode.MARKDOWN)
+    finally:
+        await state.clear()
 

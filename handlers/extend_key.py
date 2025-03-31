@@ -75,7 +75,7 @@ async def extend_key_period_handler(callback: types.CallbackQuery, session: Any)
     #     conn_server_json = conn_server.model_dump_json()
     #     r.setex(f"extend_key:{tg_id}", 100, conn_server_json)
 
-    msg = ms.extend_key_period_message(user_with_conns.balance, email, conn_server.active,
+    msg = ms.extend_key_period_message(user_with_conns.balance, conn_server.description, conn_server.active,
                                        conn_server.expire_date, conn_server.region)
     await callback.message.edit_text(msg, reply_markup=kb.extend_key_period_keyboard(email).as_markup())
 
@@ -118,7 +118,7 @@ async def extend_key_confirm_handler(callback: types.CallbackQuery, session: Any
 
     # достаточно средств
     if user_with_conns.balance >= price:
-        msg = ms.extend_key_confirm_message(period, email, price, conn_server.region)
+        msg = ms.extend_key_confirm_message(period, conn_server.description, price, conn_server.region)
         await callback.message.edit_text(msg, reply_markup=kb.extend_key_confirm_keyboard(period, email).as_markup())
     # недостаточно средств на балансе
     else:
@@ -175,7 +175,7 @@ async def extend_key_handler(callback: types.CallbackQuery, session: Any) -> Non
         await AsyncOrm.extend_key(email, new_expire_date, tg_id, new_balance, session)
 
         # отправка сообщения
-        msg = ms.extend_key_message(period, price, new_expire_date, email, new_balance, conn_server.region)
+        msg = ms.extend_key_message(period, price, new_expire_date, conn_server.description, new_balance, conn_server.region)
         await callback.message.edit_text(msg, reply_markup=to_menu_keyboard().as_markup())
 
         # TODO обновить кэш
