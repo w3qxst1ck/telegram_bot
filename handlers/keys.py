@@ -9,12 +9,13 @@ from aiogram.enums import ParseMode
 from aiogram.filters import Command
 
 from database.orm import AsyncOrm
-from handlers.messages.keys import keys_message
 from cache import r
 from schemas.user import UserConnList
+from handlers.messages.keys import keys_message
 from handlers.keyboards import keys as kb
 from handlers.buttons import commands as cmd
 from services.service import get_client_traffic, get_client_traffic_for_all_keys
+
 
 router = Router()
 
@@ -74,4 +75,3 @@ async def profile(message: types.Message | types.CallbackQuery, session: Any):
             reply_markup=kb.keys_keyboard(back_btn=True).as_markup(),
             parse_mode=ParseMode.MARKDOWN
         )
-

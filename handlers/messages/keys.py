@@ -22,7 +22,7 @@ def keys_message(user_with_conn: UserConnList) -> str:
 
                 # если активна пробная подписка
                 if conn.is_trial:
-                    message += f"*{idx}.* ✅ *Пробная ключ на 1 день*\n" \
+                    message += f"*{idx}.* 🎁 *Пробный ключ на 1 день*\n" \
                                f"🗓️ Активен до *{time} {date} (МСК)*\n" \
                                f"{REGIONS[conn.region]}\n" \
                                f"```{conn.key}```\n\n"

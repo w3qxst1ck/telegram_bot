@@ -28,19 +28,23 @@ async def run_every_hour(bot: aiogram.Bot) -> None:
         await off_expired_connections(session, bot)
         await check_traffic_excess(session, bot)
 
+    except Exception:
+        # TODO добавить логи на выполнение шедулеров
+        pass
+
     finally:
         await session.close()
 
 
 async def off_expired_connections(session: Any, bot: aiogram.Bot):
-    """Проверяет активность подписок"""
+    """
+    Проверяет активность подписок, если expire_date истек - блокирует ключ,
+    если истекший ключ - пробный, он удаляется
+    """
     all_connections = await AsyncOrm.get_active_connections(session)
 
     for conn in all_connections:
         # TODO разобраться с time zones
-        print(f"expire: {conn.expire_date}")
-        print(f"now: {datetime.datetime.now()}")
-
         if conn.expire_date < datetime.datetime.now():
 
             # если ключ пробный - удаляем его
@@ -60,18 +64,18 @@ async def off_expired_connections(session: Any, bot: aiogram.Bot):
                 message = msg.expire_trial_key(conn.key)
                 await bot.send_message(conn.tg_id, message, parse_mode=ParseMode.MARKDOWN)
 
-                continue
+            # для обычных ключей
+            else:
+                # переводим connection в неактивные в БД
+                await AsyncOrm.deactivate_connection(conn.email, session)
 
-            # переводим подписку в неактивные в БД
-            await AsyncOrm.deactivate_connection(conn.email, session)
+                # блокируем ключ в панели
+                server: Server = await AsyncOrm.get_server(conn.server_id, session)
+                await service.block_client(server, conn.email, conn.tg_id)
 
-            # блокируем ключ в панели
-            server: Server = await AsyncOrm.get_server(conn.server_id, session)
-            await service.block_client(server, conn.email, conn.tg_id)
-
-            # оповещение пользователя
-            message = msg.expire_key(conn.key)
-            await bot.send_message(conn.tg_id, message, parse_mode=ParseMode.MARKDOWN)
+                # оповещение пользователя
+                message = msg.expire_key(conn)
+                await bot.send_message(conn.tg_id, message, parse_mode=ParseMode.MARKDOWN)
 
 
 async def check_traffic_excess(session: Any, bot: aiogram.Bot) -> None:
@@ -82,7 +86,11 @@ async def check_traffic_excess(session: Any, bot: aiogram.Bot) -> None:
         current_traffic: float = await service.get_client_traffic(conn.api_url, conn.email)
 
         if current_traffic > settings.traffic_limit:
-            # TODO подумать как блокировать клиента
+            # TODO проблема в блокировке ключа (нужно чтобы она отличалась от блокировки по дате)
+            # блокируем ключ в панели
+            # server: Server = await AsyncOrm.get_server(conn.server_id, session)
+
+
             # TODO оповестить пользователя
             pass
 

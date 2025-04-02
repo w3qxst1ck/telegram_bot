@@ -7,6 +7,7 @@ from handlers.buy_menu import router as buy_router
 from handlers.new_key import router as new_key_router
 from handlers.balance import router as balance_router
 from handlers.extend_key import router as extend_router
+from handlers.trial_key import router as trial_key_router
 
 main_router = Router()
 
@@ -18,5 +19,6 @@ main_router.include_routers(
     buy_router,
     new_key_router,
     balance_router,
-    extend_router
+    extend_router,
+    trial_key_router
 )

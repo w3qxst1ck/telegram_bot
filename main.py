@@ -49,6 +49,7 @@ async def start_bot() -> None:
     scheduler = AsyncIOScheduler(timezone="Europe/Moscow")
 
     # перевод закончившихся подписок в неактивные, удаление пробных
+    # проверка превышения трафика
     scheduler.add_job(keys_schedule.run_every_hour, trigger="cron", year='*', month='*', day="*", hour="*", minute=0,
                       second=0, start_date=datetime.now(), kwargs={"bot": bot})
 
