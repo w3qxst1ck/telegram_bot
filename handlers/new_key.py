@@ -139,8 +139,14 @@ async def new_key_create_handler(callback: types.CallbackQuery | types.Message, 
 
     # подготовка нового Connection
     if not description:
-        description = server.region + f"-{len(user_with_conn.connections)}"    # TODO поправить
+        description = server.region + f"-{len(user_with_conn.connections)}"
+
+    # пересчет баланса
     new_balance = user_with_conn.balance - price
+
+    # ключ с описанием после #
+    key_with_description = await convert_key(key, description)
+
     new_conn = Connection(
         tg_id=tg_id,
         active=True,
@@ -148,7 +154,7 @@ async def new_key_create_handler(callback: types.CallbackQuery | types.Message, 
         expire_date=datetime.datetime.now() + datetime.timedelta(days=int(period)*30),
         is_trial=False,
         email=email,
-        key=key,
+        key=key_with_description,
         description=description,
         server_id=server_id
     )
@@ -156,7 +162,7 @@ async def new_key_create_handler(callback: types.CallbackQuery | types.Message, 
     # создание connection в бд
     try:
         await AsyncOrm.buy_new_key(new_conn, new_balance, session)
-        msg = ms.buy_new_key_message(period, price, new_conn.expire_date, new_balance, key)
+        msg = ms.buy_new_key_message(period, price, new_conn.expire_date, new_balance, key_with_description)
         # отправка ключа пользователю при пропуске названия
         if type(callback) == types.CallbackQuery:
             await callback.message.edit_text(msg,
@@ -193,3 +199,10 @@ async def new_key_create_handler(callback: types.CallbackQuery | types.Message, 
     finally:
         await state.clear()
 
+
+async def convert_key(key: str, description: str) -> str:
+    """Убирает стандартный email из названия и добавляет описание"""
+    key_without_email = key.split("#")[0] + "#"
+    new_description = description.replace(" ", "_")
+
+    return key_without_email + new_description
