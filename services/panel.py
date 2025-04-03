@@ -34,6 +34,8 @@ async def create_client(xui: AsyncApi, inbound_id: int, client_uuid: str, tg_id:
                     tg_id=tg_id,
                     id=client_uuid,
                     flow=settings.server.flow,
+                    total_gb=settings.traffic_limit * 1024**3,
+                    limit_ip=1
                 )
             ]
         )
