@@ -163,16 +163,20 @@ async def extend_key_handler(callback: types.CallbackQuery, session: Any) -> Non
     #     conn_server_json = conn_server.model_dump_json()
     #     r.setex(f"extend_key:{tg_id}", 100, conn_server_json)
 
+    # ключ еще не просрочен (не меняем start_date)
     if conn_server.expire_date >= datetime.datetime.now():
         new_expire_date = conn_server.expire_date + datetime.timedelta(days=int(period)*30)
+        new_start_date = conn_server.start_date
+    # просроченный ключ (start_date = now)
     else:
         new_expire_date = datetime.datetime.now() + datetime.timedelta(days=int(period)*30)
+        new_start_date = datetime.datetime.now()
 
     new_balance = user_with_conns.balance - price
 
     try:
         # внесение изменений в БД
-        await AsyncOrm.extend_key(email, new_expire_date, tg_id, new_balance, session)
+        await AsyncOrm.extend_key(email, new_start_date, new_expire_date, tg_id, new_balance, session)
 
         # отправка сообщения
         msg = ms.extend_key_message(period, price, new_expire_date, conn_server.description, new_balance, conn_server.region)

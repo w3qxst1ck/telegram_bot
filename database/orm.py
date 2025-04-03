@@ -151,7 +151,7 @@ class AsyncOrm:
                     FROM connections AS c
                     JOIN servers AS s ON c.server_id = s.id 
                     WHERE c.tg_id = $1
-                    ORDER BY c.active DESC
+                    ORDER BY is_trial DESC, c.active DESC
                     """,
                     tg_id
                 )
@@ -204,16 +204,21 @@ class AsyncOrm:
             raise
 
     @staticmethod
-    async def extend_key(email: str, expire_date: datetime.datetime, tg_id: str, balance: int, session: Any) -> None:
+    async def extend_key(email: str,
+                         start_date: datetime.datetime,
+                         expire_date: datetime.datetime,
+                         tg_id: str,
+                         balance: int,
+                         session: Any) -> None:
         """Продления ключа и транзакционное уменьшение баланса"""
         try:
             async with session.transaction():
                 await session.execute(
                     """
-                    UPDATE connections SET expire_date = $1, active=true
-                    WHERE email = $2;
+                    UPDATE connections SET start_date = $1, expire_date = $2, active = true
+                    WHERE email = $3;
                     """,
-                    expire_date, email
+                    start_date, expire_date, email
                 )
                 await session.execute(
                     """
