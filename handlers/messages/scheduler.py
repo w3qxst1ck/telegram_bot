@@ -17,3 +17,10 @@ def expire_key(connection: Connection) -> str:
               f"Пополнить баланс и продлить ключ вы можете в разделе /{cmd.BUY[0]}"
 
     return message
+
+
+def refresh_key_traffic(connection: Connection) -> str:
+    """Сообщение об обновлении трафика"""
+    message = f"Трафик вашего ключа \"{connection.description}\" обновлен!"
+
+    return message

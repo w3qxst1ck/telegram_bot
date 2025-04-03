@@ -125,6 +125,17 @@ async def get_current_traffic_without_login(xui: AsyncApi, email: str) -> float:
         logger.error(f"Ошибка при получении трафика клиента {email}: {e}")
 
 
+async def refresh_key_traffic_by_email(xui: AsyncApi, inbound_id: int, email: str) -> None:
+    """Обнуляет текущий трафик для ключа"""
+    await xui.login()
+
+    try:
+        await xui.client.reset_stats(inbound_id=inbound_id, email=email)
+
+    except Exception as e:
+        logger.error(f"Ошибка при обновлении (обнулении) текущего трафика для ключа {email}: {e}")
+
+
 def _generate_key(server: Inbound, client_uuid: str, domain: str) -> str:
     """Создание строки подключения"""
     key = f"{server.protocol}://{client_uuid}@{domain}:{server.port}" \

@@ -45,6 +45,7 @@ class Settings(BaseSettings):
     trial_days: int = 1
     price_list: dict = PRICES
     traffic_limit: int = 100
+    paid_period: int = 30
 
     db: Database = Database()
     redis: Redis = Redis()

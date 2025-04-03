@@ -341,6 +341,21 @@ class AsyncOrm:
             logger.error(f"Ошибка при получении id серверов: {e}")
 
     @staticmethod
+    async def get_all_connections(session: Any) -> list[Connection]:
+        """Получает все подключения """
+        try:
+            query = await session.fetch(
+                """
+                SELECT * FROM connections
+                """
+            )
+            connections: list[Connection] = [Connection.model_validate(conn) for conn in query]
+            return connections
+
+        except Exception as e:
+            logger.error(f"Ошибка при получении всех connections: {e}")
+
+    @staticmethod
     async def get_active_connections(session: Any) -> list[Connection]:
         """Получает все активные подключения"""
         try:

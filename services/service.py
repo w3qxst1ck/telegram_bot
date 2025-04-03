@@ -5,7 +5,7 @@ from py3xui import AsyncApi
 from database.orm import AsyncOrm
 from settings import settings
 from services.panel import create_client, block_key, delete_key, activate_key, get_current_traffic, \
-    get_current_traffic_without_login
+    get_current_traffic_without_login, refresh_key_traffic_by_email
 from schemas.connection import Server, Connection
 from logger import logger
 
@@ -98,3 +98,14 @@ async def get_client_traffic_for_all_keys(connections: List[Connection], session
         conns_with_traffic.append(conn)
 
     return conns_with_traffic
+
+
+async def refresh_client_current_traffic(server: Server, client_email: str) -> None:
+    """Обнуление трафика для ключа"""
+    xui = AsyncApi(
+        host=server.api_url,
+        username=settings.server.username,
+        password=settings.server.password
+    )
+
+    await refresh_key_traffic_by_email(xui, server.inbound_id, client_email)
