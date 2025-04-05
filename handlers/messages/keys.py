@@ -33,11 +33,21 @@ def keys_message(user_with_conn: UserConnList) -> str:
                     refresh_date, _ = convert_date_time(
                         get_next_refresh_traffic_date(conn.start_date).astimezone(tz=pytz.timezone(settings.timezone)))
 
-                    message += f"*{idx}.* ✅ Ключ *{conn.description}*\n" \
-                               f"🗓️ Активен до *{time} {date} (МСК)*\n" \
-                               f"{REGIONS[conn.region]}\n" \
-                               f"📊 Траффик: *{conn.traffic} / {settings.traffic_limit}* Гб (обновление {refresh_date})\n" \
-                               f"```{conn.key}```\n\n"
+                    # если превышен трафик
+                    if conn.traffic > settings.traffic_limit:
+                        message += f"*{idx}.* ⚠️ Ключ *{conn.description}*\n" \
+                                   f"🗓️ Активен до *{time} {date} (МСК)*\n" \
+                                   f"{REGIONS[conn.region]}\n" \
+                                   f"❗ Превышен лимит трафика: *{conn.traffic} / {settings.traffic_limit}* Гб (обновление {refresh_date})\n" \
+                                   f"```{conn.key}```\n\n"
+
+                    # если трафик в норме
+                    else:
+                        message += f"*{idx}.* ✅ Ключ *{conn.description}*\n" \
+                                   f"🗓️ Активен до *{time} {date} (МСК)*\n" \
+                                   f"{REGIONS[conn.region]}\n" \
+                                   f"📊 Траффик: *{conn.traffic} / {settings.traffic_limit}* Гб (обновление {refresh_date})\n" \
+                                   f"```{conn.key}```\n\n"
 
             # если подписка неактивна
             else:
