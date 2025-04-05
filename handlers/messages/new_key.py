@@ -10,7 +10,7 @@ from handlers.buttons import commands as cmd
 
 def new_key_message(balance: int) -> str:
     """Сообщение для покупки нового ключа"""
-    message = f"У вас на балансе <b>{balance}р</b>\n\n" \
+    message = f"💰 У вас на балансе <b>{balance}р</b>\n\n" \
                f"Стоимость ключа VPN\n" \
                f"• 1 месяц <b>{settings.price_list['1']}р</b>\n" \
                f"• 3 месяца <b>{settings.price_list['3']}р</b>\n" \
@@ -23,7 +23,7 @@ def new_key_message(balance: int) -> str:
 def new_key_confirm_message(period: str, price: int) -> str:
     """Сообщение подтверждения покупки нового ключа"""
     message = f"Купить новый ключ на <b>{period} мес.</b>?\n\n" \
-              f"У вас с баланса будет списано <b>{price}р.</b>"
+              f"У вас с баланса будет списано <b>{price} р.</b>"
     return message
 
 

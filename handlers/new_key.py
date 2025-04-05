@@ -7,12 +7,14 @@ from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 
+import schemas.user
 from handlers.keyboards import new_key as kb
 from handlers.states.new_key import KeyDescriptionFSM
 from handlers.keyboards.balance import not_enough_balance_keyboard
 from handlers.keyboards.menu import to_menu_keyboard
 from database.orm import AsyncOrm
 from schemas.connection import Connection, Server
+from schemas.user import UserConnList
 from handlers.messages import new_key as ms
 from handlers.messages import errors as err_ms
 from handlers.messages.balance import not_enough_balance_message
@@ -139,13 +141,13 @@ async def new_key_create_handler(callback: types.CallbackQuery | types.Message, 
 
     # подготовка нового Connection
     if not description:
-        description = server.region + f"-{len(user_with_conn.connections)}"
+        description = get_default_description(user_with_conn, server.region)
 
     # пересчет баланса
     new_balance = user_with_conn.balance - price
 
     # ключ с описанием после #
-    key_with_description = await convert_key(key, description)
+    key_with_description = convert_key(key, description)
 
     new_conn = Connection(
         tg_id=tg_id,
@@ -200,9 +202,22 @@ async def new_key_create_handler(callback: types.CallbackQuery | types.Message, 
         await state.clear()
 
 
-async def convert_key(key: str, description: str) -> str:
+def convert_key(key: str, description: str) -> str:
     """Убирает стандартный email из названия и добавляет описание"""
     key_without_email = key.split("#")[0] + "#"
     new_description = description.replace(" ", "_")
 
     return key_without_email + new_description
+
+
+def get_default_description(user_with_conns: UserConnList, region: str) -> str:
+    """Создание автоматического описания"""
+    descriptions = [conn.description for conn in user_with_conns.connections]
+    new_description = region + f"-{len(user_with_conns.connections)}"
+
+    counter = 1
+    while new_description in descriptions:
+        new_description = region + f"-{len(user_with_conns.connections) + counter}"
+        counter += 1
+
+    return new_description
