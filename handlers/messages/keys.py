@@ -3,6 +3,7 @@ import pytz
 from schemas.user import UserConnList
 from settings import settings
 from utils.date_time_service import convert_date_time
+from utils.next_refresh_date import get_next_refresh_traffic_date
 from handlers.buttons import commands as cmd
 from handlers.buttons.regions import REGIONS
 from handlers.buttons import menu as btn
@@ -29,10 +30,13 @@ def keys_message(user_with_conn: UserConnList) -> str:
 
                 # если активна основная подписка
                 else:
+                    refresh_date, _ = convert_date_time(
+                        get_next_refresh_traffic_date(conn.start_date).astimezone(tz=pytz.timezone(settings.timezone)))
+
                     message += f"*{idx}.* ✅ Ключ *{conn.description}*\n" \
                                f"🗓️ Активен до *{time} {date} (МСК)*\n" \
                                f"{REGIONS[conn.region]}\n" \
-                               f"📊 Траффик за месяц {conn.traffic}Гб\n" \
+                               f"📊 Траффик: *{conn.traffic} / {settings.traffic_limit}* Гб (обновление {refresh_date})\n" \
                                f"```{conn.key}```\n\n"
 
             # если подписка неактивна

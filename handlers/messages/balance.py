@@ -1,4 +1,4 @@
-from handlers.buttons.commands import HELP
+from handlers.buttons.commands import HELP, BALANCE
 
 
 def invoice_message(summ: str, tg_id: str) -> str:
@@ -16,6 +16,15 @@ def not_enough_balance_message(period: str, price: int, balance: int) -> str:
     message = f"⚠️ Недостаточно средств для покупки/продления подписки на {period} мес.\n" \
               f"Необходимо {price}р., ваш остаток на балансе {balance}р.\n\n" \
               f"Вы можете пополнить баланс на необходимую сумму по кнопке ниже"
+
+    return message
+
+
+def not_enough_money(price: int, balance: int) -> str:
+    """Сообщение о нехватке денег на балансе при покупке"""
+    message = f"⚠️ Недостаточно средств для совершения покупки\n" \
+              f"Необходимо {price} р., ваш остаток на балансе {balance} р.\n\n" \
+              f"Вы можете пополнить баланс в разделе /{BALANCE[0]}"
 
     return message
 

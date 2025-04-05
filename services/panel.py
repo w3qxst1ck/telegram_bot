@@ -28,7 +28,6 @@ async def create_client(xui: AsyncApi, inbound_id: int, client_uuid: str, tg_id:
             inbound_id,
             [
                 Client(
-                    # TODO добавить ограничение по трафику?
                     email=client_uuid,
                     enable=True,
                     tg_id=tg_id,

@@ -11,9 +11,11 @@ def main_menu_keyboard(admin: bool) -> InlineKeyboardBuilder:
 
     keyboard.row(
         InlineKeyboardButton(text=f"{btn.KEYS}", callback_data="menu|keys"),
-        InlineKeyboardButton(text=f"{btn.BUY}", callback_data="menu|buy")
+        InlineKeyboardButton(text=f"{btn.BUY}", callback_data="menu|buy"),
     )
-
+    keyboard.row(
+        InlineKeyboardButton(text=f"{btn.BALANCE}", callback_data="menu|balance")
+    )
     if admin:
         keyboard.row(InlineKeyboardButton(text=f"{btn.ADMIN}", callback_data="menu|admin"))
 

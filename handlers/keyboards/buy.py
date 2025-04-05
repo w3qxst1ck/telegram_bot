@@ -9,7 +9,6 @@ def buy_keyboard(back_bnt: bool = None) -> InlineKeyboardBuilder:
 
     keyboard.row(InlineKeyboardButton(text=f"{btn.NEW_KEY}", callback_data="new_key"))
     keyboard.row(InlineKeyboardButton(text=f"{btn.EXTEND_KEY}", callback_data="extend_key"))
-    keyboard.row(InlineKeyboardButton(text=f"{btn.BALANCE}", callback_data="balance"))
 
     if back_bnt:
         keyboard.row(InlineKeyboardButton(text=f"{btn.BACK}", callback_data="menu"))

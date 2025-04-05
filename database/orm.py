@@ -8,7 +8,7 @@ from database.database import async_engine
 from database.tables import Base
 
 from schemas.user import UserAdd, UserConnList
-from schemas.connection import Connection, ConnServerScheduler, Server, ServerAdd, ConnectionServer
+from schemas.connection import Connection, ConnServerScheduler, Server, ServerAdd, ConnectionServer, ConnectionRegion
 from logger import logger
 
 
@@ -250,6 +250,22 @@ class AsyncOrm:
             logger.error(f"Ошибка получения connection с email {email}: {e}")
 
     @staticmethod
+    async def get_connection_by_id(conn_id: int, session) -> Connection:
+        """Получение connection по email"""
+        try:
+            row = await session.fetchrow(
+                """
+                SELECT * FROM connections
+                WHERE id = $1
+                """,
+                conn_id
+            )
+            conn = Connection.model_validate(row)
+            return conn
+        except Exception as e:
+            logger.error(f"Ошибка получения connection с id {conn_id}: {e}")
+
+    @staticmethod
     async def get_connection_server(email: str, session) -> ConnectionServer:
         """Получение connection с server по email"""
         try:
@@ -476,4 +492,55 @@ class AsyncOrm:
                 )
         except Exception as e:
             logger.error(f"Ошибка при подтверждении платежа пользователя {tg_id} на сумму {amount}: {e}")
+            raise
+
+    @staticmethod
+    async def get_active_user_connections(tg_id: str, session: Any) -> list[ConnectionRegion]:
+        """Получает id и description активных connections пользователя по tg_id"""
+        try:
+            query = await session.fetch(
+                """
+                SELECT c.id, c.description, s.region 
+                FROM connections AS c
+                JOIN servers AS s ON c.server_id=s.id
+                WHERE c.tg_id=$1 AND c.active=true
+                """,
+                tg_id
+            )
+            connections: list[ConnectionRegion] = [ConnectionRegion.model_validate(conn) for conn in query]
+            return connections
+
+        except Exception as e:
+            logger.error(f"Ошибка при получении активных connections пользователя {tg_id}: {e}")
+
+    @staticmethod
+    async def get_user_balance(tg_id: str, session: Any) -> int:
+        """Получение баланса у пользователя по tg_id"""
+        try:
+            query = await session.fetchval(
+                """
+                SELECT balance from users
+                WHERE tg_id=$1
+                """,
+                tg_id
+            )
+            return query
+
+        except Exception as e:
+            logger.error(f"Ошибка при получении баланса пользователя {tg_id}: {e}")
+
+    @staticmethod
+    async def decrease_balance_on_amount(tg_id: str, amount: int, session: Any):
+        """Уменьшить баланс на величину"""
+        try:
+            await session.execute(
+                """
+                UPDATE users
+                SET balance = balance - $1
+                WHERE tg_id = $2
+                """,
+                amount, tg_id
+            )
+        except Exception as e:
+            logger.error(f"Ошибка при списании с баланса {amount} р. пользователя {tg_id}: {e}")
             raise

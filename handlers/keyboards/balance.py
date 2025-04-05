@@ -39,3 +39,10 @@ def cancel_keyboard() -> InlineKeyboardBuilder:
     keyboard = InlineKeyboardBuilder()
     keyboard.row(InlineKeyboardButton(text="❌ Отмена", callback_data="button_cancel"))
     return keyboard
+
+
+def back_to_menu_from_balance() -> InlineKeyboardBuilder:
+    """Возвращение в меню из баланса и сброс FSM"""
+    keyboard = InlineKeyboardBuilder()
+    keyboard.row(InlineKeyboardButton(text="❌ Отмена", callback_data="menu"))
+    return keyboard

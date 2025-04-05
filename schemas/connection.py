@@ -28,6 +28,12 @@ class Connection(BaseModel):
     traffic: float | None = None
 
 
+class ConnectionRegion(BaseModel):
+    id: int
+    description: str
+    region: str
+
+
 class ConnServerScheduler(BaseModel):
     tg_id: str
     email: str

@@ -4,10 +4,11 @@ from typing import Any
 from aiogram import Router, types, F, Bot
 from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramBadRequest
-from aiogram.filters import StateFilter
+from aiogram.filters import StateFilter, Command
 from aiogram.fsm.context import FSMContext
 
 from database.orm import AsyncOrm
+from handlers.buttons import commands as cmd
 from handlers.keyboards import balance as kb
 from handlers.keyboards.menu import to_menu_keyboard
 from handlers.messages import balance as ms
@@ -21,13 +22,23 @@ from utils.validations import is_valid_summ
 router = Router()
 
 
-@router.callback_query(F.data == "balance")
-async def balance_handler(callback: types.CallbackQuery, state: FSMContext) -> None:
+@router.message(Command(f"{cmd.BALANCE[0]}"))
+@router.callback_query(F.data == "menu|balance")
+async def balance_handler(message: types.CallbackQuery | types.Message, state: FSMContext, session: Any) -> None:
     """Пополнение баланса. Начало UpBalanceFSM"""
+    tg_id = str(message.from_user.id)
+
+    user_balance = await AsyncOrm.get_user_balance(tg_id, session)
+
     await state.set_state(UpBalanceFSM.summ)
 
-    text = "Введите сумму, на которую хотите пополнить баланс"
-    msg = await callback.message.edit_text(text, reply_markup=kb.cancel_keyboard().as_markup())
+    text = f"💰 Ваш баланс: <b>{user_balance} р.</b>\n\nВведите сумму, на которую хотите пополнить баланс"
+
+    if type(message) == types.Message:
+        msg = await message.answer(text, reply_markup=kb.cancel_keyboard().as_markup())
+    else:
+        msg = await message.message.edit_text(text, reply_markup=kb.back_to_menu_from_balance().as_markup())
+
     await state.update_data(prev_mess=msg)
 
 
@@ -86,7 +97,7 @@ async def balance_paid_handler(callback: types.CallbackQuery, bot: Bot, session:
 
 
 @router.callback_query(lambda callback: callback.data == "button_cancel", StateFilter("*"))
-async def cancel_handler(callback: types.CallbackQuery, state: FSMContext, session: Any):
+async def cancel_handler(callback: types.CallbackQuery, state: FSMContext):
     """Cancel FSM and delete last message"""
     await state.clear()
-    await buy_handler(callback, session)
+    await callback.message.delete()

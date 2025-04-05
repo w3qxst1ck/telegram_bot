@@ -3,6 +3,7 @@
 from aiogram import Router, types, F
 from aiogram.filters import Command
 from aiogram.enums import ParseMode
+from aiogram.fsm.context import FSMContext
 
 from handlers.buttons import commands as cmd
 from handlers.keyboards import menu as menu_kb
@@ -24,8 +25,10 @@ async def help_handler(message: types.Message) -> None:
 
 @router.message(Command(f"{cmd.MENU[0]}"))
 @router.callback_query(F.data == "menu")
-async def main_menu(message: types.Message | types.CallbackQuery, admin: bool) -> None:
+async def main_menu(message: types.Message | types.CallbackQuery, admin: bool, state: FSMContext) -> None:
     """Отправка приветственного сообщения"""
+    await state.clear()
+
     name: str = message.from_user.first_name if message.from_user.first_name else message.from_user.username
 
     msg = f"Рады видеть тебя, <b>{name}</b>!\n\n" \
