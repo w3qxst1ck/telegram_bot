@@ -4,10 +4,11 @@ from handlers.buttons import menu as btn
 
 
 def keys_keyboard(back_btn: bool = False) -> InlineKeyboardBuilder:
-    """Клавиатура профиля пользователя"""
+    """Клавиатура вкладки мои ключи"""
     keyboard = InlineKeyboardBuilder()
 
     if back_btn:
+        keyboard.row(InlineKeyboardButton(text=f"{btn.DELETE_KEY}", callback_data="delete_key"))
         keyboard.row(InlineKeyboardButton(text=f"{btn.BACK}", callback_data="menu"))
     keyboard.adjust(1)
 
