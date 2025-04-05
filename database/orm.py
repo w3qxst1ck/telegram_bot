@@ -404,6 +404,7 @@ class AsyncOrm:
 
         except Exception as e:
             logger.error(f"Ошибка при удалении connection {email}: {e}")
+            raise
 
     @staticmethod
     async def set_trial_used_true(tg_id: str, session: Any):

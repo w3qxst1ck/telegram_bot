@@ -1,6 +1,8 @@
 from typing import Any
 
 from aiogram import Router, types, F
+
+import logger
 from handlers.keyboards import delete_key as kb
 from database.orm import AsyncOrm
 from schemas.connection import Connection, ConnectionServer
@@ -75,8 +77,9 @@ async def delete_key(callback: types.CallbackQuery, session: Any) -> None:
 
         # TODO refresh cache
 
-    except Exception:
+    except Exception as e:
         err_msg = err_ms.general_error_msg()
         await callback.message.edit_text(err_msg)
+        logger.logger.error(f"Ошибка при удалении ключа {email} пользователем {callback.from_user.id}: {e}")
 
 
