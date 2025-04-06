@@ -10,12 +10,12 @@ from handlers.buttons import commands as cmd
 
 def new_key_message(balance: int) -> str:
     """Сообщение для покупки нового ключа"""
-    message = f"💰 У вас на балансе <b>{balance}р</b>\n\n" \
+    message = f"💰 У вас на балансе <b>{balance} р.</b>\n\n" \
                f"Стоимость ключа VPN <b>(100 ГБ в месяц)</b>\n" \
-               f"• 1 месяц <b>{settings.price_list['1']}р</b>\n" \
-               f"• 3 месяца <b>{settings.price_list['3']}р</b>\n" \
-               f"• 6 месяцев <b>{settings.price_list['6']}р</b>\n" \
-               f"• 12 месяцев <b>{settings.price_list['12']}р</b>\n\n" \
+               f"• 1 месяц <b>{settings.price_list['1']} р.</b>\n" \
+               f"• 3 месяца <b>{settings.price_list['3']} р.</b>\n" \
+               f"• 6 месяцев <b>{settings.price_list['6']} р.</b>\n" \
+               f"• 12 месяцев <b>{settings.price_list['12']} р.</b>\n\n" \
                f"Для покупки ключа выберите необходимый срок действия с помощью кнопок ниже"
     return message
 
@@ -32,7 +32,7 @@ def buy_new_key_message(period: str, price: int, expire_date: datetime.datetime,
     date, time = convert_date_time(expire_date.astimezone(tz=pytz.timezone(settings.timezone)))
 
     message = f"✅ Поздравляем, Вы купили ключ на *{period} мес.*!\n" \
-              f"С баланса списано {price}р. (остаток {balance}р.)\n"\
+              f"С баланса списано {price}р. (остаток {balance} р.)\n"\
               f"Дата истечения ключа *{time} {date} (МСК)*\n\n" \
               f"Нажмите на ключ, чтобы его скопировать\n" \
               f"```{key}```\n\n" \

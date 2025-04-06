@@ -13,12 +13,12 @@ from handlers.buttons import commands as cmd
 def extend_key_menu_message(user_with_conns: UserConnList) -> str:
     """Сообщение в меню продления ключа"""
     if user_with_conns.connections:
-        message = f"У вас на балансе <b>{user_with_conns.balance}р</b>\n\n" \
+        message = f"У вас на балансе <b>{user_with_conns.balance} р.</b>\n\n" \
                   f"Стоимость продления ключа VPN\n" \
-                  f"• 1 месяц <b>{settings.price_list['1']}р</b>\n" \
-                  f"• 3 месяца <b>{settings.price_list['3']}р</b>\n" \
-                  f"• 6 месяцев <b>{settings.price_list['6']}р</b>\n" \
-                  f"• 12 месяцев <b>{settings.price_list['12']}р</b>\n\n" \
+                  f"• 1 месяц <b>{settings.price_list['1']} р.</b>\n" \
+                  f"• 3 месяца <b>{settings.price_list['3']} р.</b>\n" \
+                  f"• 6 месяцев <b>{settings.price_list['6']} р.</b>\n" \
+                  f"• 12 месяцев <b>{settings.price_list['12']} р.</b>\n\n" \
                   f"Выберите ключ, который необходимо продлить, с помощью кнопок ниже (если ключ еще активен, " \
                   f"срок продления будет прибавлен к текущему)\n\n" \
                   f"✅ - Активные ключи\n" \
@@ -34,12 +34,12 @@ def extend_key_period_message(balance: int, description: str, active: bool, expi
     date, time = convert_date_time(expire_date.astimezone(tz=pytz.timezone(settings.timezone)))
     active_phrase = f"({'✅ активен до ' + time + ' ' + date if active else '❌ неактивен'})"
     flag = FLAGS[region]
-    message = f"У вас на балансе <b>{balance}р</b>\n\n" \
+    message = f"У вас на балансе <b>{balance} р.</b>\n\n" \
               f"Стоимость продления ключа {flag} <b>{description}</b> {active_phrase}\n" \
-              f"• 1 месяц <b>{settings.price_list['1']}р</b>\n" \
-              f"• 3 месяца <b>{settings.price_list['3']}р</b>\n" \
-              f"• 6 месяцев <b>{settings.price_list['6']}р</b>\n" \
-              f"• 12 месяцев <b>{settings.price_list['12']}р</b>\n\n" \
+              f"• 1 месяц <b>{settings.price_list['1']} р.</b>\n" \
+              f"• 3 месяца <b>{settings.price_list['3']} р.</b>\n" \
+              f"• 6 месяцев <b>{settings.price_list['6']} р.</b>\n" \
+              f"• 12 месяцев <b>{settings.price_list['12']} р.</b>\n\n" \
               f"Для продления ключа выберите необходимый срок действия с помощью кнопок ниже"
     return message
 
@@ -48,7 +48,7 @@ def extend_key_confirm_message(period: str, description: str, price: int, region
     """Сообщение подтверждения продления ключа"""
     flag = FLAGS[region]
     message = f"Продлить ключ {flag} <b>{description}</b> на <b>{period} мес.</b>?\n\n" \
-              f"У вас с баланса будет списано <b>{price}р.</b>"
+              f"У вас с баланса будет списано <b>{price} р.</b>"
     return message
 
 
@@ -58,7 +58,7 @@ def extend_key_message(period: str, price: int, expire_date: datetime.datetime, 
     flag = FLAGS[region]
 
     message = f"✅ Поздравляем, Вы продлили ключ {flag} <b>{description}</b> на <b>{period} мес.</b>!\n\n" \
-              f"С баланса списано {price}р. (остаток {balance}р.)\n" \
+              f"С баланса списано {price}р. (остаток {balance} р.)\n" \
               f"Дата истечения ключа <b>{time} {date} (МСК)</b>\n\n" \
               f"Вы всегда можете узнать актуальный статус и срок окончания подписки во вкладке \"{btn.KEYS}\" главного меню " \
               f"или с помощью команды /{cmd.KEYS[0]}"
