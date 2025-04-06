@@ -4,7 +4,7 @@ from aiogram.fsm.context import FSMContext
 
 from handlers.buttons import commands as cmd
 from handlers.keyboards import menu as menu_kb
-from handlers.messages.users import instruction_message
+from handlers.messages.users import instruction_message, help_message
 from handlers.keyboards import users as kb
 
 
@@ -26,7 +26,8 @@ async def instruction_for_os(callback: types.CallbackQuery) -> None:
 
 @router.message(Command(f"{cmd.HELP[0]}"))
 async def help_handler(message: types.Message) -> None:
-    await message.answer("Help message")
+    msg = help_message()
+    await message.answer(msg)
 
 
 @router.message(Command(f"{cmd.MENU[0]}"))

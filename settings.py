@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     bot_token: str = Field(..., env='BOT_TOKEN')
     admins: list = Field(..., env='ADMINS')
     payment_admin: str = Field(..., env='PAYMENT_ADMIN')
+    help_admin: str = Field(...,  env='HELP_ADMIN')
     timezone: str = "Europe/Moscow"
 
     trial_days: int = 1
