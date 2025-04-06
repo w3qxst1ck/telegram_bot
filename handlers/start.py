@@ -3,6 +3,7 @@ from typing import Any
 
 from aiogram import Router, types
 from aiogram.filters import Command
+from aiogram.fsm.context import FSMContext
 from aiogram.types import BufferedInputFile, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
@@ -17,15 +18,15 @@ router = Router()
 
 
 @router.message(Command(f"{cmd.START[0]}"))
-async def start_handler(message: types.Message | types.CallbackQuery, admin: bool, session: Any) -> None:
+async def start_handler(message: types.Message | types.CallbackQuery, admin: bool, state: FSMContext, session: Any) -> None:
     """Сообщение по команде /start"""
     tg_id: str = str(message.from_user.id)
 
     await create_user_if_not_exists(tg_id, message, session)
-    await send_hello_message(message, admin, session)
+    await send_hello_message(message, admin, state, session)
 
 
-async def send_hello_message(message: types.Message, admin: bool, session: Any) -> None:
+async def send_hello_message(message: types.Message, admin: bool, state: FSMContext, session: Any) -> None:
     """Стартовое сообщение"""
     name: str = message.from_user.first_name if message.from_user.first_name else message.from_user.username
     trial_used: bool = await AsyncOrm.get_trial_connection_status(str(message.from_user.id), session)
@@ -66,7 +67,7 @@ async def send_hello_message(message: types.Message, admin: bool, session: Any) 
                     photo=BufferedInputFile(image_buffer.read(), filename="start.png"),
                     caption=msg,
                 )
-                await main_menu(message, admin)
+                await main_menu(message, admin, state)
 
 
 async def create_user_if_not_exists(tg_id: str, message: types.Message, session: Any) -> None:

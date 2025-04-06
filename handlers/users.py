@@ -27,7 +27,10 @@ async def help_handler(message: types.Message) -> None:
 @router.callback_query(F.data == "menu")
 async def main_menu(message: types.Message | types.CallbackQuery, admin: bool, state: FSMContext) -> None:
     """Отправка приветственного сообщения"""
-    await state.clear()
+    try:
+        await state.clear()
+    except:
+        pass
 
     name: str = message.from_user.first_name if message.from_user.first_name else message.from_user.username
 
