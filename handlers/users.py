@@ -4,7 +4,7 @@ from aiogram.fsm.context import FSMContext
 
 from handlers.buttons import commands as cmd
 from handlers.keyboards import menu as menu_kb
-from handlers.messages.users import instruction_message
+from handlers.messages import users as ms
 from handlers.keyboards import users as kb
 
 
@@ -12,16 +12,29 @@ router = Router()
 
 
 @router.message(Command(f"{cmd.INSTRUCTION[0]}"))
-async def instruction_handler(message: types.Message) -> None:
+@router.callback_query(F.data == "back_to_instruction_menu")
+async def instruction_handler(message: types.Message | types.CallbackQuery) -> None:
     """Выбор ОС для инструкции"""
-    msg = instruction_message()
-    await message.answer(msg, reply_markup=kb.choose_os().as_markup())
+    msg = ms.instruction_menu_message()
+
+    if type(message) == types.Message:
+        await message.answer(msg, reply_markup=kb.choose_os().as_markup())
+    else:
+        await message.message.edit_text(msg, reply_markup=kb.choose_os().as_markup())
 
 
 @router.callback_query(F.data.split("|")[0] == "instruction")
 async def instruction_for_os(callback: types.CallbackQuery) -> None:
     """Инструкции для отдельных ОС"""
-    pass
+    os = callback.data.split("|")[1]
+
+    msg = ms.instruction_os_message(os)
+
+    await callback.message.edit_text(
+        msg,
+        reply_markup=kb.back_to_instruction_menu().as_markup(),
+        disable_web_page_preview=True
+    )
 
 
 @router.message(Command(f"{cmd.HELP[0]}"))
