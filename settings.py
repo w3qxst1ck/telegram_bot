@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     admins: list = Field(..., env='ADMINS')
     payment_admin: str = Field(..., env='PAYMENT_ADMIN')
     help_admin: str = Field(..., env='HELP_ADMIN')
+
     timezone: str = "Europe/Moscow"
 
     trial_days: int = 1
