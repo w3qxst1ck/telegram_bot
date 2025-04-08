@@ -35,10 +35,8 @@ async def instruction_for_os(callback: types.CallbackQuery) -> None:
     msg = ms.instruction_os_message(os)
 
     album_builder = MediaGroupBuilder(caption=msg)
-    # album_builder.add(type="photo", media=FSInputFile("img/instruction/delete_old.jpg"))
     album_builder.add(type="photo", media=FSInputFile("img/instruction/add.jpg"))
     album_builder.add(type="photo", media=FSInputFile("img/instruction/buffer.jpg"))
-    # album_builder.add(type="photo", media=FSInputFile("img/instruction/switch_on.jpg"))
 
     await callback.message.answer_media_group(media=album_builder.build())
     try:
