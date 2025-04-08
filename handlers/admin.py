@@ -12,6 +12,7 @@ from handlers.messages import errors as err_ms
 from handlers.messages.balance import paid_request_for_admin, paid_confirmed_for_user, paid_decline_for_user
 from database.orm import AsyncOrm
 from utils.servers_load import get_less_loaded_server
+from logger import logger
 
 
 router = Router()
@@ -53,6 +54,8 @@ async def confirm_decline_payment_handler(callback: types.CallbackQuery, bot: Bo
             message_for_user = paid_confirmed_for_user(summ)
             await bot.send_message(tg_id, message_for_user)
 
+            logger.info(f"Администратор {callback.from_user.id} подтвердил платеж пользователя {tg_id} на сумму {summ} р.")
+
             # TODO Обновить кэш пользователя после пополнения баланса
         except Exception:
             err_msg = err_ms.error_balance_for_admin()
@@ -68,3 +71,5 @@ async def confirm_decline_payment_handler(callback: types.CallbackQuery, bot: Bo
         # сообщение пользователю
         message_for_user = paid_decline_for_user(summ)
         await bot.send_message(tg_id, message_for_user)
+
+        logger.info(f"Администратор {callback.from_user.id} отклонил платеж пользователя {tg_id} на сумму {summ} р.")

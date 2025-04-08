@@ -72,6 +72,8 @@ async def confirm_buy_extra_traffic(callback: types.CallbackQuery, session: Any)
             # оповещаем пользователя
             await waiting_mess.edit_text(msg, reply_markup=to_menu_keyboard().as_markup())
 
+            logger.info(f"Обнулен трафик ключа id: {conn_id} email: {connection.email} пользователя {tg_id}")
+
         except Exception as e:
             msg = general_error_msg()
             await waiting_mess.edit_text(msg, reply_markup=to_menu_keyboard().as_markup())

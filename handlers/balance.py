@@ -17,6 +17,7 @@ from handlers.states.buy import UpBalanceFSM
 from handlers.buy_menu import buy_handler
 from settings import settings
 from utils.validations import is_valid_summ
+from logger import logger
 
 
 router = Router()
@@ -91,6 +92,8 @@ async def balance_paid_handler(callback: types.CallbackQuery, bot: Bot, session:
             message_for_admin,
             reply_markup=kb.payment_confirm_admin_keyboard(tg_id, summ).as_markup()
         )
+
+        logger.info(f"Пользователь {tg_id} подтвердил оплату платежа на сумму {summ} р.")
     except Exception:
         error_msg = err_ms.error_balance_msg()
         await callback.message.edit_text(error_msg, reply_markup=to_menu_keyboard().as_markup())
