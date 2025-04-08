@@ -3,6 +3,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from handlers.buttons import menu as btn
 from handlers.buttons import commands as cmd
+from settings import settings
 
 
 def main_menu_keyboard(admin: bool) -> InlineKeyboardBuilder:
@@ -17,6 +18,9 @@ def main_menu_keyboard(admin: bool) -> InlineKeyboardBuilder:
         InlineKeyboardButton(text=f"{btn.BALANCE}", callback_data="menu|balance"),
         InlineKeyboardButton(text=f"{btn.PAYMENTS}", callback_data="menu|payments")
     )
+
+    keyboard.row(InlineKeyboardButton(text=f"Пользовательское соглашение", url=f"{settings.user_agreement_link}"))
+
     if admin:
         keyboard.row(InlineKeyboardButton(text=f"{btn.ADMIN}", callback_data="menu|admin"))
 

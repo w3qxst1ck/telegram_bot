@@ -55,6 +55,8 @@ class Settings(BaseSettings):
     redis: Redis = Redis()
     server: Server = Server()
 
+    user_agreement_link: str = "https://telegra.ph/PUBLICHNAYA-OFERTA-04-08-2"
+
 
 settings = Settings()
 

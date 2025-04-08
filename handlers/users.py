@@ -28,6 +28,8 @@ async def instruction_handler(message: types.Message | types.CallbackQuery) -> N
 @router.callback_query(F.data.split("|")[0] == "instruction")
 async def instruction_for_os(callback: types.CallbackQuery) -> None:
     """Инструкции для отдельных ОС"""
+    wait_msg = await callback.message.edit_text("Запрос выполняется...⏳")
+
     os = callback.data.split("|")[1]
 
     msg = ms.instruction_os_message(os)
@@ -40,7 +42,7 @@ async def instruction_for_os(callback: types.CallbackQuery) -> None:
 
     await callback.message.answer_media_group(media=album_builder.build())
     try:
-        await callback.message.delete()
+        await wait_msg.delete()
     except Exception:
         pass
 
