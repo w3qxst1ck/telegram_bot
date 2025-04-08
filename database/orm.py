@@ -352,6 +352,20 @@ class AsyncOrm:
             logger.error(f"Ошибка при получении id всех серверов из connections: {e}")
 
     @staticmethod
+    async def get_server_countries(session: Any) -> List[str]:
+        """Получает list уникальных regions из таблицы servers"""
+        try:
+            query = await session.fetch("""
+                SELECT DISTINCT region from servers
+                ORDER BY region
+                """)
+
+            return [row["region"] for row in query]
+
+        except Exception as e:
+            logger.error(f"Ошибка при получении уникальных region всех серверов: {e}")
+
+    @staticmethod
     async def create_server(server: ServerAdd, session: Any) -> None:
         """Создание сервера"""
         try:
@@ -523,7 +537,7 @@ class AsyncOrm:
                 SELECT c.id, c.description, s.region 
                 FROM connections AS c
                 JOIN servers AS s ON c.server_id=s.id
-                WHERE c.tg_id=$1 AND c.active=true
+                WHERE c.tg_id=$1 AND c.active=true AND c.is_trial=false
                 """,
                 tg_id
             )
