@@ -18,7 +18,7 @@ async def user_payments(callback: types.CallbackQuery, session: Any) -> None:
     payments: list[Payments] = await AsyncOrm.get_user_payments(tg_id, session)
     user_balance: int = await AsyncOrm.get_user_balance(tg_id, session)
 
-    msg = ms.user_payments_message(payments, user_balance)
+    msg = await ms.user_payments_message(payments, user_balance, session)
 
     await callback.message.edit_text(msg, reply_markup=back_to_main_menu().as_markup())
 
