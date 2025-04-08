@@ -14,7 +14,7 @@ def invoice_message(summ: str, tg_id: str) -> str:
 def not_enough_balance_message(period: str, price: int, balance: int) -> str:
     """Сообщение при отказе в покупке подписки за счет баланса"""
     message = f"⚠️ Недостаточно средств для покупки/продления подписки на {period} мес.\n" \
-              f"Необходимо {price}р., ваш остаток на балансе {balance}р.\n\n" \
+              f"Необходимо {price} р., ваш остаток на балансе {balance} р.\n\n" \
               f"Вы можете пополнить баланс на необходимую сумму по кнопке ниже"
 
     return message

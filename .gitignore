@@ -334,6 +334,8 @@ pip-selfcheck.json
 .env.prod
 .env.dev
 
+*.jpg
+
 redisdata/
 
 *.sqlite3

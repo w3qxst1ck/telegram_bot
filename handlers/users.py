@@ -1,6 +1,8 @@
 from aiogram import Router, types, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
+from aiogram.types import BufferedInputFile, FSInputFile
+from aiogram.utils.media_group import MediaGroupBuilder
 
 from handlers.buttons import commands as cmd
 from handlers.keyboards import menu as menu_kb
@@ -30,11 +32,17 @@ async def instruction_for_os(callback: types.CallbackQuery) -> None:
 
     msg = ms.instruction_os_message(os)
 
-    await callback.message.edit_text(
-        msg,
-        reply_markup=kb.back_to_instruction_menu().as_markup(),
-        disable_web_page_preview=True
-    )
+    album_builder = MediaGroupBuilder(caption=msg)
+    # album_builder.add(type="photo", media=FSInputFile("img/instruction/delete_old.jpg"))
+    album_builder.add(type="photo", media=FSInputFile("img/instruction/add.jpg"))
+    album_builder.add(type="photo", media=FSInputFile("img/instruction/buffer.jpg"))
+    # album_builder.add(type="photo", media=FSInputFile("img/instruction/switch_on.jpg"))
+
+    await callback.message.answer_media_group(media=album_builder.build())
+    try:
+        await callback.message.delete()
+    except Exception:
+        pass
 
 
 @router.message(Command(f"{cmd.HELP[0]}"))

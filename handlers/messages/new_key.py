@@ -6,6 +6,14 @@ from settings import settings
 from utils.date_time_service import convert_date_time
 from handlers.buttons import menu as btn
 from handlers.buttons import commands as cmd
+from handlers.buttons.regions import FLAGS, REGIONS
+
+
+def choose_country() -> str:
+    """Предложение выбрать страну при покупке нового ключа"""
+    message = "Пожалуйста, выберите страну, ключ на сервере которой хотите купить:\n"
+
+    return message
 
 
 def new_key_message(balance: int) -> str:

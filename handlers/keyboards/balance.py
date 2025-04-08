@@ -24,12 +24,22 @@ def payment_confirm_admin_keyboard(tg_id: str, summ: str) -> InlineKeyboardBuild
     return keyboard
 
 
-def not_enough_balance_keyboard() -> InlineKeyboardBuilder:
-    """Клавиатура для сообщения при недостаточном балансе"""
+def not_enough_balance_ney_key_keyboard(country: str) -> InlineKeyboardBuilder:
+    """Клавиатура для сообщения при недостаточном балансе при покупке"""
     keyboard = InlineKeyboardBuilder()
 
-    keyboard.row(InlineKeyboardButton(text=f"{btn.BALANCE}", callback_data="balance"))
-    keyboard.row(InlineKeyboardButton(text=f"{btn.BACK}", callback_data="new_key"))
+    keyboard.row(InlineKeyboardButton(text=f"{btn.BALANCE}", callback_data="menu|balance"))
+    keyboard.row(InlineKeyboardButton(text=f"{btn.BACK}", callback_data=f"new_key_country|{country}"))
+
+    return keyboard
+
+
+def not_enough_balance_extend_key_keyboard(eamil: str) -> InlineKeyboardBuilder:
+    """Клавиатура для сообщения при недостаточном балансе при продлении"""
+    keyboard = InlineKeyboardBuilder()
+
+    keyboard.row(InlineKeyboardButton(text=f"{btn.BALANCE}", callback_data="menu|balance"))
+    keyboard.row(InlineKeyboardButton(text=f"{btn.BACK}", callback_data=f"extend_key_email|{eamil}"))
 
     return keyboard
 

@@ -9,7 +9,7 @@ from schemas.connection import Connection, ConnectionServer
 from handlers.messages import extend_key as ms
 from handlers.messages import errors as err_ms
 from handlers.messages.balance import not_enough_balance_message
-from handlers.keyboards.balance import not_enough_balance_keyboard
+from handlers.keyboards.balance import not_enough_balance_extend_key_keyboard
 from cache import r
 from schemas.user import UserConnList
 from settings import settings
@@ -123,7 +123,7 @@ async def extend_key_confirm_handler(callback: types.CallbackQuery, session: Any
     # недостаточно средств на балансе
     else:
         msg = not_enough_balance_message(period, price, user_with_conns.balance)
-        await callback.message.edit_text(msg, reply_markup=not_enough_balance_keyboard().as_markup())
+        await callback.message.edit_text(msg, reply_markup=not_enough_balance_extend_key_keyboard(email).as_markup())
 
 
 @router.callback_query(F.data.split("|")[0] == "extend_key_confirm")

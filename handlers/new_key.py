@@ -10,7 +10,7 @@ from aiogram.fsm.context import FSMContext
 import schemas.user
 from handlers.keyboards import new_key as kb
 from handlers.states.new_key import KeyDescriptionFSM
-from handlers.keyboards.balance import not_enough_balance_keyboard
+from handlers.keyboards.balance import not_enough_balance_ney_key_keyboard
 from handlers.keyboards.menu import to_menu_keyboard
 from database.orm import AsyncOrm
 from schemas.connection import Connection, Server
@@ -27,9 +27,17 @@ router = Router()
 
 
 @router.callback_query(F.data == "new_key")
+async def choose_country_new_key(callback: types.CallbackQuery) -> None:
+    """Выбор страны нового ключа"""
+    msg = ms.choose_country()
+    await callback.message.edit_text(msg, reply_markup=kb.new_key_country_keyboard().as_markup())
+
+
+@router.callback_query(F.data.split("|")[0] == "new_key_country")
 async def new_key_menu_handler(callback: types.CallbackQuery, session: Any) -> None:
     """Покупка нового ключа"""
     tg_id = str(callback.from_user.id)
+    country = callback.data.split("|")[1]
 
     # TODO test version
     user_with_conn = await AsyncOrm.get_user_with_connection_list(tg_id, session)
@@ -46,13 +54,14 @@ async def new_key_menu_handler(callback: types.CallbackQuery, session: Any) -> N
     #     r.setex(f"profile:{tg_id}", 300, user_with_conn_json)
 
     msg = ms.new_key_message(user_with_conn.balance)
-    await callback.message.edit_text(msg, reply_markup=kb.new_key_keyboard().as_markup())
+    await callback.message.edit_text(msg, reply_markup=kb.new_key_keyboard(country).as_markup())
 
 
 @router.callback_query(F.data.split("|")[0] == "new_key_period")
 async def new_key_confirm_handler(callback: types.CallbackQuery, session: Any) -> None:
     """Подтверждение покупки нового ключа"""
     period = callback.data.split("|")[1]
+    country = callback.data.split("|")[2]
     price = settings.price_list[period]
     tg_id = str(callback.from_user.id)
 
@@ -73,17 +82,18 @@ async def new_key_confirm_handler(callback: types.CallbackQuery, session: Any) -
     # достаточно средств
     if user_with_conn.balance >= price:
         msg = ms.new_key_confirm_message(period, price)
-        await callback.message.edit_text(msg, reply_markup=kb.new_key_confirm_keyboard(period).as_markup())
+        await callback.message.edit_text(msg, reply_markup=kb.new_key_confirm_keyboard(period, country).as_markup())
     # недостаточно средств на балансе
     else:
         msg = not_enough_balance_message(period, price, user_with_conn.balance)
-        await callback.message.edit_text(msg, reply_markup=not_enough_balance_keyboard().as_markup())
+        await callback.message.edit_text(msg, reply_markup=not_enough_balance_ney_key_keyboard(country).as_markup())
 
 
 @router.callback_query(F.data.split("|")[0] == "new_key_confirm")
 async def create_description(callback: types.CallbackQuery,  state: FSMContext) -> None:
     """Выбор description для ключа, начало KeyDescriptionFSM"""
     period = callback.data.split("|")[1]
+    country = callback.data.split("|")[2]
     price = settings.price_list[period]
     tg_id = str(callback.from_user.id)
 
@@ -91,6 +101,7 @@ async def create_description(callback: types.CallbackQuery,  state: FSMContext) 
     await state.update_data(period=period)
     await state.update_data(price=price)
     await state.update_data(tg_id=tg_id)
+    await state.update_data(country=country)
 
     msg = ms.key_description()
     prev_mess = await callback.message.edit_text(msg, reply_markup=kb.skip_keyboard().as_markup())
@@ -113,6 +124,7 @@ async def new_key_create_handler(callback: types.CallbackQuery | types.Message, 
     period = data["period"]
     price = data["price"]
     tg_id = data["tg_id"]
+    country = data["country"]
 
     # убираем клавиатуру "Пропустить" если название было введено
     if type(callback) == types.Message:
@@ -134,7 +146,7 @@ async def new_key_create_handler(callback: types.CallbackQuery | types.Message, 
     #     r.setex(f"profile:{tg_id}", 300, user_with_conn_json)
 
     # добавление клиента в панель
-    server_id = await get_less_loaded_server(session)
+    server_id = await get_less_loaded_server(session, region=country)
     server: Server = await AsyncOrm.get_server(server_id, session)
     email = str(uuid.uuid4())
     key = await add_client(server, email, tg_id)
