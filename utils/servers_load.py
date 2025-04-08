@@ -3,11 +3,11 @@ from typing import Any
 from database.orm import AsyncOrm
 
 
-async def get_less_loaded_server(session: Any) -> int:
+async def get_less_loaded_server(session: Any, region: str = None) -> int:
     """Возвращает id самого ненагруженного сервера"""
     servers_load: dict[int:int] = {}
 
-    servers_ids_connections: list[int] = await AsyncOrm.get_all_servers_id_from_connections(session)
+    servers_ids_connections: list[int] = await AsyncOrm.get_all_servers_id_from_connections(session, region)
 
     # при отсутствии созданных ранее подключений
     if not servers_ids_connections:

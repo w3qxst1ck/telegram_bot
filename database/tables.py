@@ -56,13 +56,19 @@ class Connection(Base):
 
 
 class Payment(Base):
-    """Платежи"""
+    """
+        Платежи ADD - пополнение баланса,
+        id (connection) - списание с баланса на оплату ключей,
+        REF - получение денег за реф. ссылки
+    """
+
     __tablename__ = "payments"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     created_at: Mapped[datetime.datetime]
     amount: Mapped[int]
     status: Mapped[bool] = mapped_column(default=False)
+    description: Mapped[str]
 
     user_tg_id: Mapped[int] = mapped_column(ForeignKey("users.tg_id", ondelete="CASCADE"))
     user: Mapped["User"] = relationship(back_populates="payments")

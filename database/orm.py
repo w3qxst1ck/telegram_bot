@@ -8,6 +8,7 @@ from database.database import async_engine
 from database.tables import Base
 
 from schemas.user import UserAdd, UserConnList
+from schemas.payments import Payments
 from schemas.connection import Connection, ConnServerScheduler, Server, ServerAdd, ConnectionServer, ConnectionRegion
 from logger import logger
 
@@ -320,15 +321,28 @@ class AsyncOrm:
             logger.error(f"Ошибка при получение сервера {server_id}: {e}")
 
     @staticmethod
-    async def get_all_servers_id_from_connections(session: Any) -> list[int]:
-        """Получает list всех server_id из таблицы connections"""
+    async def get_all_servers_id_from_connections(session: Any, region: str = None) -> list[int]:
+        """Получает list всех server_id из таблицы connections, если передан регион,
+        то возвращает ключи этого региона"""
         try:
-            query = await session.fetch(
-                """
-                SELECT server_id from connections
-                """
-            )
+            if region:
+                query = await session.fetch(
+                    """
+                    SELECT c.server_id from connections c
+                    JOIN servers s ON c.server_id=s.id
+                    WHERE s.region=$1 
+                    """,
+                    region
+                )
+            else:
+                query = await session.fetch(
+                    """
+                    SELECT server_id from connections
+                    """
+                )
+
             return [row["server_id"] for row in query]
+
         except Exception as e:
             logger.error(f"Ошибка при получении id всех серверов из connections: {e}")
 
@@ -456,15 +470,15 @@ class AsyncOrm:
             logger.error(f"Ошибка при получении данных для ConnServerScheduler: {e}")
 
     @staticmethod
-    async def init_payment(tg_id: str, amount: int, created_at:datetime.datetime, session: Any) -> None:
+    async def init_payment(tg_id: str, amount: int, created_at: datetime.datetime, description: str, session: Any) -> None:
         """Создание еще неподтвержденного платежа"""
         try:
             await session.execute(
                 """
-                INSERT INTO payments (created_at, amount, status, user_tg_id)
-                VALUES ($1, $2, $3, $4)
+                INSERT INTO payments (created_at, amount, status, description, user_tg_id)
+                VALUES ($1, $2, $3, $4, $5)
                 """,
-                created_at, amount, False, tg_id
+                created_at, amount, False, description, tg_id
             )
         except Exception as e:
             logger.error(f"Ошибка при создании платежа пользователя {tg_id} на сумму {amount}: {e}")
@@ -545,3 +559,22 @@ class AsyncOrm:
         except Exception as e:
             logger.error(f"Ошибка при списании с баланса {amount} р. пользователя {tg_id}: {e}")
             raise
+
+    @staticmethod
+    async def get_user_payments(tg_id: str, session: Any) -> list[Payments]:
+        """Получает список всех платежей пользователя"""
+        try:
+            rows = await session.fetch(
+                """
+                SELECT * FROM payments
+                WHERE user_tg_id=$1
+                ORDER BY created_at desc
+                """,
+                tg_id
+            )
+            payments = [Payments.model_validate(row) for row in rows]
+            return payments
+
+        except Exception as e:
+            logger.error(f"Ошибка при получении платежей пользователя {tg_id}: {e}")
+

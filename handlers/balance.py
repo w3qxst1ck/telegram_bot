@@ -83,7 +83,7 @@ async def balance_paid_handler(callback: types.CallbackQuery, bot: Bot, session:
     # создание платежа
     try:
         created_at = datetime.datetime.now()
-        await AsyncOrm.init_payment(tg_id, int(summ), created_at, session)
+        await AsyncOrm.init_payment(tg_id, int(summ), created_at, "ADD", session)
         # оповещение администратора
         message_for_admin = ms.paid_request_for_admin(summ, tg_id)
         await bot.send_message(
