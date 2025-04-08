@@ -205,6 +205,7 @@ class AsyncOrm:
                 )
                 logger.info(f"Пользователь {c.tg_id} купил новый ключ сроком до {c.expire_date}")
                 return conn_id
+
         except Exception as e:
             logger.error(f"Ошибка покупки ключа пользователя {c.tg_id}: {e}")
             raise
@@ -240,20 +241,19 @@ class AsyncOrm:
             raise
 
     @staticmethod
-    async def get_connection(email: str, session) -> Connection:
-        """Получение connection по email"""
+    async def get_connection_id(email: str, session) -> int:
+        """Получение connection.id по email"""
         try:
-            row = await session.fetchrow(
+            conn_id = await session.fetchval(
                 """
-                SELECT * FROM connections
+                SELECT id FROM connections
                 WHERE email = $1
                 """,
                 email
             )
-            conn = Connection.model_validate(row)
-            return conn
+            return conn_id
         except Exception as e:
-            logger.error(f"Ошибка получения connection с email {email}: {e}")
+            logger.error(f"Ошибка получения connection.id с email {email}: {e}")
 
     @staticmethod
     async def get_connection_by_id(conn_id: int, session) -> Connection:
@@ -367,14 +367,23 @@ class AsyncOrm:
             logger.error(f"Ошибка при создании сервера {Server}: {e}")
 
     @staticmethod
-    async def get_servers_ids(session: Any) -> list[int]:
-        """Получение id всех серверов"""
+    async def get_servers_ids(session: Any, region: str = None) -> list[int]:
+        """Получение id всех серверов (при передаче региона, то вернутся сервера только этого региона)"""
         try:
-            query = await session.fetch(
-                """
-                SELECT id from servers
-                """
-            )
+            if region:
+                query = await session.fetch(
+                    """
+                    SELECT id from servers
+                    WHERE region=$1
+                    """,
+                    region
+                )
+            else:
+                query = await session.fetch(
+                    """
+                    SELECT id from servers
+                    """
+                )
             return [server["id"] for server in query]
 
         except Exception as e:
@@ -567,13 +576,14 @@ class AsyncOrm:
 
     @staticmethod
     async def get_user_payments(tg_id: str, session: Any) -> list[Payments]:
-        """Получает список всех платежей пользователя"""
+        """Получает список всех платежей пользователя (max - 10)"""
         try:
             rows = await session.fetch(
                 """
                 SELECT * FROM payments
                 WHERE user_tg_id=$1
                 ORDER BY created_at desc
+                LIMIT 10
                 """,
                 tg_id
             )
@@ -582,4 +592,3 @@ class AsyncOrm:
 
         except Exception as e:
             logger.error(f"Ошибка при получении платежей пользователя {tg_id}: {e}")
-

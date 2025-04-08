@@ -195,8 +195,8 @@ async def new_key_create_handler(callback: types.CallbackQuery | types.Message, 
 
             await callback.answer(msg, reply_markup=to_menu_keyboard().as_markup(), parse_mode=ParseMode.MARKDOWN)
 
-            # создаем платеж в payments
-            await AsyncOrm.init_payment(tg_id, price, datetime.datetime.now(), f"{conn_id}", session)
+        # создаем платеж в payments
+        await AsyncOrm.init_payment(tg_id, price, datetime.datetime.now(), f"KEY_{conn_id}", session)
 
         # TODO обновить кэш
         # user_with_conn.balance = new_balance

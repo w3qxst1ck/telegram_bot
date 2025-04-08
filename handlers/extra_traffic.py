@@ -1,3 +1,5 @@
+import datetime
+
 from typing import Any
 
 from aiogram import Router, F
@@ -71,6 +73,15 @@ async def confirm_buy_extra_traffic(callback: types.CallbackQuery, session: Any)
 
             # оповещаем пользователя
             await waiting_mess.edit_text(msg, reply_markup=to_menu_keyboard().as_markup())
+
+            # создаем платеж в payments
+            await AsyncOrm.init_payment(
+                tg_id,
+                settings.extra_traffic_price,
+                datetime.datetime.now(),
+                f"TRAF_{conn_id}",
+                session
+            )
 
             logger.info(f"Обнулен трафик ключа id: {conn_id} email: {connection.email} пользователя {tg_id}")
 

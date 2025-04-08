@@ -120,6 +120,7 @@ async def extend_key_confirm_handler(callback: types.CallbackQuery, session: Any
     if user_with_conns.balance >= price:
         msg = ms.extend_key_confirm_message(period, conn_server.description, price, conn_server.region)
         await callback.message.edit_text(msg, reply_markup=kb.extend_key_confirm_keyboard(period, email).as_markup())
+
     # недостаточно средств на балансе
     else:
         msg = not_enough_balance_message(period, price, user_with_conns.balance)
@@ -181,6 +182,10 @@ async def extend_key_handler(callback: types.CallbackQuery, session: Any) -> Non
         # отправка сообщения
         msg = ms.extend_key_message(period, price, new_expire_date, conn_server.description, new_balance, conn_server.region)
         await callback.message.edit_text(msg, reply_markup=to_menu_keyboard().as_markup())
+
+        # создаем платеж в payments
+        conn_id: int = await AsyncOrm.get_connection_id(conn_server.email, session)
+        await AsyncOrm.init_payment(tg_id, price, datetime.datetime.now(), f"KEY_{conn_id}", session)
 
         # TODO обновить кэш
         # user_with_conns = await AsyncOrm.get_user_with_connection_list(tg_id, session)

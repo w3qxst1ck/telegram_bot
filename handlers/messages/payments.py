@@ -1,12 +1,10 @@
 from typing import Any
-import pytz
 
 from schemas.payments import Payments
 from schemas.connection import Connection
 from utils.date_time_service import convert_date_time
 from logger import logger
 from database.orm import AsyncOrm
-from settings import settings
 
 
 async def user_payments_message(payments: list[Payments], balance: int, session: Any) -> str:
@@ -20,22 +18,28 @@ async def user_payments_message(payments: list[Payments], balance: int, session:
     for payment in payments:
         count += 1
         date, time = convert_date_time(payment.created_at, with_tz=True)
+        pay_type = payment.description.split("_")[0]
 
         # пополнение баланса
-        if payment.description == "ADD":
-            message += f"<b>{count}</b>. Пополнение <b>+{payment.amount} р.</b> {'✅' if payment.status else '❌ Не подтвержден'} {date} {time}\n\n"
+        if pay_type == "ADD":
+            message += f"<b>{count}</b>. Пополнение <b>+{payment.amount} р. </b>{time} <b>{date}</b>\n{'✅ Платеж подтвержден' if payment.status else '❌ Не подтвержден'}\n\n"
 
         # пополнения по реферальным ссылкам
-        elif payment.description == "REF":
-            message += f"{count}. Поступление за приглашение <b>+{payment.amount} р.</b> ✅ {date} {time}\n\n"
+        elif pay_type == "REF":
+            message += f"<b>{count}</b>. Пополнение <b>+{payment.amount} р. </b>{time} <b>{date}</b>\n✅ Начисление за приглашение\n\n"
 
         # платежи за ключи
-        else:
-            # TODO выбрать смайлик
+        elif pay_type == "KEY":
             try:
-                connection: Connection = await AsyncOrm.get_connection_by_id(int(payment.description), session)
-                message += f"{count}. Списание <b>-{payment.amount} р.</b> оплата ключа \"{connection.description}\" {date} {time}\n\n"
+                connection: Connection = await AsyncOrm.get_connection_by_id(int(payment.description.split("_")[1]), session)
+                message += f"{count}. Списание <b>-{payment.amount} р. </b>{time} <b>{date}</b>\n🔻 Оплата ключа \"{connection.description}\"\n\n"
+            except Exception as e:
+                logger.error(f"Ошибка при парсинге платежа по ключу: {e}")
 
+        elif pay_type == "TRAF":
+            try:
+                connection: Connection = await AsyncOrm.get_connection_by_id(int(payment.description.split("_")[1]), session)
+                message += f"{count}. Списание <b>-{payment.amount} р. </b>{time} <b>{date}</b>\n🔻 Обнуление трафика ключа \"{connection.description}\"\n\n"
             except Exception as e:
                 logger.error(f"Ошибка при парсинге платежа по ключу: {e}")
 
