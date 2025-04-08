@@ -31,7 +31,7 @@ def extend_key_menu_message(user_with_conns: UserConnList) -> str:
 
 def extend_key_period_message(balance: int, description: str, active: bool, expire_date: datetime.datetime, region: str) -> str:
     """Сообщение с периодом продления ключа"""
-    date, time = convert_date_time(expire_date.astimezone(tz=pytz.timezone(settings.timezone)))
+    date, time = convert_date_time(expire_date, with_tz=True)
     active_phrase = f"({'✅ активен до ' + time + ' ' + date if active else '❌ неактивен'})"
     flag = FLAGS[region]
     message = f"У вас на балансе <b>{balance} р.</b>\n\n" \
@@ -54,7 +54,7 @@ def extend_key_confirm_message(period: str, description: str, price: int, region
 
 def extend_key_message(period: str, price: int, expire_date: datetime.datetime, description: str, balance: int, region: str) -> str:
     """Сообщение при продлении ключа за счет баланса"""
-    date, time = convert_date_time(expire_date.astimezone(tz=pytz.timezone(settings.timezone)))
+    date, time = convert_date_time(expire_date, with_tz=True)
     flag = FLAGS[region]
 
     message = f"✅ Поздравляем, Вы продлили ключ {flag} <b>{description}</b> на <b>{period} мес.</b>!\n\n" \

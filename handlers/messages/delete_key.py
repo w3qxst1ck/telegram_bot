@@ -20,7 +20,7 @@ def delete_key_menu() -> str:
 
 def confirm_delete_key(conn_server: ConnectionServer) -> str:
     """Запрос подтверждения удаления ключа"""
-    date, time = convert_date_time(conn_server.expire_date.astimezone(tz=pytz.timezone(settings.timezone)))
+    date, time = convert_date_time(conn_server.expire_date, with_tz=True)
     active_phrase = f"({'✅ активен до ' + time + ' ' + date if conn_server.active else '❌ неактивен'})"
     flag = FLAGS[conn_server.region]
 

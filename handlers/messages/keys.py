@@ -16,7 +16,7 @@ def keys_message(user_with_conn: UserConnList) -> str:
         message = "🔑 ВАШИ КЛЮЧИ\n\n"
 
         for idx, conn in enumerate(user_with_conn.connections, start=1):
-            date, time = convert_date_time(conn.expire_date.astimezone(tz=pytz.timezone(settings.timezone)))
+            date, time = convert_date_time(conn.expire_date, with_tz=True)
 
             # если активна пробная или основная подписка
             if conn.active:
@@ -31,7 +31,7 @@ def keys_message(user_with_conn: UserConnList) -> str:
                 # если активна основная подписка
                 else:
                     refresh_date, _ = convert_date_time(
-                        get_next_refresh_traffic_date(conn.start_date).astimezone(tz=pytz.timezone(settings.timezone)))
+                        get_next_refresh_traffic_date(conn.start_date), with_tz=True)
 
                     # если превышен трафик
                     if conn.traffic > settings.traffic_limit:

@@ -163,7 +163,7 @@ async def new_key_create_handler(callback: types.CallbackQuery | types.Message, 
 
     # создание connection в бд
     try:
-        await AsyncOrm.buy_new_key(new_conn, new_balance, session)
+        conn_id = await AsyncOrm.buy_new_key(new_conn, new_balance, session)
         msg = ms.buy_new_key_message(period, price, new_conn.expire_date, new_balance, key_with_description)
         # отправка ключа пользователю при пропуске названия
         if type(callback) == types.CallbackQuery:
@@ -183,11 +183,15 @@ async def new_key_create_handler(callback: types.CallbackQuery | types.Message, 
 
             await callback.answer(msg, reply_markup=to_menu_keyboard().as_markup(), parse_mode=ParseMode.MARKDOWN)
 
+            # создаем платеж в payments
+            await AsyncOrm.init_payment(tg_id, price, datetime.datetime.now(), f"{conn_id}", session)
+
         # TODO обновить кэш
         # user_with_conn.balance = new_balance
         # user_with_conn.connections.append(new_conn)
         # user_with_conn_json = user_with_conn.model_dump_json()
         # r.setex(f"profile:{tg_id}", 300, user_with_conn_json)
+
     except Exception:
         error_msg = err_ms.error_msg()
         if type(callback) == types.CallbackQuery:

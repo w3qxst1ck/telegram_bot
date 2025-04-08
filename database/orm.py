@@ -181,14 +181,18 @@ class AsyncOrm:
     async def buy_new_key(
             c: Connection,
             balance: int,
-            session: Any) -> None:
-        """Покупка нового ключа и транзакционное уменьшение баланса"""
+            session: Any) -> id:
+        """
+            Покупка нового ключа и транзакционное уменьшение баланса
+            Return: connection id: int
+        """
         try:
             async with session.transaction():
-                await session.execute(
+                conn_id = await session.fetchval(
                     """
                     INSERT INTO connections (tg_id, active, start_date, expire_date, is_trial, email, key, description, server_id)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                    RETURNING id;
                     """,
                     c.tg_id, c.active, c.start_date, c.expire_date, c.is_trial, c.email, c.key, c.description, c.server_id)
                 await session.execute(
@@ -200,6 +204,7 @@ class AsyncOrm:
                     balance, c.tg_id
                 )
                 logger.info(f"Пользователь {c.tg_id} купил новый ключ сроком до {c.expire_date}")
+                return conn_id
         except Exception as e:
             logger.error(f"Ошибка покупки ключа пользователя {c.tg_id}: {e}")
             raise
