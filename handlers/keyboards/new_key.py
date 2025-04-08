@@ -5,14 +5,13 @@ from settings import settings
 from handlers.buttons.regions import REGIONS
 
 
-def new_key_country_keyboard() -> InlineKeyboardBuilder:
+def new_key_country_keyboard(countries: list[str]) -> InlineKeyboardBuilder:
     """Клавиатура выбора страны"""
     keyboard = InlineKeyboardBuilder()
 
-    for k, v in REGIONS.items():
-        keyboard.row(
-            InlineKeyboardButton(text=f"{v}", callback_data=f"new_key_country|{k}")
-        )
+    for country in countries:
+        country_with_flag = REGIONS[country]
+        keyboard.row(InlineKeyboardButton(text=f"{country_with_flag}", callback_data=f"new_key_country|{country}"))
 
     keyboard.row(InlineKeyboardButton(text=f"{btn.BACK}", callback_data="menu|buy"))
 

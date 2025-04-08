@@ -27,10 +27,11 @@ router = Router()
 
 
 @router.callback_query(F.data == "new_key")
-async def choose_country_new_key(callback: types.CallbackQuery) -> None:
+async def choose_country_new_key(callback: types.CallbackQuery, session: Any) -> None:
     """Выбор страны нового ключа"""
+    countries = await AsyncOrm.get_server_countries(session)
     msg = ms.choose_country()
-    await callback.message.edit_text(msg, reply_markup=kb.new_key_country_keyboard().as_markup())
+    await callback.message.edit_text(msg, reply_markup=kb.new_key_country_keyboard(countries).as_markup())
 
 
 @router.callback_query(F.data.split("|")[0] == "new_key_country")
