@@ -1,4 +1,5 @@
 from handlers.buttons import commands as cmd
+from handlers.buttons import menu as btn
 from schemas.connection import Connection
 
 
@@ -21,6 +22,7 @@ def expire_key(connection: Connection) -> str:
 
 def refresh_key_traffic(connection: Connection) -> str:
     """Сообщение об обновлении трафика"""
-    message = f"Трафик вашего ключа \"{connection.description}\" обновлен!"
+    message = f"{btn.NOTIFICATION} <i>Системное уведомление</i>\n\n" \
+              f"Текущий трафик вашего ключа \"<b>{connection.description}</b>\" обновлен!"
 
     return message

@@ -34,6 +34,7 @@ async def user_payments_message(payments: list[Payments], balance: int, session:
                 connection: Connection = await AsyncOrm.get_connection_by_id(int(payment.description.split("_")[1]), session)
                 message += f"{count}. Списание <b>-{payment.amount} р. </b>{time} <b>{date}</b>\n🔻 Оплата ключа \"{connection.description}\"\n\n"
             except Exception as e:
+                count -= 1
                 logger.error(f"Ошибка при парсинге платежа по ключу: {e}")
 
         elif pay_type == "TRAF":
@@ -41,6 +42,7 @@ async def user_payments_message(payments: list[Payments], balance: int, session:
                 connection: Connection = await AsyncOrm.get_connection_by_id(int(payment.description.split("_")[1]), session)
                 message += f"{count}. Списание <b>-{payment.amount} р. </b>{time} <b>{date}</b>\n🔻 Обнуление трафика ключа \"{connection.description}\"\n\n"
             except Exception as e:
+                count -= 1
                 logger.error(f"Ошибка при парсинге платежа по ключу: {e}")
 
     return message
