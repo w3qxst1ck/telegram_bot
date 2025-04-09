@@ -19,8 +19,8 @@ def instruction_os_message(os: str) -> str:
                    "\t• <a href='https://apps.apple.com/ru/app/streisand/id6450534064'>Streisand</a>\n\n"
 
     elif os == "Android":
-        message += "\t• <a href='https://play.google.com/store/apps/details?id=com.v2raytun.android'>v2RayTun</a>\n" \
-                   "\t• <a href='https://play.google.com/store/apps/details?id=app.hiddify.com'>Hiddify</a>\n" \
+        message += "\t• <a href='https://play.google.com/store/apps/details?id=app.hiddify.com'>Hiddify</a>\n" \
+                   "\t• <a href='https://play.google.com/store/apps/details?id=com.v2raytun.android'>v2RayTun</a>\n" \
                    "\t• <a href='https://github.com/MatsuriDayo/NekoBoxForAndroid'>NekoBox</a> (<a href='https://itdog.info/ustanovka-nekobox-na-android-iz-apk-fajla-nastrojka-podklyuchenij/'>инструкция</a> по установке)\n\n"
 
     elif os == "macOS":
@@ -36,7 +36,10 @@ def instruction_os_message(os: str) -> str:
     message += f"Необходимо скопировать купленный VPN ключ из раздела \"{btn.KEYS}\" главного меню или " \
                f"из списка ключей с помощью команды /{cmd.KEYS[0]}.\n\n"
 
-    message += "Далее добавляем ключ в установленное ранее приложение (на скриншотах показан пример с приложением \"v2RayTun\").\n\n"
+    if os == "Android":
+        message += "Далее добавляем ключ в установленное ранее приложение (на скриншотах показан пример с приложением \"Hiddify\").\n\n"
+    else:
+        message += "Далее добавляем ключ в установленное ранее приложение (на скриншотах показан пример с приложением \"v2RayTun\").\n\n"
 
     message += f"Если у вас есть вопросы по покупке/продлению или использованию ключа, напишите в поддержку @{settings.help_admin}"
 

@@ -17,12 +17,3 @@ def choose_os() -> InlineKeyboardBuilder:
     )
 
     return keyboard
-
-
-def back_to_instruction_menu() -> InlineKeyboardBuilder:
-    """Кнопка возврата к выбору ОС"""
-    keyboard = InlineKeyboardBuilder()
-
-    keyboard.row(InlineKeyboardButton(text=f"{btn.BACK}", callback_data="back_to_instruction_menu"))
-
-    return keyboard

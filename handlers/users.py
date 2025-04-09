@@ -14,7 +14,6 @@ router = Router()
 
 
 @router.message(Command(f"{cmd.INSTRUCTION[0]}"))
-@router.callback_query(F.data == "back_to_instruction_menu")
 async def instruction_handler(message: types.Message | types.CallbackQuery) -> None:
     """Выбор ОС для инструкции"""
     msg = ms.instruction_menu_message()
@@ -35,8 +34,13 @@ async def instruction_for_os(callback: types.CallbackQuery) -> None:
     msg = ms.instruction_os_message(os)
 
     album_builder = MediaGroupBuilder(caption=msg)
-    album_builder.add(type="photo", media=FSInputFile("img/instruction/add.jpg"))
-    album_builder.add(type="photo", media=FSInputFile("img/instruction/buffer.jpg"))
+
+    if os == "Android":
+        album_builder.add(type="photo", media=FSInputFile("img/instruction/add_hiddify.jpg"))
+        album_builder.add(type="photo", media=FSInputFile("img/instruction/buffer_hiddify.jpg"))
+    else:
+        album_builder.add(type="photo", media=FSInputFile("img/instruction/ios_add.PNG"))
+        album_builder.add(type="photo", media=FSInputFile("img/instruction/ios_buffer.PNG"))
 
     await callback.message.answer_media_group(media=album_builder.build())
     try:

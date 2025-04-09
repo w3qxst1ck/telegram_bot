@@ -335,6 +335,7 @@ pip-selfcheck.json
 .env.dev
 
 *.jpg
+*.png
 
 redisdata/
 
