@@ -55,6 +55,9 @@ class Settings(BaseSettings):
     redis: Redis = Redis()
     server: Server = Server()
 
+    need_payment_service: bool = False
+    payment_token: str = Field(..., env='PAYMENT_TOKEN')
+
     user_agreement_link: str = "https://telegra.ph/PUBLICHNAYA-OFERTA-04-08-2"
 
 
