@@ -12,6 +12,7 @@ from handlers.extra_traffic import router as extra_traffic_router
 from handlers.delete_key import router as delete_key_router
 from handlers.payments import router as payment_router
 from handlers.referral import router as referral_router
+from handlers.paymaster import router as paymaster_router
 
 main_router = Router()
 
@@ -29,4 +30,5 @@ main_router.include_routers(
     delete_key_router,
     payment_router,
     referral_router,
+    paymaster_router,
 )

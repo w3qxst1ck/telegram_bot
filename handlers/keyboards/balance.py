@@ -1,6 +1,7 @@
 from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from handlers.buttons import menu as btn
+from settings import settings
 
 
 def payment_confirm_keyboard(summ: str) -> InlineKeyboardBuilder:
@@ -14,12 +15,22 @@ def payment_confirm_keyboard(summ: str) -> InlineKeyboardBuilder:
     return keyboard
 
 
-def payment_confirm_admin_keyboard(tg_id: str, summ: str) -> InlineKeyboardBuilder:
+def choose_payment_method_keyboard() -> InlineKeyboardBuilder:
+    """Выбор способа оплаты"""
+    keyboard = InlineKeyboardBuilder()
+    keyboard.row(InlineKeyboardButton(text="Перевод на карту", callback_data=f"pay_method_transfer"))
+    if settings.need_payment_service:
+        keyboard.row(InlineKeyboardButton(text="Картой", callback_data=f"pay_method_card"))
+
+    return keyboard
+
+
+def payment_confirm_admin_keyboard(tg_id: str, summ: str, payment_id: int) -> InlineKeyboardBuilder:
     """Клавиатура для подтверждения или отклонения платежа админом"""
     keyboard = InlineKeyboardBuilder()
     keyboard.row(
-        InlineKeyboardButton(text="Подтвердить ✅", callback_data=f"admin-payment-confirm|{tg_id}|{summ}"),
-        InlineKeyboardButton(text="Отклонить ❌", callback_data=f"admin-payment-cancel|{tg_id}|{summ}")
+        InlineKeyboardButton(text="Подтвердить ✅", callback_data=f"admin-payment-confirm|{tg_id}|{summ}|{payment_id}"),
+        InlineKeyboardButton(text="Отклонить ❌", callback_data=f"admin-payment-cancel|{tg_id}|{summ}|{payment_id}")
     )
     return keyboard
 

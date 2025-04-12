@@ -38,12 +38,13 @@ async def confirm_decline_payment_handler(callback: types.CallbackQuery, bot: Bo
     """Подтверждение или отклонение перевода админом"""
     tg_id = callback.data.split("|")[1]
     summ = callback.data.split("|")[2]
+    payment_id = int(callback.data.split("|")[3])
 
     # подтверждение перевода
     if callback.data.split("|")[0] == "admin-payment-confirm":
         try:
             # подтверждение платежа и пополнение баланса пользователю
-            await AsyncOrm.confirm_payment(tg_id, int(summ), session)
+            await AsyncOrm.confirm_payment(payment_id, tg_id, int(summ), session)
 
             # сообщение админу
             message_for_admin = paid_request_for_admin(summ, tg_id).split("\n\n")[0]
@@ -55,7 +56,7 @@ async def confirm_decline_payment_handler(callback: types.CallbackQuery, bot: Bo
             await bot.send_message(tg_id, message_for_user)
 
             logger.info(f"Администратор {callback.from_user.id} подтвердил платеж пользователя {tg_id} на сумму {summ} р.")
-
+            logger.info(f"Баланс пользователя {tg_id} пополнен на {summ} р.")
             # TODO Обновить кэш пользователя после пополнения баланса
         except Exception:
             err_msg = err_ms.error_balance_for_admin()

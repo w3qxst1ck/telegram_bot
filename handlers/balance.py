@@ -44,8 +44,8 @@ async def balance_handler(message: types.CallbackQuery | types.Message, state: F
 
 
 @router.message(UpBalanceFSM.summ)
-async def confirm_up_balance_handler(message: types.Message, state: FSMContext) -> None:
-    """Подтверждение пополнения баланса. Конец UpBalanceFSM"""
+async def choose_pay_method_handler(message: types.Message, state: FSMContext) -> None:
+    """Выбор способа оплаты"""
     data = await state.get_data()
     try:
         await data["prev_mess"].delete()
@@ -62,13 +62,32 @@ async def confirm_up_balance_handler(message: types.Message, state: FSMContext) 
         await state.update_data(prev_mess=msg)
         return
     else:
-        await state.clear()
-        invoice_message = ms.invoice_message(summ, str(message.from_user.id))
-        await message.answer(
-            invoice_message,
-            reply_markup=kb.payment_confirm_keyboard(summ).as_markup(),
+        # await state.clear()
+        # invoice_message = ms.invoice_message(summ, str(message.from_user.id))
+        msg = "Выберите способ оплаты"
+        prev_mess = await message.answer(
+            msg,
+            reply_markup=kb.choose_payment_method_keyboard().as_markup(),
             parse_mode=ParseMode.MARKDOWN_V2
         )
+        await state.update_data(prev_mess=prev_mess)
+        await state.update_data(summ=summ)
+        await state.set_state(UpBalanceFSM.method)
+
+
+@router.callback_query(F.data == "pay_method_transfer", UpBalanceFSM.method)
+async def confirm_up_balance_handler(callback: types.CallbackQuery, state: FSMContext) -> None:
+    """Подтверждение пополнения баланса. Конец UpBalanceFSM"""
+    data = await state.get_data()
+    summ = data["summ"]
+    await state.clear()
+
+    invoice_message = ms.invoice_message(summ, str(callback.from_user.id))
+    await callback.message.edit_text(
+        invoice_message,
+        reply_markup=kb.payment_confirm_keyboard(summ).as_markup(),
+        parse_mode=ParseMode.MARKDOWN_V2
+    )
 
 
 @router.callback_query(F.data.split("|")[0] == "paid")
@@ -84,13 +103,14 @@ async def balance_paid_handler(callback: types.CallbackQuery, bot: Bot, session:
     # создание платежа
     try:
         created_at = datetime.datetime.now()
-        await AsyncOrm.init_payment(tg_id, int(summ), created_at, "ADD", session)
+        payment_id = await AsyncOrm.init_payment(tg_id, int(summ), created_at, "ADD", session)
+
         # оповещение администратора
         message_for_admin = ms.paid_request_for_admin(summ, tg_id)
         await bot.send_message(
             settings.payment_admin,
             message_for_admin,
-            reply_markup=kb.payment_confirm_admin_keyboard(tg_id, summ).as_markup()
+            reply_markup=kb.payment_confirm_admin_keyboard(tg_id, summ, payment_id).as_markup()
         )
 
         logger.info(f"Пользователь {tg_id} подтвердил оплату платежа на сумму {summ} р.")
