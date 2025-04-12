@@ -1,11 +1,13 @@
 import os
 from typing import Any
 
+import aiogram
 from aiogram import Router, types
-from aiogram.filters import Command
+from aiogram.filters import Command, CommandStart, CommandObject
 from aiogram.fsm.context import FSMContext
 from aiogram.types import BufferedInputFile, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.utils.deep_linking import decode_payload
 
 from database.orm import AsyncOrm
 from schemas.user import UserAdd
@@ -17,16 +19,48 @@ from settings import settings
 router = Router()
 
 
+@router.message(CommandStart(deep_link=True))
 @router.message(Command(f"{cmd.START[0]}"))
-async def start_handler(message: types.Message | types.CallbackQuery, admin: bool, state: FSMContext, session: Any) -> None:
+async def start_handler(
+        message: types.Message | types.CallbackQuery,
+        admin: bool,
+        state: FSMContext,
+        command: CommandObject,
+        bot: aiogram.Bot,
+        session: Any) -> None:
     """Сообщение по команде /start"""
+
     tg_id: str = str(message.from_user.id)
+    user_exists: bool = await AsyncOrm.check_user_already_exists(tg_id, session)
 
-    await create_user_if_not_exists(tg_id, message, session)
-    await send_hello_message(message, admin, state, session)
+    args = command.args
+    # если пользователь пришел по ссылке приглашению
+    if args:
+        # получаем телеграм id пользователя, который пригласил
+        from_tg_id = decode_payload(args)
+
+        # проверяем получал ли он уже бонус
+        already_exist: bool = await AsyncOrm.is_users_ref_relation_exists(tg_id, session)
+
+        # если записи не было создаем
+        if not already_exist and not user_exists:
+            await AsyncOrm.crete_users_ref_relation(tg_id, from_tg_id, session)
+
+    if not user_exists:
+        user: UserAdd = UserAdd(
+            tg_id=tg_id,
+            username=message.from_user.username,
+            firstname=message.from_user.first_name,
+            lastname=message.from_user.last_name,
+            balance=0,
+            trial_used=False
+        )
+        await AsyncOrm.create_user(user, session)
+
+    await send_hello_message(message, admin, state, bot, session)
 
 
-async def send_hello_message(message: types.Message, admin: bool, state: FSMContext, session: Any) -> None:
+async def send_hello_message(message: types.Message, admin: bool, state: FSMContext, bot: aiogram.Bot, session: Any) -> None:
     """Стартовое сообщение"""
     name: str = message.from_user.first_name if message.from_user.first_name else message.from_user.username
     trial_used: bool = await AsyncOrm.get_trial_connection_status(str(message.from_user.id), session)
@@ -67,7 +101,7 @@ async def send_hello_message(message: types.Message, admin: bool, state: FSMCont
                     photo=BufferedInputFile(image_buffer.read(), filename="start.png"),
                     caption=msg,
                 )
-                await main_menu(message, admin, state)
+                await main_menu(message, admin, state, bot)
 
 
 async def create_user_if_not_exists(tg_id: str, message: types.Message, session: Any) -> None:
@@ -84,5 +118,4 @@ async def create_user_if_not_exists(tg_id: str, message: types.Message, session:
             trial_used=False
         )
         await AsyncOrm.create_user(user, session)
-
 

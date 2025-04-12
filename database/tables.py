@@ -90,3 +90,12 @@ class Server(Base):
         back_populates="server",
     )
 
+
+class Referral(Base):
+    """Реферальные ссылки"""
+    __tablename__ = "referrals"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    from_user_id: Mapped[str] = mapped_column(index=True)
+    to_user_id: Mapped[str] = mapped_column(index=True, unique=True)
+    is_used: Mapped[bool] = mapped_column(default=False)

@@ -9,6 +9,7 @@ from database.tables import Base
 
 from schemas.user import UserAdd, UserConnList
 from schemas.payments import Payments
+from schemas.referrals import Referrals
 from schemas.connection import Connection, ConnServerScheduler, Server, ServerAdd, ConnectionServer, ConnectionRegion
 from logger import logger
 
@@ -606,3 +607,101 @@ class AsyncOrm:
 
         except Exception as e:
             logger.error(f"Ошибка при получении платежей пользователя {tg_id}: {e}")
+
+    @staticmethod
+    async def is_users_ref_relation_exists(tg_id: str, session: Any) -> bool:
+        """Проверяем существует ли такая запись"""
+        try:
+            row_id = await session.fetchval(
+                """
+                SELECT id FROM referrals
+                WHERE to_user_id=$1
+                """,
+                tg_id
+            )
+
+            return True if row_id else False
+
+        except Exception as e:
+            logger.error(f"Ошибка при получении cостояния реф. ссылки для {tg_id}: {e}")
+
+    @staticmethod
+    async def crete_users_ref_relation(tg_id: str, from_tg_id: str, session: Any) -> None:
+        """Создает запись с приглашением от кого и для кого"""
+        try:
+            await session.execute(
+                """
+                INSERT INTO referrals(from_user_id, to_user_id, is_used)
+                VALUES ($1, $2, false)
+                """,
+                from_tg_id, tg_id
+            )
+
+        except Exception as e:
+            logger.error(f"Ошибка при создании записи о реф. ссылке от {tg_id} для {from_tg_id}: {e}")
+
+    @staticmethod
+    async def add_money_for_ref(tg_id: str, from_tg_id: str, amount: int, session: Any):
+        """Начисляет деньги за реферальную программу и переводит ref.is_used в false"""
+        try:
+            async with session.transaction():
+                await session.execute(
+                    """
+                    UPDATE referrals SET is_used=true 
+                    WHERE to_user_id=$1
+                    """,
+                    tg_id)
+
+                await session.execute(
+                    """
+                    UPDATE users
+                    SET balance = balance + $1
+                    WHERE tg_id = $2;
+                    """,
+                    amount, from_tg_id)
+
+                await session.execute(
+                    """
+                    INSERT INTO payments (created_at, amount, status, description, user_tg_id)
+                    VALUES ($1, $2, $3, $4, $5)
+                    """,
+                    datetime.datetime.now(), amount, True, "REF", from_tg_id
+                )
+                logger.info(f"Пользователю {from_tg_id} начислен бонус за использование реф. ссылки пользователем "
+                            f"{tg_id}")
+
+        except Exception as e:
+            logger.error(f"Ошибка при начислен бонуса пользователю {from_tg_id} за использование реф. ссылки "
+                         f"пользователем {tg_id}: {e}")
+
+    @staticmethod
+    async def get_active_referrals(session: Any) -> list[Referrals]:
+        """Получает все реф. записи с is_used=false"""
+        try:
+            rows = await session.fetch(
+                """
+                SELECT * from referrals 
+                WHERE is_used=false
+                """
+            )
+            referrals = [Referrals.model_validate(row) for row in rows]
+            return referrals
+
+        except Exception as e:
+            logger.error(f"Ошибка при получении всех незакрытых реф. записей: {e}")
+
+    @staticmethod
+    async def is_confirmed_payment_exists_for_user(tg_id: str, session: Any) -> bool:
+        """Проверяем существует ли подтвержденный платеж пользователя"""
+        try:
+            query = await session.fetchval(
+                """
+                SELECT COUNT(*) FROM payments
+                WHERE user_tg_id=$1 AND status=true
+                """,
+                tg_id
+            )
+            return query > 0
+
+        except Exception as e:
+            logger.error(f"Ошибка при получении количества подтвержденных платежей пользователя {tg_id}: {e}")

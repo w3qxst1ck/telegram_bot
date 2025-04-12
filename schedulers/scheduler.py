@@ -8,9 +8,10 @@ from aiogram.enums import ParseMode
 from database.orm import AsyncOrm
 from logger import logger
 from schemas.connection import Server
-from settings import settings
+from schemas.referrals import Referrals
 from services import service
 from handlers.messages import scheduler as ms
+from settings import settings
 
 
 async def run_every_hour(bot: aiogram.Bot) -> None:
@@ -25,6 +26,7 @@ async def run_every_hour(bot: aiogram.Bot) -> None:
 
     try:
         await off_expired_connections(session, bot)
+        await check_ref_links_and_add_bonus(session, bot)
 
     except Exception as e:
         logger.error(f"Ошибка при выполнении шедулера (1 раз в час) {e}")
@@ -93,6 +95,25 @@ async def off_expired_connections(session: Any, bot: aiogram.Bot) -> None:
                 # оповещение пользователя
                 message = ms.expire_key(conn)
                 await bot.send_message(conn.tg_id, message, parse_mode=ParseMode.MARKDOWN)
+
+
+async def check_ref_links_and_add_bonus(session: Any, bot: aiogram.Bot) -> None:
+    """Начисляет бонус за реферальную программу"""
+    active_referrals: list[Referrals] = await AsyncOrm.get_active_referrals(session)
+
+    for ref in active_referrals:
+        # проверяем появился ли подтвержденный платеж
+        check_payments: bool = await AsyncOrm.is_confirmed_payment_exists_for_user(ref.to_user_id, session)
+
+        # если подтвержденный платеж есть
+        if check_payments:
+
+            # начисляем бонус, переводи is_used в true, создаем payment о начислении за реф. ссылку
+            await AsyncOrm.add_money_for_ref(ref.to_user_id, ref.from_user_id, settings.ref_bonus, session)
+
+            # оповещаем пользователя
+            msg = ms.get_money_for_ref_message(ref.to_user_id)
+            await bot.send_message(ref.from_user_id, msg)
 
 
 async def refresh_current_traffic(session: Any, bot: aiogram.Bot) -> None:

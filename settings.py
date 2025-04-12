@@ -37,6 +37,7 @@ class Server(BaseSettings):
 
 class Settings(BaseSettings):
     bot_name: str = "VLESS VPN bot"
+    bot_tg_name: str = "VlessDigitalBot"
     bot_token: str = Field(..., env='BOT_TOKEN')
     admins: list = Field(..., env='ADMINS')
     payment_admin: str = Field(..., env='PAYMENT_ADMIN')
@@ -50,6 +51,7 @@ class Settings(BaseSettings):
     extra_traffic_price: int = 100
     extra_traffic_size: int = 100
     paid_period: int = 30
+    ref_bonus: int = 100
 
     db: Database = Database()
     redis: Redis = Redis()

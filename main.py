@@ -13,7 +13,7 @@ from middlewares.admin import AdminMiddleware
 from settings import settings
 from handlers import main_router
 from handlers.buttons import commands as cmd
-from schedulers import keys_schedule
+from schedulers import scheduler as scheduler_funcs
 
 
 async def set_commands(bot: io.Bot):
@@ -24,6 +24,7 @@ async def set_commands(bot: io.Bot):
         BotCommand(command=f"{cmd.KEYS[0]}", description=f"{cmd.KEYS[1]}"),
         BotCommand(command=f"{cmd.BALANCE[0]}", description=f"{cmd.BALANCE[1]}"),
         BotCommand(command=f"{cmd.BUY[0]}", description=f"{cmd.BUY[1]}"),
+        BotCommand(command=f"{cmd.INVITE[0]}", description=f"{cmd.INVITE[1]}"),
         BotCommand(command=f"{cmd.INSTRUCTION[0]}", description=f"{cmd.INSTRUCTION[1]}"),
         BotCommand(command=f"{cmd.HELP[0]}", description=f"{cmd.HELP[1]}"),
     ]
@@ -49,12 +50,12 @@ async def start_bot() -> None:
     # SCHEDULER
     scheduler = AsyncIOScheduler(timezone="Europe/Moscow")
 
-    # перевод закончившихся подписок в неактивные, удаление пробных
-    scheduler.add_job(keys_schedule.run_every_hour, trigger="cron", year='*', month='*', day="*", hour="*", minute=0,
+    # перевод закончившихся подписок в неактивные, удаление пробных, оплата реф. ссылок
+    scheduler.add_job(scheduler_funcs.run_every_hour, trigger="cron", year='*', month='*', day="*", hour="*", minute="*",
                       second=0, start_date=datetime.now(), kwargs={"bot": bot})
 
     # обновление трафика ключей каждые settings.paid_period
-    scheduler.add_job(keys_schedule.run_every_day, trigger="cron", year='*', month='*', day="*", hour=1, minute=10,
+    scheduler.add_job(scheduler_funcs.run_every_day, trigger="cron", year='*', month='*', day="*", hour=1, minute=10,
                       second=0, start_date=datetime.now(), kwargs={"bot": bot})
 
     scheduler.start()
