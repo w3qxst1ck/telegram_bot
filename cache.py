@@ -8,7 +8,7 @@ r = redis.Redis(host='redis', port=settings.redis.redis_port, password=settings.
 try:
     response = r.ping()
     if response:
-        logger.info("Успешное подключение к Redis")
+        pass
     else:
         logger.error("Не удалось подключиться к Redis.")
 except redis.exceptions.RedisError as e:

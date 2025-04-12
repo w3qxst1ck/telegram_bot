@@ -36,7 +36,7 @@ async def delete_key_menu(callback: types.CallbackQuery, session: Any) -> None:
     #     user_with_conn_json = user_with_conn.model_dump_json()
     #     r.setex(f"extend_key:{tg_id}", 300, user_with_conn_json)
 
-    msg = ms.delete_key_menu()
+    msg = ms.delete_key_menu(user_with_conns)
 
     await callback.message.edit_text(msg, reply_markup=kb.delete_key_menu_keyboard(user_with_conns).as_markup())
 

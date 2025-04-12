@@ -11,9 +11,12 @@ from handlers.buttons import commands as cmd
 from schemas.connection import ConnectionServer
 
 
-def delete_key_menu() -> str:
+def delete_key_menu(user_with_conns: UserConnList) -> str:
     """Сообщение при выборе какой ключ удалить"""
-    message = "Выберите ключ который хотите удалить"
+    if len(user_with_conns.connections) == 0:
+        message = "У вас нет ключей, которые можно удалить"
+    else:
+        message = "Выберите ключ который хотите удалить"
 
     return message
 
