@@ -15,9 +15,9 @@ def error_balance_msg() -> str:
     return message
 
 
-def error_balance_for_admin() -> str:
+def error_balance_for_admin(e: Exception) -> str:
     """Ошибка при подтверждении платежа"""
-    message = f"⚠️ Ошибка при подтверждении платежа"
+    message = f"⚠️ Ошибка при подтверждении платежа\n\n{e}"
     return message
 
 

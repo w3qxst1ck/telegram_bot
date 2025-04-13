@@ -5,6 +5,7 @@ from typing import Any
 from aiogram import Router, F
 from aiogram import types
 
+from cache import r
 import handlers.messages.extra_traffic as ms
 from handlers.messages.errors import general_error_msg
 from handlers.messages.balance import not_enough_money
@@ -62,9 +63,6 @@ async def confirm_buy_extra_traffic(callback: types.CallbackQuery, session: Any)
     if user_balance >= settings.extra_traffic_price:
 
         try:
-            # отвечаем пользователю
-            msg = ms.success_buy_extra_traffic(connection, server.region)
-
             # обновить трафик
             await refresh_client_current_traffic(server, connection.email)
 
@@ -72,6 +70,7 @@ async def confirm_buy_extra_traffic(callback: types.CallbackQuery, session: Any)
             await AsyncOrm.decrease_balance_on_amount(tg_id, settings.extra_traffic_price, session)
 
             # оповещаем пользователя
+            msg = ms.success_buy_extra_traffic(connection, server.region)
             await waiting_mess.edit_text(msg, reply_markup=to_menu_keyboard().as_markup())
 
             # создаем платеж в payments
@@ -82,6 +81,9 @@ async def confirm_buy_extra_traffic(callback: types.CallbackQuery, session: Any)
                 f"TRAF_{conn_id}",
                 session
             )
+
+            # удаляем кэш
+            r.delete(f"user_conn_server:{tg_id}")
 
             logger.info(f"Обнулен трафик ключа id: {conn_id} email: {connection.email} пользователя {tg_id}")
 

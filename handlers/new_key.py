@@ -10,7 +10,7 @@ from aiogram.fsm.context import FSMContext
 import schemas.user
 from handlers.keyboards import new_key as kb
 from handlers.states.new_key import KeyDescriptionFSM
-from handlers.keyboards.balance import not_enough_balance_ney_key_keyboard
+from handlers.keyboards.balance import not_enough_balance_new_key_keyboard
 from handlers.keyboards.menu import to_menu_keyboard
 from database.orm import AsyncOrm
 from schemas.connection import Connection, Server
@@ -40,21 +40,9 @@ async def new_key_menu_handler(callback: types.CallbackQuery, session: Any) -> N
     tg_id = str(callback.from_user.id)
     country = callback.data.split("|")[1]
 
-    # TODO test version
-    user_with_conn = await AsyncOrm.get_user_with_connection_list(tg_id, session)
+    user_balance = await AsyncOrm.get_user_balance(tg_id, session)
 
-    # TODO prod version
-    # cached_data = r.get(f"profile:{tg_id}")
-    # if cached_data:
-    #     # from cache
-    #     user_with_conn = UserConnList.model_validate_json(cached_data)
-    # else:
-    #     # from DB
-    #     user_with_conn = await AsyncOrm.get_user_with_connection_list(tg_id, session)
-    #     user_with_conn_json = user_with_conn.model_dump_json()
-    #     r.setex(f"profile:{tg_id}", 300, user_with_conn_json)
-
-    msg = ms.new_key_message(user_with_conn.balance)
+    msg = ms.new_key_message(user_balance)
     await callback.message.edit_text(msg, reply_markup=kb.new_key_keyboard(country).as_markup())
 
 
@@ -66,28 +54,17 @@ async def new_key_confirm_handler(callback: types.CallbackQuery, session: Any) -
     price = settings.price_list[period]
     tg_id = str(callback.from_user.id)
 
-    # TODO test version
-    user_with_conn = await AsyncOrm.get_user_with_connection_list(tg_id, session)
-
-    # TODO prod version
-    # cached_data = r.get(f"profile:{tg_id}")
-    # if cached_data:
-    #     # from cache
-    #     user_with_conn = UserConnList.model_validate_json(cached_data)
-    # else:
-    #     # from DB
-    #     user_with_conn = await AsyncOrm.get_user_with_connection_list(tg_id, session)
-    #     user_with_conn_json = user_with_conn.model_dump_json()
-    #     r.setex(f"profile:{tg_id}", 300, user_with_conn_json)
+    user_balance = await AsyncOrm.get_user_balance(tg_id, session)
 
     # достаточно средств
-    if user_with_conn.balance >= price:
+    if user_balance >= price:
         msg = ms.new_key_confirm_message(period, price)
         await callback.message.edit_text(msg, reply_markup=kb.new_key_confirm_keyboard(period, country).as_markup())
+
     # недостаточно средств на балансе
     else:
-        msg = not_enough_balance_message(period, price, user_with_conn.balance)
-        await callback.message.edit_text(msg, reply_markup=not_enough_balance_ney_key_keyboard(country).as_markup())
+        msg = not_enough_balance_message(period, price, user_balance)
+        await callback.message.edit_text(msg, reply_markup=not_enough_balance_new_key_keyboard(country).as_markup())
 
 
 @router.callback_query(F.data.split("|")[0] == "new_key_confirm")
@@ -113,6 +90,7 @@ async def create_description(callback: types.CallbackQuery,  state: FSMContext) 
 @router.message(KeyDescriptionFSM.description)
 async def new_key_create_handler(callback: types.CallbackQuery | types.Message, state: FSMContext, session: Any) -> None:
     """Обработка подтверждения покупки нового ключа"""
+
     # получение описания
     if type(callback) == types.CallbackQuery:
         await callback.message.edit_text("Запрос выполняется...⏳")
@@ -132,19 +110,7 @@ async def new_key_create_handler(callback: types.CallbackQuery | types.Message, 
         prev_mess = data.get("prev_mess")
         await prev_mess.edit_text(ms.key_description())
 
-    # TODO test version
     user_with_conn = await AsyncOrm.get_user_with_connection_list(tg_id, session)
-
-    # TODO prod version
-    # cached_data = r.get(f"profile:{tg_id}")
-    # if cached_data:
-    #     # from cache
-    #     user_with_conn = UserConnList.model_validate_json(cached_data)
-    # else:
-    #     # from DB
-    #     user_with_conn = await AsyncOrm.get_user_with_connection_list(tg_id, session)
-    #     user_with_conn_json = user_with_conn.model_dump_json()
-    #     r.setex(f"profile:{tg_id}", 300, user_with_conn_json)
 
     # добавление клиента в панель
     server_id = await get_less_loaded_server(session, region=country)
@@ -178,11 +144,13 @@ async def new_key_create_handler(callback: types.CallbackQuery | types.Message, 
     try:
         conn_id = await AsyncOrm.buy_new_key(new_conn, new_balance, session)
         msg = ms.buy_new_key_message(period, price, new_conn.expire_date, new_balance, key_with_description)
+
         # отправка ключа пользователю при пропуске названия
         if type(callback) == types.CallbackQuery:
             await callback.message.edit_text(msg,
                                              reply_markup=to_menu_keyboard().as_markup(),
                                              parse_mode=ParseMode.MARKDOWN)
+
         # отправка ключа пользователю при введенном названии
         else:
             # удаление сообщения ожидания
@@ -199,11 +167,8 @@ async def new_key_create_handler(callback: types.CallbackQuery | types.Message, 
         # создаем платеж в payments
         await AsyncOrm.init_payment(tg_id, price, datetime.datetime.now(), f"KEY_{conn_id}", session)
 
-        # TODO обновить кэш
-        # user_with_conn.balance = new_balance
-        # user_with_conn.connections.append(new_conn)
-        # user_with_conn_json = user_with_conn.model_dump_json()
-        # r.setex(f"profile:{tg_id}", 300, user_with_conn_json)
+        # удаляем кэш
+        r.delete(f"user_conn_server:{tg_id}")
 
     except Exception:
         error_msg = err_ms.error_msg()

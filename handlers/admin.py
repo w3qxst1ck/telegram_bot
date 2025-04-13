@@ -9,27 +9,29 @@ from middlewares.admin import AdminMiddleware
 from database.orm import AsyncOrm
 from services import service
 from schemas.connection import ServerAdd
+from schemas.user import UserConnList
 from handlers.messages import errors as err_ms
 from handlers.messages.balance import paid_request_for_admin, paid_confirmed_for_user, paid_decline_for_user
 from utils.servers_load import get_less_loaded_server
 from logger import logger
+from cache import r
 
 
 router = Router()
 router.message.middleware.register(AdminMiddleware())
 
 
-@router.message(Command("add_server"))
-async def add_server(message: types.Message, session: Any) -> None:
-    new_sever = ServerAdd(
-        name="am-1",
-        region="Netherlands",
-        api_url="https://somedomain123.store:2053/jA7PFJItw5/",
-        domain="somedomain123.store",
-        inbound_id=1,
-    )
-    await AsyncOrm.create_server(new_sever, session)
-    await message.answer("Сервер успешно добавлен")
+# @router.message(Command("add_server"))
+# async def add_server(message: types.Message, session: Any) -> None:
+#     new_sever = ServerAdd(
+#         name="am-1",
+#         region="Netherlands",
+#         api_url="https://somedomain123.store:2053/jA7PFJItw5/",
+#         domain="somedomain123.store",
+#         inbound_id=1,
+#     )
+#     await AsyncOrm.create_server(new_sever, session)
+#     await message.answer("Сервер успешно добавлен")
 
 
 @router.callback_query(or_f(F.data.split("|")[0] == "admin-payment-confirm",
@@ -55,11 +57,19 @@ async def confirm_decline_payment_handler(callback: types.CallbackQuery, bot: Bo
             message_for_user = paid_confirmed_for_user(summ)
             await bot.send_message(tg_id, message_for_user)
 
+            # обновляем кэш
+            cache_data = r.get(f"user_conn_server:{tg_id}")
+            if cache_data:
+                user_conn_list = UserConnList.model_validate_json(cache_data)
+                user_conn_list.balance += int(summ)
+                user_conn_list_json = user_conn_list.model_dump_json()
+                r.setex(f"user_conn_server:{tg_id}", 180, user_conn_list_json)
+
             logger.info(f"Администратор {callback.from_user.id} подтвердил платеж пользователя {tg_id} на сумму {summ} р.")
             logger.info(f"Баланс пользователя {tg_id} пополнен на {summ} р.")
-            # TODO Обновить кэш пользователя после пополнения баланса
-        except Exception:
-            err_msg = err_ms.error_balance_for_admin()
+
+        except Exception as e:
+            err_msg = err_ms.error_balance_for_admin(e)
             await callback.message.answer(err_msg)
 
     # отклонение перевода

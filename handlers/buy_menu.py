@@ -17,21 +17,9 @@ router = Router()
 async def buy_handler(message: types.Message | types.CallbackQuery, session: Any) -> None:
     tg_id = str(message.from_user.id)
 
-    # TODO test version
-    user_with_conn = await AsyncOrm.get_user_with_connection_list(tg_id, session)
+    user_balance: int = await AsyncOrm.get_user_balance(tg_id, session)
 
-    # TODO prod version
-    # cached_data = r.get(f"profile:{tg_id}")
-    # if cached_data:
-    #     # from cache
-    #     user_with_conn = UserConnList.model_validate_json(cached_data)
-    # else:
-    #     # from DB
-    #     user_with_conn = await AsyncOrm.get_user_with_connection_list(tg_id, session)
-    #     user_with_conn_json = user_with_conn.model_dump_json()
-    #     r.setex(f"profile:{tg_id}", 300, user_with_conn_json)
-
-    msg = ms.buy_message(user_with_conn)
+    msg = ms.buy_message(user_balance)
 
     if type(message) == types.Message:
         await message.answer(msg, reply_markup=kb.buy_keyboard().as_markup())

@@ -23,19 +23,7 @@ async def extend_key_menu_handler(callback: types.CallbackQuery, session: Any) -
     """Меню продления ключа"""
     tg_id = str(callback.from_user.id)
 
-    # TODO test version
     user_with_conns = await AsyncOrm.get_user_with_connection_list(tg_id, session, need_trial=False)
-
-    # TODO prod version
-    # cached_data = r.get(f"extend_key:{tg_id}")
-    # if cached_data:
-    #     # from cache
-    #     user_with_conn = UserConnList.model_validate_json(cached_data)
-    # else:
-    #     # from DB
-    #     user_with_conn = await AsyncOrm.get_user_with_connection_list(tg_id, session, need_trial=False)
-    #     user_with_conn_json = user_with_conn.model_dump_json()
-    #     r.setex(f"extend_key:{tg_id}", 300, user_with_conn_json)
 
     msg = ms.extend_key_menu_message(user_with_conns)
     await callback.message.edit_text(msg, reply_markup=kb.extend_key_menu_keyboard(user_with_conns).as_markup())
@@ -47,33 +35,8 @@ async def extend_key_period_handler(callback: types.CallbackQuery, session: Any)
     tg_id = str(callback.from_user.id)
     email = callback.data.split("|")[1]
 
-    # TODO test version
     user_with_conns = await AsyncOrm.get_user_with_connection_list(tg_id, session, need_trial=False)
-
-    # TODO prod version
-    # cached_data = r.get(f"extend_key:{tg_id}")
-    # if cached_data:
-    #     # from cache
-    #     user_with_conn = UserConnList.model_validate_json(cached_data)
-    # else:
-    #     # from DB
-    #     user_with_conn = await AsyncOrm.get_user_with_connection_list(tg_id, session, need_trial=False)
-    #     user_with_conn_json = user_with_conn.model_dump_json()
-    #     r.setex(f"extend_key:{tg_id}", 300, user_with_conn_json)
-
-    # TODO test version
     conn_server = await AsyncOrm.get_connection_server(email, session)
-
-    # TODO prod version
-    # cached_data = r.get(f"conn_server:{email}")
-    # if cached_data:
-    #     # from cache
-    #     conn_server = ConnectionServer.model_validate_json(cached_data)
-    # else:
-    #     # from DB
-    #     conn_server = await AsyncOrm.get_connection_server(email, session)
-    #     conn_server_json = conn_server.model_dump_json()
-    #     r.setex(f"extend_key:{tg_id}", 100, conn_server_json)
 
     msg = ms.extend_key_period_message(user_with_conns.balance, conn_server.description, conn_server.active,
                                        conn_server.expire_date, conn_server.region)
@@ -88,33 +51,8 @@ async def extend_key_confirm_handler(callback: types.CallbackQuery, session: Any
     email = callback.data.split("|")[2]
     price = settings.price_list[period]
 
-    # TODO test version
     user_with_conns = await AsyncOrm.get_user_with_connection_list(tg_id, session, need_trial=False)
-
-    # TODO prod version
-    # cached_data = r.get(f"extend_key:{tg_id}")
-    # if cached_data:
-    #     # from cache
-    #     user_with_conn = UserConnList.model_validate_json(cached_data)
-    # else:
-    #     # from DB
-    #     user_with_conn = await AsyncOrm.get_user_with_connection_list(tg_id, session, need_trial=False)
-    #     user_with_conn_json = user_with_conn.model_dump_json()
-    #     r.setex(f"extend_key:{tg_id}", 300, user_with_conn_json)
-
-    # TODO test version
     conn_server = await AsyncOrm.get_connection_server(email, session)
-
-    # TODO prod version
-    # cached_data = r.get(f"conn_server:{email}")
-    # if cached_data:
-    #     # from cache
-    #     conn_server = ConnectionServer.model_validate_json(cached_data)
-    # else:
-    #     # from DB
-    #     conn_server = await AsyncOrm.get_connection_server(email, session)
-    #     conn_server_json = conn_server.model_dump_json()
-    #     r.setex(f"extend_key:{tg_id}", 100, conn_server_json)
 
     # достаточно средств
     if user_with_conns.balance >= price:
@@ -135,39 +73,14 @@ async def extend_key_handler(callback: types.CallbackQuery, session: Any) -> Non
     email = callback.data.split("|")[2]
     price = settings.price_list[period]
 
-    # TODO test version
     user_with_conns = await AsyncOrm.get_user_with_connection_list(tg_id, session)
-
-    # TODO prod version
-    # cached_data = r.get(f"profile:{tg_id}")
-    # if cached_data:
-    #     # from cache
-    #     user_with_conn = UserConnList.model_validate_json(cached_data)
-    # else:
-    #     # from DB
-    #     user_with_conn = await AsyncOrm.get_user_with_connection_list(tg_id, session)
-    #     user_with_conn_json = user_with_conn.model_dump_json()
-    #     r.setex(f"profile:{tg_id}", 300, user_with_conn_json)
-
-    # подготовка данных для обновления connection
-    # TODO test version
     conn_server = await AsyncOrm.get_connection_server(email, session)
-
-    # TODO prod version
-    # cached_data = r.get(f"conn_server:{email}")
-    # if cached_data:
-    #     # from cache
-    #     conn_server = ConnectionServer.model_validate_json(cached_data)
-    # else:
-    #     # from DB
-    #     conn_server = await AsyncOrm.get_connection_server(email, session)
-    #     conn_server_json = conn_server.model_dump_json()
-    #     r.setex(f"extend_key:{tg_id}", 100, conn_server_json)
 
     # ключ еще не просрочен (не меняем start_date)
     if conn_server.expire_date >= datetime.datetime.now():
         new_expire_date = conn_server.expire_date + datetime.timedelta(days=int(period)*30)
         new_start_date = conn_server.start_date
+
     # просроченный ключ (start_date = now)
     else:
         new_expire_date = datetime.datetime.now() + datetime.timedelta(days=int(period)*30)
@@ -187,13 +100,8 @@ async def extend_key_handler(callback: types.CallbackQuery, session: Any) -> Non
         conn_id: int = await AsyncOrm.get_connection_id(conn_server.email, session)
         await AsyncOrm.init_payment(tg_id, price, datetime.datetime.now(), f"KEY_{conn_id}", session)
 
-        # TODO обновить кэш
-        # user_with_conns = await AsyncOrm.get_user_with_connection_list(tg_id, session)
-        # user_with_conn_json = user_with_conns.model_dump_json()
-        # r.setex(f"profile:{tg_id}", 300, user_with_conn_json)
-
-        # conn_server_json = conn_server.model_dump_json()
-        # r.setex(f"extend_key:{tg_id}", 100, conn_server_json)
+        # удаляем кэш
+        r.delete(f"user_conn_server:{tg_id}")
 
     except Exception:
         error_msg = err_ms.error_msg()

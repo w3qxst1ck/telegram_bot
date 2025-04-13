@@ -35,7 +35,7 @@ def payment_confirm_admin_keyboard(tg_id: str, summ: str, payment_id: int) -> In
     return keyboard
 
 
-def not_enough_balance_ney_key_keyboard(country: str) -> InlineKeyboardBuilder:
+def not_enough_balance_new_key_keyboard(country: str) -> InlineKeyboardBuilder:
     """Клавиатура для сообщения при недостаточном балансе при покупке"""
     keyboard = InlineKeyboardBuilder()
 

@@ -22,19 +22,7 @@ async def delete_key_menu(callback: types.CallbackQuery, session: Any) -> None:
     """Меню выбора какой ключ удалить"""
     tg_id = str(callback.from_user.id)
 
-    # TODO test version
     user_with_conns = await AsyncOrm.get_user_with_connection_list(tg_id, session, need_trial=False)
-
-    # TODO prod version
-    # cached_data = r.get(f"extend_key:{tg_id}")
-    # if cached_data:
-    #     # from cache
-    #     user_with_conn = UserConnList.model_validate_json(cached_data)
-    # else:
-    #     # from DB
-    #     user_with_conn = await AsyncOrm.get_user_with_connection_list(tg_id, session, need_trial=False)
-    #     user_with_conn_json = user_with_conn.model_dump_json()
-    #     r.setex(f"extend_key:{tg_id}", 300, user_with_conn_json)
 
     msg = ms.delete_key_menu(user_with_conns)
 
@@ -46,7 +34,6 @@ async def delete_key_confirmation(callback: types.CallbackQuery, session: Any) -
     """Подтверждение удаления выбранного ключа"""
     email = callback.data.split("|")[1]
 
-    # TODO cache
     conn_server = await AsyncOrm.get_connection_server(email, session)
     msg = ms.confirm_delete_key(conn_server)
 
@@ -57,12 +44,11 @@ async def delete_key_confirmation(callback: types.CallbackQuery, session: Any) -
 async def delete_key(callback: types.CallbackQuery, session: Any) -> None:
     """Удаление ключа"""
     wait_msg = await callback.message.edit_text("Запрос выполняется...⏳")
+    tg_id = callback.from_user.id
 
     email = callback.data.split("|")[1]
 
     try:
-        # TODO cache
-
         # удаление с панели
         conn_server = await AsyncOrm.get_connection_server(email, session)
         server = await AsyncOrm.get_server(conn_server.server_id, session)
@@ -75,9 +61,10 @@ async def delete_key(callback: types.CallbackQuery, session: Any) -> None:
         msg = ms.key_deleted()
         await wait_msg.edit_text(msg, reply_markup=to_menu_keyboard().as_markup())
 
-        logger.info(f"Пользователь {callback.from_user.id} удалил ключ {email}")
+        # удаление записи в кэше
+        r.delete(f"user_conn_server:{tg_id}")
 
-        # TODO refresh cache
+        logger.info(f"Пользователь {tg_id} удалил ключ {email}")
 
     except Exception:
         err_msg = err_ms.general_error_msg()

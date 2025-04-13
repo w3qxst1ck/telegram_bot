@@ -2,7 +2,7 @@ import aiogram
 from aiogram import Router, types, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.types import BufferedInputFile, FSInputFile
+from aiogram.types import FSInputFile
 from aiogram.utils.deep_linking import create_start_link
 from aiogram.utils.media_group import MediaGroupBuilder
 
@@ -10,8 +10,6 @@ from handlers.buttons import commands as cmd
 from handlers.keyboards import menu as menu_kb
 from handlers.messages import users as ms
 from handlers.keyboards import users as kb
-from settings import settings
-from utils.invite_link import generate_invite_link
 
 router = Router()
 
@@ -75,7 +73,7 @@ async def main_menu(
     name: str = message.from_user.first_name if message.from_user.first_name else message.from_user.username
 
     tg_id = str(message.from_user.id)
-    invite_link = await generate_invite_link(tg_id, bot)
+    invite_link = await create_start_link(bot, tg_id, encode=True)
 
     msg = f"Рады видеть тебя, <b>{name}</b>!\n\n" \
           "<i>Твоя ссылка для приглашения</i>\n" \

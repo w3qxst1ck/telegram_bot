@@ -4,9 +4,9 @@ import aiogram
 from aiogram import Router, types
 from aiogram.filters import Command
 from aiogram.types import BufferedInputFile
+from aiogram.utils.deep_linking import create_start_link
 
 from handlers.buttons import commands as cmd
-from utils.invite_link import generate_invite_link
 from handlers.messages import referral as ms
 
 router = Router()
@@ -17,7 +17,7 @@ async def referral_info(message: types.Message, bot: aiogram.Bot) -> None:
     """Отправляет информацию о реферальной программе"""
     tg_id = str(message.from_user.id)
 
-    invite_link = await generate_invite_link(tg_id, bot)
+    invite_link = await create_start_link(bot, tg_id, encode=True)
     msg = ms.referral_info_message(invite_link)
 
     # await message.answer(msg)
@@ -28,5 +28,3 @@ async def referral_info(message: types.Message, bot: aiogram.Bot) -> None:
                 photo=BufferedInputFile(image_buffer.read(), filename="start.png"),
                 caption=msg,
             )
-
-
