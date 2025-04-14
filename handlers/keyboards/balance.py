@@ -11,6 +11,7 @@ def payment_confirm_keyboard(summ: str) -> InlineKeyboardBuilder:
         InlineKeyboardButton(
             text="Оплатил(а)", callback_data=f"paid|{summ}")
     )
+    keyboard.row(InlineKeyboardButton(text="❌ Отмена", callback_data="button_cancel"))
 
     return keyboard
 
@@ -22,6 +23,7 @@ def choose_payment_method_keyboard() -> InlineKeyboardBuilder:
     if settings.need_payment_service:
         keyboard.row(InlineKeyboardButton(text="Картой", callback_data=f"pay_method_card"))
 
+    keyboard.row(InlineKeyboardButton(text="❌ Отмена", callback_data="button_cancel"))
     return keyboard
 
 
