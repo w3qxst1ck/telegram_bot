@@ -709,3 +709,42 @@ class AsyncOrm:
 
         except Exception as e:
             logger.error(f"Ошибка при получении количества подтвержденных платежей пользователя {tg_id}: {e}")
+
+    @staticmethod
+    async def create_payment(tg_id: str,
+                             amount: int,
+                             description: str,
+                             status: bool,
+                             created_at: datetime.datetime,
+                             session: Any) -> None:
+        """Создание платежа"""
+        try:
+            await session.execute(
+                """
+                INSERT INTO payments (created_at, amount, status, description, user_tg_id)
+                VALUES ($1, $2, $3, $4, $5)
+                """,
+                created_at, amount, status, description, tg_id)
+
+            logger.info(f"Создан платеж пользователя {tg_id} на сумму {amount}")
+
+        except Exception as e:
+            logger.error(f"Ошибка покупки создании платежа пользователя {tg_id}: {e}")
+
+    @staticmethod
+    async def up_balance(tg_id: str, summ: int, session: Any) -> None:
+        """Пополнение баланса"""
+        try:
+            await session.execute(
+                """
+                UPDATE users
+                SET balance = balance + $1
+                WHERE tg_id=$2
+                """,
+                summ, tg_id
+            )
+            logger.info(f"Баланс пользователя {tg_id} пополнен на сумму {summ} р.")
+
+        except Exception as e:
+            logger.error(f"Ошибка при пополнении баланса пользователя {tg_id} на сумму {summ}: {e}")
+            raise

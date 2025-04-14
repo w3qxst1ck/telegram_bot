@@ -4,7 +4,7 @@ from typing import Any
 from aiogram import Router, types, F, Bot
 from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramBadRequest
-from aiogram.filters import StateFilter, Command
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
 from database.orm import AsyncOrm
@@ -14,7 +14,6 @@ from handlers.keyboards.menu import to_menu_keyboard
 from handlers.messages import balance as ms
 from handlers.messages import errors as err_ms
 from handlers.states.buy import UpBalanceFSM
-from handlers.buy_menu import buy_handler
 from settings import settings
 from utils.validations import is_valid_summ
 from logger import logger
@@ -26,7 +25,29 @@ router = Router()
 @router.message(Command(f"{cmd.BALANCE[0]}"))
 @router.callback_query(F.data == "menu|balance")
 async def balance_handler(message: types.CallbackQuery | types.Message, state: FSMContext, session: Any) -> None:
-    """Пополнение баланса. Начало UpBalanceFSM"""
+    """Пополнение баланса. Выбор способа оплаты"""
+    # сброс state в случае возврата из введенной суммы
+    if type(message) == types.CallbackQuery:
+        try:
+            await state.clear()
+        except Exception:
+            pass
+
+    tg_id = str(message.from_user.id)
+
+    user_balance = await AsyncOrm.get_user_balance(tg_id, session)
+
+    text = f"💰 Ваш баланс: <b>{user_balance} р.</b>\n\nВыберите способ оплаты"
+
+    if type(message) == types.Message:
+        await message.answer(text, reply_markup=kb.choose_payment_method_keyboard(need_back_button=False).as_markup())
+    else:
+        await message.message.edit_text(text, reply_markup=kb.choose_payment_method_keyboard().as_markup())
+
+
+@router.callback_query(F.data == "pay_method_transfer")
+async def balance_handler(message: types.CallbackQuery, state: FSMContext, session: Any) -> None:
+    """Выбор суммы перевода на карту. Начало UpBalanceFSM"""
     tg_id = str(message.from_user.id)
 
     user_balance = await AsyncOrm.get_user_balance(tg_id, session)
@@ -35,17 +56,14 @@ async def balance_handler(message: types.CallbackQuery | types.Message, state: F
 
     text = f"💰 Ваш баланс: <b>{user_balance} р.</b>\n\nВведите сумму, на которую хотите пополнить баланс"
 
-    if type(message) == types.Message:
-        msg = await message.answer(text, reply_markup=kb.cancel_keyboard().as_markup())
-    else:
-        msg = await message.message.edit_text(text, reply_markup=kb.back_to_menu_from_balance().as_markup())
+    msg = await message.message.edit_text(text, reply_markup=kb.back_to_choose_payment_method().as_markup())
 
     await state.update_data(prev_mess=msg)
 
 
 @router.message(UpBalanceFSM.summ)
-async def choose_pay_method_handler(message: types.Message, state: FSMContext) -> None:
-    """Выбор способа оплаты"""
+async def confirm_up_balance_handler(message: types.Message, state: FSMContext) -> None:
+    """Подтверждение пополнения баланса. Конец UpBalanceFSM"""
     data = await state.get_data()
     try:
         await data["prev_mess"].delete()
@@ -53,37 +71,20 @@ async def choose_pay_method_handler(message: types.Message, state: FSMContext) -
         pass
 
     summ = message.text
+    # в случае не валидной суммы
     if not is_valid_summ(summ):
         msg = await message.answer(f"Указан неверный формат\n\n"
                                    f"Необходимо указать сумму одним <b>числом</b> без букв, знаков препинания "
                                    f"и других специальных символов (например: 300)\n"
                                    f"Сумма не может быть меньше {settings.price_list['1']}",
-                                   reply_markup=kb.cancel_keyboard().as_markup())
+                                   reply_markup=kb.back_to_choose_payment_method().as_markup())
         await state.update_data(prev_mess=msg)
         return
-    else:
-        # await state.clear()
-        # invoice_message = ms.invoice_message(summ, str(message.from_user.id))
-        msg = "Выберите способ оплаты"
-        prev_mess = await message.answer(
-            msg,
-            reply_markup=kb.choose_payment_method_keyboard().as_markup(),
-            parse_mode=ParseMode.MARKDOWN_V2
-        )
-        await state.update_data(prev_mess=prev_mess)
-        await state.update_data(summ=summ)
-        await state.set_state(UpBalanceFSM.method)
 
-
-@router.callback_query(F.data == "pay_method_transfer", UpBalanceFSM.method)
-async def confirm_up_balance_handler(callback: types.CallbackQuery, state: FSMContext) -> None:
-    """Подтверждение пополнения баланса. Конец UpBalanceFSM"""
-    data = await state.get_data()
-    summ = data["summ"]
     await state.clear()
 
-    invoice_message = ms.invoice_message(summ, str(callback.from_user.id))
-    await callback.message.edit_text(
+    invoice_message = ms.invoice_message(summ, str(message.from_user.id))
+    await message.answer(
         invoice_message,
         reply_markup=kb.payment_confirm_keyboard(summ).as_markup(),
         parse_mode=ParseMode.MARKDOWN_V2
@@ -117,10 +118,3 @@ async def balance_paid_handler(callback: types.CallbackQuery, bot: Bot, session:
     except Exception:
         error_msg = err_ms.error_balance_msg()
         await callback.message.edit_text(error_msg, reply_markup=to_menu_keyboard().as_markup())
-
-
-@router.callback_query(lambda callback: callback.data == "button_cancel", StateFilter("*"))
-async def cancel_handler(callback: types.CallbackQuery, state: FSMContext):
-    """Cancel FSM and delete last message"""
-    await state.clear()
-    await callback.message.delete()

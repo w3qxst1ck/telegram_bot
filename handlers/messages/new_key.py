@@ -6,7 +6,6 @@ from settings import settings
 from utils.date_time_service import convert_date_time
 from handlers.buttons import menu as btn
 from handlers.buttons import commands as cmd
-from handlers.buttons.regions import FLAGS, REGIONS
 
 
 def choose_country() -> str:
@@ -19,7 +18,7 @@ def choose_country() -> str:
 def new_key_message(balance: int) -> str:
     """Сообщение для покупки нового ключа"""
     message = f"💰 У вас на балансе <b>{balance} р.</b>\n\n" \
-               f"Стоимость ключа VPN <b>(100 ГБ в месяц)</b>\n" \
+               f"Стоимость ключа VPN (100 ГБ в месяц)\n" \
                f"• 1 месяц <b>{settings.price_list['1']} р.</b>\n" \
                f"• 3 месяца <b>{settings.price_list['3']} р.</b>\n" \
                f"• 6 месяцев <b>{settings.price_list['6']} р.</b>\n" \

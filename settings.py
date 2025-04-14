@@ -11,6 +11,13 @@ PRICES = {
     "12": 1200
 }
 
+STARS_PRICES = {
+    "50": 100,
+    "150": 300,
+    "300": 600,
+    "600": 1200
+}
+
 
 class Database(BaseSettings):
     postgres_user: str = Field(..., env='POSTGRES_USER')
@@ -47,6 +54,7 @@ class Settings(BaseSettings):
 
     trial_days: int = 1
     price_list: dict = PRICES
+    stars_price_list: dict = STARS_PRICES
     traffic_limit: int = 100
     extra_traffic_price: int = 100
     extra_traffic_size: int = 100

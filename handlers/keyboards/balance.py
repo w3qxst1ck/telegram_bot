@@ -11,19 +11,22 @@ def payment_confirm_keyboard(summ: str) -> InlineKeyboardBuilder:
         InlineKeyboardButton(
             text="Оплатил(а)", callback_data=f"paid|{summ}")
     )
-    keyboard.row(InlineKeyboardButton(text="❌ Отмена", callback_data="button_cancel"))
+    keyboard.row(InlineKeyboardButton(text=f"{btn.BACK}", callback_data="menu|balance"))
 
     return keyboard
 
 
-def choose_payment_method_keyboard() -> InlineKeyboardBuilder:
+def choose_payment_method_keyboard(need_back_button: bool = True) -> InlineKeyboardBuilder:
     """Выбор способа оплаты"""
     keyboard = InlineKeyboardBuilder()
-    keyboard.row(InlineKeyboardButton(text="Перевод на карту", callback_data=f"pay_method_transfer"))
+    keyboard.row(InlineKeyboardButton(text="Перевод на карту 💳", callback_data=f"pay_method_transfer"))
+    keyboard.row(InlineKeyboardButton(text="Звездами телеграм ⭐️", callback_data=f"pay_method_star"))
+
     if settings.need_payment_service:
         keyboard.row(InlineKeyboardButton(text="Картой", callback_data=f"pay_method_card"))
 
-    keyboard.row(InlineKeyboardButton(text="❌ Отмена", callback_data="button_cancel"))
+    if need_back_button:
+        keyboard.row(InlineKeyboardButton(text=f"{btn.BACK}", callback_data="menu"))
     return keyboard
 
 
@@ -57,15 +60,8 @@ def not_enough_balance_extend_key_keyboard(eamil: str) -> InlineKeyboardBuilder:
     return keyboard
 
 
-def cancel_keyboard() -> InlineKeyboardBuilder:
-    """Клавиатура для отмены пополнения баланса"""
+def back_to_choose_payment_method() -> InlineKeyboardBuilder:
+    """Возвращение в меню из перевода на карту в выбор способа оплаты"""
     keyboard = InlineKeyboardBuilder()
-    keyboard.row(InlineKeyboardButton(text="❌ Отмена", callback_data="button_cancel"))
-    return keyboard
-
-
-def back_to_menu_from_balance() -> InlineKeyboardBuilder:
-    """Возвращение в меню из баланса и сброс FSM"""
-    keyboard = InlineKeyboardBuilder()
-    keyboard.row(InlineKeyboardButton(text="❌ Отмена", callback_data="menu"))
+    keyboard.row(InlineKeyboardButton(text=f"{btn.BACK}", callback_data="menu|balance"))
     return keyboard
