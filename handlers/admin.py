@@ -55,7 +55,7 @@ async def confirm_decline_payment_handler(callback: types.CallbackQuery, bot: Bo
 
             # сообщение пользователю
             message_for_user = paid_confirmed_for_user(summ)
-            await bot.send_message(tg_id, message_for_user)
+            await bot.send_message(tg_id, message_for_user, message_effect_id="5104841245755180586")    # 🔥
 
             # обновляем кэш
             cache_data = r.get(f"user_conn_server:{tg_id}")

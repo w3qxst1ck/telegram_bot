@@ -162,10 +162,11 @@ async def new_key_create_handler(callback: types.CallbackQuery | types.Message, 
                 error_msg = err_ms.general_error_msg()
                 await callback.answer(error_msg)
 
-            await callback.answer(msg, reply_markup=to_menu_keyboard().as_markup(), parse_mode=ParseMode.MARKDOWN)
+            await callback.answer(msg, reply_markup=to_menu_keyboard().as_markup(), parse_mode=ParseMode.MARKDOWN,
+                                  message_effect_id="5046509860389126442")
 
         # создаем платеж в payments
-        await AsyncOrm.init_payment(tg_id, price, datetime.datetime.now(), f"KEY_{conn_id}", session)
+        await AsyncOrm.create_payment(tg_id, price, f"KEY_{conn_id}", True, datetime.datetime.now(),  session)
 
         # удаляем кэш
         r.delete(f"user_conn_server:{tg_id}")

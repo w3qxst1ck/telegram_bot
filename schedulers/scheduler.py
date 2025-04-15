@@ -6,6 +6,7 @@ import asyncpg
 from aiogram.enums import ParseMode
 
 from database.orm import AsyncOrm
+from cache import r
 from logger import logger
 from schemas.connection import Server
 from schemas.referrals import Referrals
@@ -96,6 +97,9 @@ async def off_expired_connections(session: Any, bot: aiogram.Bot) -> None:
                 message = ms.expire_key(conn)
                 await bot.send_message(conn.tg_id, message, parse_mode=ParseMode.MARKDOWN)
 
+            # удаляем кэш
+            r.delete(f"user_conn_server:{conn.tg_id}")
+
 
 async def check_ref_links_and_add_bonus(session: Any, bot: aiogram.Bot) -> None:
     """Начисляет бонус за реферальную программу"""
@@ -113,7 +117,7 @@ async def check_ref_links_and_add_bonus(session: Any, bot: aiogram.Bot) -> None:
 
             # оповещаем пользователя
             msg = ms.get_money_for_ref_message(ref.to_user_id)
-            await bot.send_message(ref.from_user_id, msg)
+            await bot.send_message(ref.from_user_id, msg, message_effect_id="5104841245755180586")  # 🔥
 
 
 async def refresh_current_traffic(session: Any, bot: aiogram.Bot) -> None:
@@ -132,6 +136,9 @@ async def refresh_current_traffic(session: Any, bot: aiogram.Bot) -> None:
 
             # скидывает трафик
             await service.refresh_client_current_traffic(server=server, client_email=conn.email)
+
+            # удаляем кэш
+            r.delete(f"user_conn_server:{conn.tg_id}")
 
             # оповещаем пользователя об обновлении трафика
             message = ms.refresh_key_traffic(conn)

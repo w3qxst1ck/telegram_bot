@@ -669,7 +669,7 @@ class AsyncOrm:
                     INSERT INTO payments (created_at, amount, status, description, user_tg_id)
                     VALUES ($1, $2, $3, $4, $5)
                     """,
-                    datetime.datetime.now(), amount, True, "REF", from_tg_id
+                    datetime.datetime.now(), amount, True, f"REF_{tg_id}", from_tg_id
                 )
                 logger.info(f"Пользователю {from_tg_id} начислен бонус за использование реф. ссылки пользователем "
                             f"{tg_id}")
@@ -701,7 +701,7 @@ class AsyncOrm:
             query = await session.fetchval(
                 """
                 SELECT COUNT(*) FROM payments
-                WHERE user_tg_id=$1 AND status=true
+                WHERE user_tg_id=$1 AND description IN ('STARS', 'ADD') AND status=true  
                 """,
                 tg_id
             )

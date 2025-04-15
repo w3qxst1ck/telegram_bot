@@ -20,9 +20,13 @@ async def user_payments_message(payments: list[Payments], balance: int, session:
         date, time = convert_date_time(payment.created_at, with_tz=True)
         pay_type = payment.description.split("_")[0]
 
-        # пополнение баланса
+        # пополнение баланса переводом
         if pay_type == "ADD":
             message += f"<b>{count}</b>. Пополнение <b>+{payment.amount} р. </b>{time} <b>{date}</b>\n{'✅ Платеж подтвержден' if payment.status else '❌ Не подтвержден'}\n\n"
+
+        # пополнение баланса звездами
+        elif pay_type == "STARS":
+            message += f"<b>{count}</b>. Пополнение <b>+{payment.amount} р. </b>{time} <b>{date}</b>\n✅ Оплата телеграм звездами\n\n"
 
         # пополнения по реферальным ссылкам
         elif pay_type == "REF":

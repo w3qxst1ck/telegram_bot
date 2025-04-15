@@ -29,8 +29,7 @@ async def balance_handler(callback: types.CallbackQuery, session: Any) -> None:
             await callback.message.delete()
         except Exception:
             pass
-        await callback.message.answer(msg, reply_markup=kb.choose_star_count_keyboard().as_markup(),
-                                      message_effect_id="5104841245755180586")
+        await callback.message.answer(msg, reply_markup=kb.choose_star_count_keyboard().as_markup())
 
 
 @router.callback_query(F.data.split("|")[0] == "stars")

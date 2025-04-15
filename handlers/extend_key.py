@@ -98,7 +98,7 @@ async def extend_key_handler(callback: types.CallbackQuery, session: Any) -> Non
 
         # создаем платеж в payments
         conn_id: int = await AsyncOrm.get_connection_id(conn_server.email, session)
-        await AsyncOrm.init_payment(tg_id, price, datetime.datetime.now(), f"KEY_{conn_id}", session)
+        await AsyncOrm.create_payment(tg_id, price, f"KEY_{conn_id}", True, datetime.datetime.now(), session)
 
         # удаляем кэш
         r.delete(f"user_conn_server:{tg_id}")

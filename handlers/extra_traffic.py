@@ -74,11 +74,12 @@ async def confirm_buy_extra_traffic(callback: types.CallbackQuery, session: Any)
             await waiting_mess.edit_text(msg, reply_markup=to_menu_keyboard().as_markup())
 
             # создаем платеж в payments
-            await AsyncOrm.init_payment(
+            await AsyncOrm.create_payment(
                 tg_id,
                 settings.extra_traffic_price,
-                datetime.datetime.now(),
                 f"TRAF_{conn_id}",
+                True,
+                datetime.datetime.now(),
                 session
             )
 
