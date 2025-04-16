@@ -5,6 +5,7 @@ from schemas.connection import Connection
 from utils.date_time_service import convert_date_time
 from logger import logger
 from database.orm import AsyncOrm
+from pydantic import ValidationError
 
 
 async def user_payments_message(payments: list[Payments], balance: int, session: Any) -> str:
@@ -37,6 +38,12 @@ async def user_payments_message(payments: list[Payments], balance: int, session:
             try:
                 connection: Connection = await AsyncOrm.get_connection_by_id(int(payment.description.split("_")[1]), session)
                 message += f"{count}. Списание <b>-{payment.amount} р. </b>{time} <b>{date}</b>\n🔻 Оплата ключа \"{connection.description}\"\n\n"
+
+            # при удаленном ключе
+            except ValidationError:
+                message += f"{count}. Списание <b>-{payment.amount} р. </b>{time} <b>{date}</b>\n🔻 Оплата ключа\n\n"
+
+            # при неожиданной ошибке
             except Exception as e:
                 count -= 1
                 logger.error(f"Ошибка при парсинге платежа по ключу: {e}")
@@ -45,6 +52,12 @@ async def user_payments_message(payments: list[Payments], balance: int, session:
             try:
                 connection: Connection = await AsyncOrm.get_connection_by_id(int(payment.description.split("_")[1]), session)
                 message += f"{count}. Списание <b>-{payment.amount} р. </b>{time} <b>{date}</b>\n🔻 Обнуление трафика ключа \"{connection.description}\"\n\n"
+
+            # при удаленном ключе
+            except ValidationError:
+                message += f"{count}. Списание <b>-{payment.amount} р. </b>{time} <b>{date}</b>\n🔻 Обнуление трафика ключа\n\n"
+
+            # при неожиданной ошибке
             except Exception as e:
                 count -= 1
                 logger.error(f"Ошибка при парсинге платежа по ключу: {e}")

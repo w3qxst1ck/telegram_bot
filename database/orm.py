@@ -1,5 +1,6 @@
 import datetime
 from collections.abc import Mapping
+from pydantic import ValidationError
 from typing import Any, List
 
 import asyncpg
@@ -36,9 +37,10 @@ class AsyncOrm:
     async def create_user(user: UserAdd, session: Any) -> None:
         """Создание пользователя"""
         try:
+            created_at = datetime.datetime.now()
             await session.execute("""
-                INSERT INTO users (tg_id, username, firstname, lastname, balance, trial_used)
-                VALUES ($1, $2, $3, $4, $5, $6)
+                INSERT INTO users (tg_id, username, firstname, lastname, balance, trial_used, created_at)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
                 ON CONFLICT (tg_id) DO NOTHING
                 """,
                                   user.tg_id,
@@ -47,6 +49,7 @@ class AsyncOrm:
                                   user.lastname,
                                   user.balance,
                                   user.trial_used,
+                                  created_at
                                   )
         except Exception as e:
             logger.error(f"Ошибка при создании пользователя {user.tg_id} "
@@ -87,7 +90,7 @@ class AsyncOrm:
                 """,
                 tg_id, active, start_date, expire_date, is_trial, email, key, description, server_id
             )
-            logger.info(f"Создан коннект с ключом {key} для пользователя {tg_id}")
+
         except Exception as e:
             logger.error(f"Ошибка при создании подключения {tg_id}: {e}")
 
@@ -269,6 +272,10 @@ class AsyncOrm:
             )
             conn = Connection.model_validate(row)
             return conn
+
+        except ValidationError:
+            raise
+
         except Exception as e:
             logger.error(f"Ошибка получения connection с id {conn_id}: {e}")
 

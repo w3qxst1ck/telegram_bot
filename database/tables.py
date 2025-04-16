@@ -28,7 +28,7 @@ class User(Base):
     lastname: Mapped[str] = mapped_column(nullable=True)
     balance: Mapped[int] = mapped_column(default=0)
     trial_used: Mapped[bool] = mapped_column(default=False)
-    created_at: Mapped[datetime.datetime] = mapped_column(server_default=text("TIMEZONE('utc-3', now())"))
+    created_at: Mapped[datetime.datetime]
 
     payments: Mapped[list["Payment"]] = relationship(back_populates="user")
 

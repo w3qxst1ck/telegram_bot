@@ -3,7 +3,6 @@ import uuid
 from typing import Any
 
 from aiogram import Router, types, F
-from aiogram.filters import Command
 from aiogram.enums import ParseMode
 
 from database.orm import AsyncOrm
@@ -12,6 +11,7 @@ from handlers.keyboards import menu as menu_kb
 from schemas.connection import Server
 from services import service
 from utils.servers_load import get_less_loaded_server
+from logger import logger
 
 
 TRIAL_KEY_DESCRIPTION = "🎁 Пробный"
@@ -75,3 +75,5 @@ async def send_trial_key(message: types.CallbackQuery, session: Any) -> None:
         reply_markup=menu_kb.to_menu_keyboard().as_markup(),
         parse_mode=ParseMode.MARKDOWN
     )
+
+    logger.info(f"Создан пробный коннект с ключом {trial_key} для пользователя {tg_id}")

@@ -104,18 +104,3 @@ async def send_hello_message(message: types.Message, admin: bool, state: FSMCont
                 await main_menu(message, admin, state, bot)
 
 
-async def create_user_if_not_exists(tg_id: str, message: types.Message, session: Any) -> None:
-    """Создает пользователя в БД, если он не зарегистрирован"""
-    user_exists: bool = await AsyncOrm.check_user_already_exists(tg_id, session)
-
-    if not user_exists:
-        user: UserAdd = UserAdd(
-            tg_id=tg_id,
-            username=message.from_user.username,
-            firstname=message.from_user.first_name,
-            lastname=message.from_user.last_name,
-            balance=0,
-            trial_used=False
-        )
-        await AsyncOrm.create_user(user, session)
-
