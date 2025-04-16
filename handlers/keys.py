@@ -14,7 +14,7 @@ from schemas.user import UserConnList
 from handlers.messages.keys import keys_message
 from handlers.keyboards import keys as kb
 from handlers.buttons import commands as cmd
-from services.service import get_client_traffic, get_client_traffic_for_all_keys
+from services.service import get_client_traffic_for_all_keys
 
 
 router = Router()
@@ -32,12 +32,6 @@ async def profile(message: types.Message | types.CallbackQuery, session: Any):
         waiting_msg = await message.answer("Запрос выполняется...⏳")
     else:
         await message.message.edit_text("Запрос выполняется...⏳")
-
-    # todo test version
-    # user_with_conn = await AsyncOrm.get_user_with_connection_list(tg_id, session)
-
-    # FAST VERSION 2.55
-    # user_with_conn.connections = await get_client_traffic_for_all_keys(user_with_conn.connections, session)
 
     # todo prod version
     cached_data = r.get(f"user_conn_server:{tg_id}")

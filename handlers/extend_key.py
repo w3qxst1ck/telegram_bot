@@ -1,17 +1,15 @@
 import datetime
-import uuid
 from typing import Any
 
 from aiogram import Router, types, F
 from handlers.keyboards import extend_key as kb
 from database.orm import AsyncOrm
-from schemas.connection import Connection, ConnectionServer
 from handlers.messages import extend_key as ms
 from handlers.messages import errors as err_ms
 from handlers.messages.balance import not_enough_balance_message
 from handlers.keyboards.balance import not_enough_balance_extend_key_keyboard
 from cache import r
-from schemas.user import UserConnList
+from logger import logger
 from settings import settings
 from handlers.keyboards.menu import to_menu_keyboard
 
@@ -102,6 +100,8 @@ async def extend_key_handler(callback: types.CallbackQuery, session: Any) -> Non
 
         # удаляем кэш
         r.delete(f"user_conn_server:{tg_id}")
+
+        logger.info(f"Пользователь {tg_id} продлил ключ {email} до {new_expire_date}")
 
     except Exception:
         error_msg = err_ms.error_msg()

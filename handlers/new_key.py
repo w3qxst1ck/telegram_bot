@@ -9,6 +9,7 @@ from aiogram.fsm.context import FSMContext
 
 import schemas.user
 from handlers.keyboards import new_key as kb
+from logger import logger
 from handlers.states.new_key import KeyDescriptionFSM
 from handlers.keyboards.balance import not_enough_balance_new_key_keyboard
 from handlers.keyboards.menu import to_menu_keyboard
@@ -171,6 +172,8 @@ async def new_key_create_handler(callback: types.CallbackQuery | types.Message, 
         # удаляем кэш
         r.delete(f"user_conn_server:{tg_id}")
 
+        logger.info(f"Пользователь {tg_id} купил новый ключ сроком до {new_conn.expire_date}")
+
     except Exception:
         error_msg = err_ms.error_msg()
         if type(callback) == types.CallbackQuery:
@@ -196,7 +199,7 @@ def convert_key(key: str, description: str) -> str:
 def get_default_description(user_with_conns: UserConnList, region: str) -> str:
     """Создание автоматического описания"""
     descriptions = [conn.description for conn in user_with_conns.connections]
-    new_description = region + f"-{len(user_with_conns.connections)}"
+    new_description = region + f"-{len(user_with_conns.connections)+1}"
 
     counter = 1
     while new_description in descriptions:

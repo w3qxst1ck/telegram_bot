@@ -204,11 +204,11 @@ class AsyncOrm:
                     """,
                     balance, c.tg_id
                 )
-                logger.info(f"Пользователь {c.tg_id} купил новый ключ сроком до {c.expire_date}")
+
                 return conn_id
 
         except Exception as e:
-            logger.error(f"Ошибка покупки ключа пользователя {c.tg_id}: {e}")
+            logger.error(f"Ошибка создания connection и списания средств с баланся пользователя {c.tg_id}: {e}")
             raise
 
     @staticmethod
@@ -236,7 +236,7 @@ class AsyncOrm:
                     """,
                     balance, tg_id
                 )
-                logger.info(f"Пользователь {tg_id} продлил ключ {email} до {expire_date}")
+
         except Exception as e:
             logger.error(f"Ошибка продления ключа {email} пользователя {tg_id}: {e}")
             raise
@@ -726,7 +726,7 @@ class AsyncOrm:
                 """,
                 created_at, amount, status, description, tg_id)
 
-            logger.info(f"Создан платеж пользователя {tg_id} на сумму {amount}")
+            logger.info(f"Создан платеж пользователя {tg_id} на сумму {amount} р.")
 
         except Exception as e:
             logger.error(f"Ошибка покупки создании платежа пользователя {tg_id}: {e}")
@@ -743,7 +743,6 @@ class AsyncOrm:
                 """,
                 summ, tg_id
             )
-            logger.info(f"Баланс пользователя {tg_id} пополнен на сумму {summ} р.")
 
         except Exception as e:
             logger.error(f"Ошибка при пополнении баланса пользователя {tg_id} на сумму {summ}: {e}")
