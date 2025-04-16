@@ -83,10 +83,6 @@ router = Router()
 #         "currency": "RUB", "provider_token": settings.payment_token,
 #         "prices": [LabeledPrice(label="Пополнение", amount=summ * 100)],
 #         "protect_content": True,
-#         "photo_url": "https://i0.wp.com/blogrevamp.cashfree.com/wp-content/uploads/2023/07/Payment-Success-Rate.png?fit=1200%2C800&ssl=1",
-#         "photo_height": 512,
-#         "photo_width": 512,
-#         "photo_size": 512,
 #     }
 #
 #     return payment_invoice
