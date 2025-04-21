@@ -1,11 +1,12 @@
 from handlers.buttons.commands import HELP, BALANCE
 from handlers.buttons.menu import NOTIFICATION
+from settings import settings
 
 
 def invoice_message(summ: str, tg_id: str) -> str:
     """Сообщение о переводе денег"""
     message = f"Для зачисления суммы на баланс необходимо перевести {summ} р\. по указанным реквизитам \(нажмите, чтобы скопировать реквизиты\)\n\n" \
-              f"`0000 0000 0000 0000`\nАлександр \(Т\-Банк\)\n\n"\
+              f"`{settings.card}`\n{settings.card_name} \(Т\-Банк\)\n\n"\
               f"❗*ВАЖНО*: \n" \
               f"В комментарии к оплате укажите число *{tg_id}* для идентификации и подтверждения вашего платежа\n\n" \
               f"После завершения оплаты нажмите кнопку *\"Оплатил\(а\)\"*\."
