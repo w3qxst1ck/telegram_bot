@@ -43,8 +43,8 @@ class Server(BaseSettings):
 
 
 class Settings(BaseSettings):
-    bot_name: str = "VLESS VPN bot"
-    bot_tg_name: str = "VlessDigitalBot"
+    bot_name: str = "VIRA Bot"
+    bot_tg_name: str = "VIRADigitalBot"
     bot_token: str = Field(..., env='BOT_TOKEN')
     admins: list = Field(..., env='ADMINS')
     payment_admin: str = Field(..., env='PAYMENT_ADMIN')
