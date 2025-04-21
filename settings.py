@@ -49,6 +49,8 @@ class Settings(BaseSettings):
     admins: list = Field(..., env='ADMINS')
     payment_admin: str = Field(..., env='PAYMENT_ADMIN')
     help_admin: str = Field(..., env='HELP_ADMIN')
+    card: str = Field(..., env='CARD')
+    card_name: str = Field(..., env='CARD_NAME')
 
     timezone: str = "Europe/Moscow"
 
