@@ -72,15 +72,7 @@ async def start_bot() -> None:
     dp.message.middleware(AdminMiddleware())
     dp.callback_query.middleware(AdminMiddleware())
 
-    # await init_models()
-
     await dp.start_polling(bot)
-
-
-# async def init_models():
-#     async with async_engine.begin() as conn:
-#         # await conn.run_sync(Base.metadata.drop_all)
-#         await conn.run_sync(Base.metadata.create_all)
 
 
 if __name__ == "__main__":
