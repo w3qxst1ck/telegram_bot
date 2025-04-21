@@ -82,7 +82,7 @@ async def send_hello_message(message: types.Message, admin: bool, state: FSMCont
 
     msg += f"Если у вас остались вопросы, вы можете обратиться в поддержку /{cmd.HELP[0]}"
 
-    image_path = os.path.join("img", "start.png")
+    image_path = os.path.join("img", "start.jpg")
     if os.path.isfile(image_path):
         with open(image_path, "rb") as image_buffer:
 
