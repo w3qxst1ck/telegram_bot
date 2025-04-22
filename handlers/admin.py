@@ -21,19 +21,6 @@ router = Router()
 router.message.middleware.register(AdminMiddleware())
 
 
-@router.message(Command("add_server"))
-async def add_server(message: types.Message, session: Any) -> None:
-    new_sever = ServerAdd(
-        name="nl-1",
-        region="Netherlands",
-        api_url="https://viradigital.xyz:51258/U0JJpb2BsTsiStg/",
-        domain="viradigital.xyz",
-        inbound_id=1,
-    )
-    await AsyncOrm.create_server(new_sever, session)
-    await message.answer("Сервер успешно добавлен")
-
-
 @router.callback_query(or_f(F.data.split("|")[0] == "admin-payment-confirm",
                             F.data.split("|")[0] == "admin-payment-cancel"))
 async def confirm_decline_payment_handler(callback: types.CallbackQuery, bot: Bot, session: Any):
