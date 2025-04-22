@@ -51,7 +51,7 @@ services:
     ports:
       - 6379:6379
     volumes:
-      - ./redisdata:/data
+      - redis_data:/data
     command: >
       sh -c '
       mkdir -p /usr/local/etc/redis &&
@@ -63,3 +63,4 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
