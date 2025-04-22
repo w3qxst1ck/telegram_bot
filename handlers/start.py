@@ -91,14 +91,14 @@ async def send_hello_message(message: types.Message, admin: bool, state: FSMCont
                 keyboard.row(InlineKeyboardButton(text=f"{TRIAL_KEY}", callback_data=f"trial_key"))
 
                 await message.answer_photo(
-                    photo=BufferedInputFile(image_buffer.read(), filename="start.png"),
+                    photo=BufferedInputFile(image_buffer.read(), filename="start.jpg"),
                     caption=msg,
                     reply_markup=keyboard.as_markup()
                 )
             # если истек пробный период
             else:
                 await message.answer_photo(
-                    photo=BufferedInputFile(image_buffer.read(), filename="start.png"),
+                    photo=BufferedInputFile(image_buffer.read(), filename="start.jpg"),
                     caption=msg,
                 )
                 await main_menu(message, admin, state, bot)

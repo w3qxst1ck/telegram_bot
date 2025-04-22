@@ -21,7 +21,7 @@ async def referral_info(message: types.Message, bot: aiogram.Bot) -> None:
     msg = ms.referral_info_message(invite_link)
 
     # await message.answer(msg)
-    image_path = os.path.join("img", "start.png")
+    image_path = os.path.join("img", "start.jpg")
     if os.path.isfile(image_path):
         with open(image_path, "rb") as image_buffer:
             await message.answer_photo(

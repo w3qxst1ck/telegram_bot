@@ -64,7 +64,6 @@ async def off_expired_connections(session: Any, bot: aiogram.Bot) -> None:
     active_connections = await AsyncOrm.get_active_connections(session)
 
     for conn in active_connections:
-        # TODO разобраться с time zones
         if conn.expire_date < datetime.datetime.now():
 
             # если ключ пробный - удаляем его

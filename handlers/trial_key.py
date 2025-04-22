@@ -11,6 +11,7 @@ from handlers.keyboards import menu as menu_kb
 from schemas.connection import Server
 from services import service
 from utils.servers_load import get_less_loaded_server
+from settings import settings
 from logger import logger
 
 
@@ -59,7 +60,7 @@ async def send_trial_key(message: types.CallbackQuery, session: Any) -> None:
             tg_id=tg_id,
             active=True,
             start_date=datetime.datetime.now(),
-            expire_date=datetime.datetime.now() + datetime.timedelta(days=1),
+            expire_date=datetime.datetime.now() + datetime.timedelta(days=settings.trial_days),
             is_trial=True,
             email=new_uuid,
             key=trial_key,

@@ -5,17 +5,17 @@ from pydantic import Field
 
 
 PRICES = {
-    "1": 100,
-    "3": 300,
-    "6": 600,
-    "12": 1200
+    "1": 150,
+    "3": 450,
+    "6": 900,
+    "12": 1800
 }
 
 STARS_PRICES = {
-    "2": 100,
-    "3": 300,
-    "4": 600,
-    "5": 1200
+    "75": 150,
+    "150": 300,
+    "300": 600,
+    "600": 1200
 }
 
 
@@ -54,7 +54,7 @@ class Settings(BaseSettings):
 
     timezone: str = "Europe/Moscow"
 
-    trial_days: int = 1
+    trial_days: int = 3
     price_list: dict = PRICES
     stars_price_list: dict = STARS_PRICES
     traffic_limit: int = 100

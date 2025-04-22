@@ -1,10 +1,12 @@
+from settings import settings
+
 BUY = "💲 Оплатить ключ"
 BALANCE = "💰 Пополнить баланс"
 KEYS = "🔑 Мои ключи"
 PAYMENTS = "🧾️ Платежи"
 ADMIN = "🛠️ Администратор"
 BACK = "🔙 назад"
-TRIAL_KEY = "🎁 Бесплатно на 1 день"
+TRIAL_KEY = f"🎁 Бесплатно на {settings.trial_days} дня"
 NEW_KEY = "🔑 Купить новый ключ"
 EXTEND_KEY = "➕ Продлить ключ"
 DELETE_KEY = "🗑 Удалить ключ"
