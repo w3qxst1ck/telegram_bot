@@ -34,16 +34,21 @@ async def instruction_for_os(callback: types.CallbackQuery) -> None:
 
     msg = ms.instruction_os_message(os)
 
-    album_builder = MediaGroupBuilder(caption=msg)
-
     if os == "Android":
+        album_builder = MediaGroupBuilder(caption=msg)
         album_builder.add(type="photo", media=FSInputFile("img/instruction/add_hiddify.jpg"))
         album_builder.add(type="photo", media=FSInputFile("img/instruction/buffer_hiddify.jpg"))
-    else:
+        await callback.message.answer_media_group(media=album_builder.build())
+    elif os == "iOS":
+        album_builder = MediaGroupBuilder(caption=msg)
         album_builder.add(type="photo", media=FSInputFile("img/instruction/ios_add.PNG"))
         album_builder.add(type="photo", media=FSInputFile("img/instruction/ios_buffer.PNG"))
+        await callback.message.answer_media_group(media=album_builder.build())
+    # без картинок
+    else:
+        await callback.message.answer(msg, disable_web_page_preview=True)
 
-    await callback.message.answer_media_group(media=album_builder.build())
+    # удаляем заглушку
     try:
         await wait_msg.delete()
     except Exception:
