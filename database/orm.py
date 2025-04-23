@@ -755,3 +755,17 @@ class AsyncOrm:
         except Exception as e:
             logger.error(f"Ошибка при пополнении баланса пользователя {tg_id} на сумму {summ}: {e}")
             raise
+
+    @staticmethod
+    async def get_all_tg_ids(session: Any) -> List[str]:
+        """Получение tg_id всех пользователей"""
+        try:
+            rows = await session.fetch(
+                """
+                SELECT tg_id 
+                FROM users
+                """
+            )
+            return [row["tg_id"] for row in rows]
+        except Exception as e:
+            logger.error(f"Ошибка при получении всех tg_id: {e}")

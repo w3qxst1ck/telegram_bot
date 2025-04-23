@@ -1,20 +1,20 @@
-from datetime import datetime, timedelta
-import uuid
 from typing import Any
 
+import aiogram
+import asyncpg
 from aiogram import Router, types, F, Bot
-from aiogram.filters import Command, or_f
+from aiogram.filters import or_f
+from aiogram.fsm.context import FSMContext
 
 from middlewares.admin import AdminMiddleware
 from database.orm import AsyncOrm
-from services import service
-from schemas.connection import ServerAdd
 from schemas.user import UserConnList
 from handlers.messages import errors as err_ms
 from handlers.messages.balance import paid_request_for_admin, paid_confirmed_for_user, paid_decline_for_user
-from utils.servers_load import get_less_loaded_server
 from logger import logger
 from cache import r
+from handlers.keyboards import admin as kb
+from handlers.states.admin import NotifyUsersFSM
 
 
 router = Router()
@@ -71,3 +71,105 @@ async def confirm_decline_payment_handler(callback: types.CallbackQuery, bot: Bo
         await bot.send_message(tg_id, message_for_user)
 
         logger.info(f"Администратор {callback.from_user.id} отклонил платеж пользователя {tg_id} на сумму {summ} р.")
+
+
+@router.callback_query(F.data == "menu|admin")
+async def admin_menu(callback: types.CallbackQuery) -> None:
+    """Меню администратора"""
+    msg = "🛠️ Панель администратора"
+    await callback.message.edit_text(msg, reply_markup=kb.admin_keyboard().as_markup())
+
+
+@router.callback_query(F.data == "notify_users")
+async def choose_users(callback: types.CallbackQuery, state: FSMContext) -> None:
+    """Выбор группы пользователей для рассылки"""
+    # сброс стейта при кнопке назад из отправки сообщения
+    current_state = await state.get_state()
+    if current_state:
+        await state.clear()
+
+    msg = "\"<b>Всем пользователям</b>\" - рассылка сообщения всем пользователям в боте\n\n" \
+          "\"<b>Польз. с активными ключами</b>\" - рассылка сообщения пользователям с активными ключами\n\n" \
+          "\"<b>Польз. без активных ключей</b>\" - рассылка сообщения пользователям с просроченными ключами"
+
+    await callback.message.edit_text(msg, reply_markup=kb.admin_users_group().as_markup())
+
+
+@router.callback_query(F.data.split("|")[0] == "users_group")
+async def get_message_for_users(callback: types.CallbackQuery, state: FSMContext) -> None:
+    """Предложение отправить сообщение для пользователей"""
+    users_group = callback.data.split("|")[1]
+
+    await state.set_state(NotifyUsersFSM.text)
+    await state.update_data(users_group=users_group)
+
+    msg = "Отправьте в чат сообщение, которое вы бы хотели разослать "
+    if users_group == "all":
+        msg += "всем пользователям"
+    elif users_group == "expired":
+        msg += "пользователям, у которых просрочен ключ"
+    else:
+        msg += "пользователям, имеющим активные ключи"
+
+    prev_mess = await callback.message.edit_text(msg, reply_markup=kb.back_button().as_markup())
+    await state.update_data(prev_mess=prev_mess)
+
+
+@router.message(NotifyUsersFSM.text)
+async def notify_users(message: types.Message, state: FSMContext, session: Any, bot: aiogram.Bot) -> None:
+    """Рассылка сообщения"""
+    data = await state.get_data()
+
+    # если отправлен не текст
+    if not message.text:
+        try:
+            await data["prev_mess"].delete()
+        except Exception:
+            pass
+        msg = await message.answer("Необходимо отправить текст", reply_markup=kb.back_button().as_markup())
+        await state.update_data(prev_mess=msg)
+        return
+
+    # если отправлен текст
+    await state.clear()
+
+    # меняем предыдущее сообщение
+    try:
+        await data["prev_mess"].delete()
+    except Exception:
+        pass
+
+    # отправляем заглушку
+    wait_message = await message.answer("Рассылка выполняется...⏳")
+
+    # получаем текст с форматированием и группу пользователей
+    msg = message.html_text
+    users_group = data["users_group"]
+
+    # получаем необходимых пользователей
+    user_ids = await get_user_group_ids(users_group, session)
+
+    # выполняем рассылку
+    success_message_counter = 0
+    for tg_id in user_ids:
+        try:
+            await bot.send_message(tg_id, msg)
+            success_message_counter += 1
+        except Exception as e:
+            logger.error(f"При рассылке не удалось отправить сообщение пользователю {tg_id}: {e}")
+
+    await wait_message.edit_text(f"✅ Оповещено пользователей: <b>{success_message_counter}</b>")
+
+
+async def get_user_group_ids(users_group: str, session: Any) -> list[str]:
+    """Возвращает список tg_id пользователей"""
+    if users_group == "all":
+        users_ids = await AsyncOrm.get_all_tg_ids(session)
+    # elif users_group == "expired":
+    #     users_ids = await AsyncOrm.get_inactive_users_tg_ids()
+    # else:
+    #     users_ids = await AsyncOrm.get_unsub_tg_ids()
+
+    return users_ids
+
+
