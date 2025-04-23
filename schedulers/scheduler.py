@@ -81,7 +81,10 @@ async def off_expired_connections(session: Any, bot: aiogram.Bot) -> None:
 
                 # оповещение пользователя
                 message = ms.expire_trial_key(conn.key)
-                await bot.send_message(conn.tg_id, message, parse_mode=ParseMode.MARKDOWN)
+                try:
+                    await bot.send_message(conn.tg_id, message, parse_mode=ParseMode.MARKDOWN)
+                except Exception as e:
+                    logger.error(f"Ошибка при отправке сообщения из шедулера пользователю {conn.tg_id} об окончании пробного ключа: {e}")
 
             # для обычных ключей
             else:
@@ -94,7 +97,10 @@ async def off_expired_connections(session: Any, bot: aiogram.Bot) -> None:
 
                 # оповещение пользователя
                 message = ms.expire_key(conn)
-                await bot.send_message(conn.tg_id, message, parse_mode=ParseMode.MARKDOWN)
+                try:
+                    await bot.send_message(conn.tg_id, message, parse_mode=ParseMode.MARKDOWN)
+                except Exception as e:
+                    logger.error(f"Ошибка при отправке сообщения из шедулера пользователю {conn.tg_id} о блокировке ключа: {e}")
 
             # удаляем кэш
             r.delete(f"user_conn_server:{conn.tg_id}")
@@ -116,7 +122,11 @@ async def check_ref_links_and_add_bonus(session: Any, bot: aiogram.Bot) -> None:
 
             # оповещаем пользователя
             msg = ms.get_money_for_ref_message(ref.to_user_id)
-            await bot.send_message(ref.from_user_id, msg, message_effect_id="5104841245755180586")  # 🔥
+            try:
+                await bot.send_message(ref.from_user_id, msg, message_effect_id="5104841245755180586")  # 🔥
+            except Exception as e:
+                logger.error(f"Ошибка при отправке сообщения из шедулера пользователю {ref.from_user_id} "
+                             f"о начислении бонуса за реферальную программу: {e}")
 
 
 async def refresh_current_traffic(session: Any, bot: aiogram.Bot) -> None:
@@ -128,7 +138,8 @@ async def refresh_current_traffic(session: Any, bot: aiogram.Bot) -> None:
     for conn in all_connections:
 
         # проверяем сколько дней прошло с дня активации ключа
-        if (datetime.datetime.now() - conn.start_date).days % settings.paid_period == 0:
+        if (datetime.datetime.now() - conn.start_date).days != 0 \
+                and (datetime.datetime.now() - conn.start_date).days % settings.paid_period == 0:
 
             # получаем необходимый сервер
             server = await AsyncOrm.get_server(server_id=conn.server_id, session=session)

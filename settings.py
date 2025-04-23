@@ -54,7 +54,7 @@ class Settings(BaseSettings):
 
     timezone: str = "Europe/Moscow"
 
-    trial_days: int = 3
+    trial_days: int = 7
     price_list: dict = PRICES
     stars_price_list: dict = STARS_PRICES
     traffic_limit: int = 100

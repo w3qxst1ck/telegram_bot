@@ -165,10 +165,10 @@ async def get_user_group_ids(users_group: str, session: Any) -> list[str]:
     """Возвращает список tg_id пользователей"""
     if users_group == "all":
         users_ids = await AsyncOrm.get_all_tg_ids(session)
-    # elif users_group == "expired":
-    #     users_ids = await AsyncOrm.get_inactive_users_tg_ids()
-    # else:
-    #     users_ids = await AsyncOrm.get_unsub_tg_ids()
+    elif users_group == "expired":
+        users_ids = await AsyncOrm.get_expired_users_tg_ids(session)
+    else:
+        users_ids = await AsyncOrm.get_active_users_tg_ids(session)
 
     return users_ids
 

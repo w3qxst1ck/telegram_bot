@@ -769,3 +769,33 @@ class AsyncOrm:
             return [row["tg_id"] for row in rows]
         except Exception as e:
             logger.error(f"Ошибка при получении всех tg_id: {e}")
+
+    @staticmethod
+    async def get_expired_users_tg_ids(session: Any) -> List[str]:
+        """Получение tg_id пользователей у которых неактивен ключ"""
+        try:
+            rows = await session.fetch(
+                """
+                SELECT DISTINCT tg_id
+                FROM connections
+                WHERE is_trial = false AND active = false
+                """
+            )
+            return [row["tg_id"] for row in rows]
+        except Exception as e:
+            logger.error(f"Ошибка при получении всех tg_id, у которых неактивны ключи: {e}")
+
+    @staticmethod
+    async def get_active_users_tg_ids(session: Any) -> List[str]:
+        """Получение tg_id пользователей у которых активен ключ"""
+        try:
+            rows = await session.fetch(
+                """
+                SELECT DISTINCT tg_id
+                FROM connections
+                WHERE is_trial = false AND active = true
+                """
+            )
+            return [row["tg_id"] for row in rows]
+        except Exception as e:
+            logger.error(f"Ошибка при получении всех tg_id, у которых неактивны ключи: {e}")
