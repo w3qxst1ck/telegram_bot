@@ -70,7 +70,7 @@ async def send_hello_message(message: types.Message, admin: bool, state: FSMCont
 
     # для пробного периода
     if not trial_used:
-        msg += f"Вам доступен <b>бесплатный пробный период на {settings.trial_days} день</b>.\n" \
+        msg += f"Вам доступен <b>бесплатный пробный период на {settings.trial_days} дня</b>.\n" \
                "Ваш ключ доступа ниже по кнопке\n\n" \
                f"Посмотреть свои ключи, профиль, пополнить баланс и купить ключ вы можете в /{cmd.MENU[0]}\n" \
                f"Инструкцию по установке vpn можно посмотреть по команде /{cmd.INSTRUCTION[0]}\n\n"
