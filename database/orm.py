@@ -418,6 +418,7 @@ class AsyncOrm:
             query = await session.fetch(
                 """
                 SELECT * FROM connections
+                WHERE is_trial = false 
                 """
             )
             connections: list[Connection] = [Connection.model_validate(conn) for conn in query]
