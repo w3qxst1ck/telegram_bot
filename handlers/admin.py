@@ -10,6 +10,7 @@ from middlewares.admin import AdminMiddleware
 from database.orm import AsyncOrm
 from schemas.user import UserConnList
 from handlers.messages import errors as err_ms
+from handlers.messages.admin import statistics_message
 from handlers.messages.balance import paid_request_for_admin, paid_confirmed_for_user, paid_decline_for_user
 from logger import logger
 from cache import r
@@ -171,5 +172,19 @@ async def get_user_group_ids(users_group: str, session: Any) -> list[str]:
         users_ids = await AsyncOrm.get_active_users_tg_ids(session)
 
     return users_ids
+
+
+@router.callback_query(F.data == "stats")
+async def statistics(callback: types.CallbackQuery, session: Any) -> None:
+    """Вывод статистики по пользователям"""
+    # отправляем заглушку
+    wait_message = await callback.message.edit_text("Получение статистики...⏳")
+
+    # получаем данные
+    data = await AsyncOrm.get_statistic_data(session)
+
+    msg = statistics_message(data)
+
+    await wait_message.edit_text(msg, reply_markup=kb.back_to_admin_menu().as_markup())
 
 

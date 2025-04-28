@@ -8,6 +8,7 @@ def admin_keyboard() -> InlineKeyboardBuilder:
     keyboard = InlineKeyboardBuilder()
 
     keyboard.row(InlineKeyboardButton(text="📢 Рассылка", callback_data="notify_users"))
+    keyboard.row(InlineKeyboardButton(text="📊 Статистика", callback_data="stats"))
 
     keyboard.row(InlineKeyboardButton(text=f"{btn.BACK}", callback_data="menu"))
 
@@ -28,9 +29,18 @@ def admin_users_group() -> InlineKeyboardBuilder:
 
 
 def back_button() -> InlineKeyboardBuilder:
-    """Кнопка назад для рассылки при ожиданни сообщения"""
+    """Кнопка назад для рассылки при ожидании сообщения"""
     keyboard = InlineKeyboardBuilder()
 
     keyboard.row(InlineKeyboardButton(text=f"{btn.BACK}", callback_data="notify_users"))
+
+    return keyboard
+
+
+def back_to_admin_menu() -> InlineKeyboardBuilder:
+    """Кнопка возращения в меню администратора"""
+    keyboard = InlineKeyboardBuilder()
+
+    keyboard.row(InlineKeyboardButton(text=f"{btn.BACK}", callback_data="menu|admin"))
 
     return keyboard

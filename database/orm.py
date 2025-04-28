@@ -799,3 +799,83 @@ class AsyncOrm:
             return [row["tg_id"] for row in rows]
         except Exception as e:
             logger.error(f"Ошибка при получении всех tg_id, у которых неактивны ключи: {e}")
+
+    @staticmethod
+    async def get_statistic_data(session: Any) -> dict:
+        """Получение статистики по пользователям"""
+        try:
+            monthly_period = datetime.datetime.now() - datetime.timedelta(days=30)
+
+            all_users = await session.fetchval(
+                """
+                SELECT COUNT(*) FROM users
+                """
+            )
+
+            month_count_users = await session.fetchval(
+                f"""
+                SELECT COUNT(*) FROM users
+                WHERE created_at > $1
+                """,
+                monthly_period
+            )
+
+            users_with_active_keys = await session.fetchval(
+                """
+                SELECT COUNT(*) FROM 
+                    (
+                    SELECT DISTINCT tg_id FROM connections AS c
+                    WHERE c.active = true AND c.is_trial = false 
+                    ) as temp
+                """
+            )
+
+            all_keys = await session.fetchval(
+                """
+                SELECT COUNT(*) FROM connections
+                """
+            )
+
+            trial_keys = await session.fetchval(
+                """
+                SELECT COUNT(*) FROM connections
+                WHERE is_trial = true
+                """
+            )
+
+            active_keys = await session.fetchval(
+                """
+                SELECT COUNT(*) FROM connections
+                WHERE is_trial = false AND active = true
+                """
+            )
+
+            payments_all_time = await session.fetchval(
+                """
+                SELECT SUM(p.amount) FROM payments AS p
+                WHERE p.description = 'ADD' AND p.status = true
+                """
+            )
+
+            payments_last_period = await session.fetchval(
+                f"""
+                SELECT SUM(p.amount) FROM payments AS p
+                WHERE p.description = 'ADD' AND p.status = true AND p.created_at > $1
+                """,
+                monthly_period
+            )
+
+            data = {
+                "all_users": all_users,
+                "month_count_users": month_count_users if month_count_users else 0,
+                "users_with_active_keys": users_with_active_keys if users_with_active_keys else 0,
+                "all_keys": all_keys if all_keys else 0,
+                "trial_keys": trial_keys if trial_keys else 0,
+                "active_keys": active_keys if active_keys else 0,
+                "payments_all_time": payments_all_time if payments_all_time else 0,
+                "payments_last_period": payments_last_period if payments_last_period else 0,
+            }
+            return data
+
+        except Exception as e:
+            logger.error(f"Ошибка при получении статистики о пользователях: {e}")
