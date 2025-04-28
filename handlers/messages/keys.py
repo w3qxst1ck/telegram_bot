@@ -46,7 +46,7 @@ def keys_message(user_with_conn: UserConnList) -> str:
                         message += f"*{idx}.* ✅ Ключ *{conn.description}*\n" \
                                    f"🗓️ Активен до *{time} {date} (МСК)*\n" \
                                    f"{REGIONS[conn.region]}\n" \
-                                   f"📊 Траффик: *{conn.traffic} / {settings.traffic_limit}* ГБ (обновление {refresh_date})\n" \
+                                   f"📊 Трафик: *{conn.traffic} / {settings.traffic_limit}* ГБ (обновление {refresh_date})\n" \
                                    f"```{conn.key}```\n\n"
 
             # если подписка неактивна
