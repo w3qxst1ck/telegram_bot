@@ -850,17 +850,32 @@ class AsyncOrm:
                 """
             )
 
-            payments_all_time = await session.fetchval(
+            payments_transfer_all_time = await session.fetchval(
                 """
                 SELECT SUM(p.amount) FROM payments AS p
                 WHERE p.description = 'ADD' AND p.status = true
                 """
             )
 
-            payments_last_period = await session.fetchval(
+            payments_transfer_last_period = await session.fetchval(
                 f"""
                 SELECT SUM(p.amount) FROM payments AS p
                 WHERE p.description = 'ADD' AND p.status = true AND p.created_at > $1
+                """,
+                monthly_period
+            )
+
+            payments_stars_all_time = await session.fetchval(
+                """
+                SELECT SUM(p.amount) FROM payments AS p
+                WHERE p.description = 'STARS' AND p.status = true
+                """
+            )
+
+            payments_stars_last_period = await session.fetchval(
+                f"""
+                SELECT SUM(p.amount) FROM payments AS p
+                WHERE p.description = 'STARS' AND p.status = true AND p.created_at > $1
                 """,
                 monthly_period
             )
@@ -872,8 +887,10 @@ class AsyncOrm:
                 "all_keys": all_keys if all_keys else 0,
                 "trial_keys": trial_keys if trial_keys else 0,
                 "active_keys": active_keys if active_keys else 0,
-                "payments_all_time": payments_all_time if payments_all_time else 0,
-                "payments_last_period": payments_last_period if payments_last_period else 0,
+                "payments_transfer_all_time": payments_transfer_all_time if payments_transfer_all_time else 0,
+                "payments_transfer_last_period": payments_transfer_last_period if payments_transfer_last_period else 0,
+                "payments_stars_all_time": payments_stars_all_time if payments_stars_all_time else 0,
+                "payments_stars_last_period": payments_stars_last_period if payments_stars_last_period else 0,
             }
             return data
 

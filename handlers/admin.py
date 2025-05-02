@@ -77,7 +77,7 @@ async def confirm_decline_payment_handler(callback: types.CallbackQuery, bot: Bo
 @router.callback_query(F.data == "menu|admin")
 async def admin_menu(callback: types.CallbackQuery) -> None:
     """Меню администратора"""
-    msg = "🛠️ Панель администратора"
+    msg = "⚙️️ Панель администратора"
     await callback.message.edit_text(msg, reply_markup=kb.admin_keyboard().as_markup())
 
 

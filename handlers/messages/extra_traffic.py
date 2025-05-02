@@ -3,12 +3,15 @@ from schemas.connection import Connection
 from handlers.buttons import regions
 
 
-def buy_extra_traffic_message() -> str:
+def buy_extra_traffic_message(is_empty: bool) -> str:
     """Сообщение с информацией о доп. трафике"""
+    if is_empty:
+        message = "У вас нет ключей, для которых можно обновить трафик"
 
-    message = "Выберите ключ, для которого вы бы хотели обновить трафик " \
-              "(текущий трафик выбранного ключа будет обнулен)\n\n" \
-              f"Стоимость - <b>{settings.extra_traffic_price} руб.</b>"
+    else:
+        message = "Выберите ключ, для которого вы бы хотели обновить трафик " \
+                  "(текущий трафик выбранного ключа будет обнулен)\n\n" \
+                  f"Стоимость - <b>{settings.extra_traffic_price} руб.</b>"
 
     return message
 

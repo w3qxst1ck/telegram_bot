@@ -27,7 +27,8 @@ async def buy_extra_traffic_menu(callback: types.CallbackQuery, session: Any):
     tg_id = str(callback.from_user.id)
     active_connections: list[ConnectionRegion] = await AsyncOrm.get_active_user_connections(tg_id, session)
 
-    msg = ms.buy_extra_traffic_message()
+    is_empty: bool = len(active_connections) == 0
+    msg = ms.buy_extra_traffic_message(is_empty)
 
     await callback.message.edit_text(msg, reply_markup=kb.keys_list(active_connections).as_markup())
 

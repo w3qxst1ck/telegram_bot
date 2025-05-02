@@ -7,8 +7,8 @@ def admin_keyboard() -> InlineKeyboardBuilder:
     """Меню администратора"""
     keyboard = InlineKeyboardBuilder()
 
-    keyboard.row(InlineKeyboardButton(text="📢 Рассылка", callback_data="notify_users"))
-    keyboard.row(InlineKeyboardButton(text="📊 Статистика", callback_data="stats"))
+    keyboard.row(InlineKeyboardButton(text=f"{btn.NOTIFY}", callback_data="notify_users"))
+    keyboard.row(InlineKeyboardButton(text=f"{btn.STATS}", callback_data="stats"))
 
     keyboard.row(InlineKeyboardButton(text=f"{btn.BACK}", callback_data="menu"))
 
