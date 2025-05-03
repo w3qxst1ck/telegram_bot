@@ -873,11 +873,26 @@ class AsyncOrm:
             )
 
             payments_stars_last_period = await session.fetchval(
-                f"""
+                """
                 SELECT SUM(p.amount) FROM payments AS p
                 WHERE p.description = 'STARS' AND p.status = true AND p.created_at > $1
                 """,
                 monthly_period
+            )
+
+            referral_users = await session.fetchval(
+                """
+                SELECT COUNT(*)
+                FROM referrals
+                """
+            )
+
+            active_referral_users = await session.fetchval(
+                """
+                SELECT COUNT(*)
+                FROM referrals
+                WHERE is_used = true
+                """
             )
 
             data = {
@@ -891,6 +906,8 @@ class AsyncOrm:
                 "payments_transfer_last_period": payments_transfer_last_period if payments_transfer_last_period else 0,
                 "payments_stars_all_time": payments_stars_all_time if payments_stars_all_time else 0,
                 "payments_stars_last_period": payments_stars_last_period if payments_stars_last_period else 0,
+                "referral_users": referral_users if referral_users else 0,
+                "active_referral_users": active_referral_users if active_referral_users else 0
             }
             return data
 
