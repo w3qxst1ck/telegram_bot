@@ -3,9 +3,11 @@ from handlers.buttons import menu as btn
 from schemas.connection import Connection
 from settings import settings
 
+
 def expire_trial_key(trial_key: str) -> str:
     """Сообщение об окончании пробного ключа"""
     message = f"⛔️ Истек период использования пробного ключа\n```{trial_key}```\n\n*❗️Ключ удален*\n\n" \
+              f"Вам необходимо пополнить баланс и купить новый ключ в разделе \"{btn.BUY}\" главного меню\n\n" \
               f"Посмотреть свои ключи, профиль, пополнить баланс и купить ключ вы можете в /{cmd.MENU[0]}"
 
     return message
