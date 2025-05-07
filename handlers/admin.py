@@ -1,7 +1,6 @@
 from typing import Any
 
 import aiogram
-import asyncpg
 from aiogram import Router, types, F, Bot
 from aiogram.filters import or_f
 from aiogram.fsm.context import FSMContext
