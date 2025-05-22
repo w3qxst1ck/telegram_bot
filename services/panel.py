@@ -130,6 +130,7 @@ async def refresh_key_traffic_by_email(xui: AsyncApi, inbound_id: int, email: st
 
     try:
         await xui.client.reset_stats(inbound_id=inbound_id, email=email)
+        logger.info(f"Обновлен трафик ключа: {email}")
 
     except Exception as e:
         logger.error(f"Ошибка при обновлении (обнулении) текущего трафика для ключа {email}: {e}")

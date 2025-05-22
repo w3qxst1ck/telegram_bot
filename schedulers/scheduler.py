@@ -132,7 +132,6 @@ async def check_ref_links_and_add_bonus(session: Any, bot: aiogram.Bot) -> None:
 async def refresh_current_traffic(session: Any, bot: aiogram.Bot) -> None:
     """Скидывает трафик (устанавливает текущее значение в 0 Гб), каждые 30 дней"""
 
-    print("Выполняется ежедневный шедулер")
     all_connections = await AsyncOrm.get_all_connections(session)
 
     for conn in all_connections:
