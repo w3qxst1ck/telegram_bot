@@ -11,6 +11,8 @@ services:
       postgresdb:
         condition: service_healthy
 #      - postgresdb
+    networks:
+      - app-network
     restart: on-failure
 
   postgresdb:
@@ -43,6 +45,9 @@ services:
                -c maintenance_work_mem=128MB
                -c checkpoint_completion_target=0.9
                -c wal_buffers=16MB
+    networks:
+      - app-network
+
   redis:
     image: redis:latest
     container_name: "redis_container"
@@ -59,7 +64,13 @@ services:
       echo "appendonly yes" >> /usr/local/etc/redis/redis.conf &&
       redis-server /usr/local/etc/redis/redis.conf
       '
+    networks:
+      - app-network
     restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
   postgres_data:
