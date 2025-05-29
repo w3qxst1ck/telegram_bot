@@ -12,6 +12,7 @@ from cache import r
 from logger import logger
 from settings import settings
 from handlers.keyboards.menu import to_menu_keyboard
+from services.service import activate_client
 
 router = Router()
 
@@ -97,6 +98,11 @@ async def extend_key_handler(callback: types.CallbackQuery, session: Any) -> Non
         # создаем платеж в payments
         conn_id: int = await AsyncOrm.get_connection_id(conn_server.email, session)
         await AsyncOrm.create_payment(tg_id, price, f"KEY_{conn_id}", True, datetime.datetime.now(), session)
+
+        # активируем клиенту ключ в панели, если отключен
+        if conn_server.expire_date < datetime.datetime.now():
+            server = await AsyncOrm.get_server(conn_server.server_id, session)
+            await activate_client(server, conn_server.email, conn_server.tg_id)
 
         # удаляем кэш
         r.delete(f"user_conn_server:{tg_id}")
